@@ -1,0 +1,1 @@
+Het project richt zich op het ontwikkelen van een offline webapplicatie die gebruikt kan worden als scorebord voor teambuildings. De applicatie moet gebruiksvriendelijk zijn, real-time scores kunnen tonen en volledig functioneel zijn zonder internetverbinding.
