@@ -1,0 +1,95 @@
+h1,
+.h1 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-bold);
+  font-size: var(--font-size-h1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+h2,
+.h2 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-bold);
+  font-size: var(--font-size-h2);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+h3,
+.h3 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-bold);
+  font-size: var(--font-size-h3);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+h4,
+.h4 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-bold);
+  font-size: var(--font-size-h4);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+h5,
+.h5 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-bold);
+  font-size: var(--font-size-h5);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+h6,
+.h6 {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-size-h6);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  color: $color-secondary-grey-900;
+  line-height: 110%;
+}
+
+body {
+  background-color: $color-secondary-grey-75;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-regular);
+  font-size: var(--font-size-body);
+  color: $color-secondary-grey-900;
+  line-height: 22px;
+}
+
+.meta {
+  font-family: var(--font-family-inter);
+  font-weight: var(--font-regular);
+  font-size: var(--font-size-meta);
+  line-height: 22px;
+}
