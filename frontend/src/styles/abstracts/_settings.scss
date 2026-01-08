@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+// --- CSS VARIABLES --- ///
+:root {
+  --font-family-inter: 'Inter', sans-serif;
+
+  --font-bold: 700;
+  --font-semibold: 600;
+  --font-regular: 400;
+
+  --font-size-h1: 3.5rem;
+  --font-size-h2: 3rem;
+  --font-size-h3: 2.5rem;
+  --font-size-h4: 2rem;
+  --font-size-h5: 1.5rem;
+  --font-size-h6: 1.25rem;
+  --font-size-body: 0.875rem;
+  --font-size-meta: 0.75rem;
+}
+
+// --- COLORS --- ///
+$color-primary-blue-500: #534aff;
+$color-primary-blue-400: #7a73ff;
+$color-primary-blue-300: #a19cff;
+$color-primary-blue-200: #b2aeff;
+$color-primary-blue-100: #dbd9ff;
+$color-primary-blue-75: #f0efff;
+$color-primary-blue-50: #f9f8ff;
+
+$color-secondary-grey-900: #1d1d1d;
+$color-secondary-grey-800: #36383d;
+$color-secondary-grey-700: #4c5054;
+$color-secondary-grey-600: #65676d;
+$color-secondary-grey-500: #7d7f83;
+$color-secondary-grey-400: #94969a;
+$color-secondary-grey-300: #aaaeb1;
+$color-secondary-grey-200: #dadee4;
+$color-secondary-grey-100: #eaedf0;
+$color-secondary-grey-75: #fcfafa;
+$color-secondary-grey-50: #fdffff;
+
+$colors-vibrant-blue: #00d4fa;
+$colors-vibrant-green: #00e676;
+$colors-vibrant-red: #ff3b30;
+$colors-vibrant-yellow: #ffd60a;
+$colors-vibrant-orange: #ff9f0a;
+
+$colors-gradient-red: linear-gradient(121deg, #ff3b30 18.2%, #99231d 85.55%);
+$colors-gradient-blue: linear-gradient(144deg, #00d4fa 11.87%, #007e94 81.36%);
+$colors-gradient-orange: linear-gradient(
+  118deg,
+  #ff9f0a 10.22%,
+  #ce8006 83.45%
+);
+
+$colors-gradient-red-light: linear-gradient(
+  121deg,
+  rgba(255, 59, 48, 0.5) 18.2%,
+  rgba(153, 35, 29, 0.5) 85.55%
+);
+$colors-gradient-blue-light: linear-gradient(
+  144deg,
+  rgba(0, 212, 250, 0.5) 11.87%,
+  rgba(0, 126, 148, 0.5) 81.36%
+);
+$colors-gradient-orange-light: linear-gradient(
+  118deg,
+  rgba(255, 159, 10, 0.5) 10.22%,
+  rgba(206, 128, 6, 0.5) 83.45%
+);
+
+// --- BORDERS --- //
+$border-radius-5: 0.3125rem;
+$border-radius-10: 0.625rem;
+$border-radius-20: 1.25rem;
+$border-radius-25: 1.5625rem;
+$border-radius-34: 2.125rem;
+$border-radius-999: 50%;
+
+// --- SHADOWS --- //
+$box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+
+// --- BOOTSTRAP OVERRIDES ---
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+  xxxl: 1700px,
+) !default;
+
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1140px,
+  xxl: 1320px,
+  xxxl: 1600px,
+) !default;
