@@ -1,0 +1,31 @@
+.c-toggle {
+  position: relative;
+  background-color: $color-secondary-grey-100;
+  border-radius: $border-radius-20;
+  width: 3rem;
+  height: 1.25rem;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &__input {
+    display: none;
+    &:checked + .c-toggle__thumb {
+      background-color: $color-primary-blue-500;
+      left: 1.5rem;
+    }
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: $border-radius-999;
+    background-color: $color-primary-blue-200;
+    transition: left 0.3s ease;
+  }
+}
