@@ -62,8 +62,8 @@ nvm --version
 Installeer de juiste node versie met de volgende commando's in de root van deze repository in de terminal:
 
 ```bash
-nvm install
-nvm use
+nvm install 24.12.0
+nvm use 24.12.0
 ```
 
 **npm-versie instellen:**
