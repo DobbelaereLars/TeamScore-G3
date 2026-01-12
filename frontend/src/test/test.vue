@@ -1,6 +1,6 @@
 <script setup>
 // import Button from '../components/Button.vue'
-import Button from '../components/Button_manual.vue';
+import Button from '../components/Button.vue';
 import {
   Gamepad2,
   Calendar,
@@ -23,7 +23,7 @@ import {
       </template>
     </Button>
 
-    <Button button-tekst="" :is-icon-button="true">
+    <Button :is-icon-button="true">
       <template #c-icon-left>
         <Calendar :size="18" />
       </template>
@@ -31,8 +31,4 @@ import {
   </div>
 </template>
 
-<style scoped>
-.tablet-home {
-  padding: 2rem;
-}
-</style>
+<style scoped></style>
