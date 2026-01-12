@@ -2,28 +2,27 @@
 defineProps({
   buttonTekst: {
     type: String,
-    default: ''
+    default: '',
   },
   isIconButton: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 </script>
 
 <template>
-  <button 
-    class="c-btn"
-    :class="{ 'c-btn--icon-only': isIconButton }"
-  >
+  <a class="c-btn" :class="{ 'c-btn--icon-only': isIconButton }">
     <span v-if="$slots['c-icon-left']" class="c-icon-container">
       <slot name="c-icon-left"></slot>
     </span>
-    <span v-if="buttonTekst && !isIconButton" class="c-ButtonText">{{ buttonTekst }}</span>
+    <span v-if="buttonTekst && !isIconButton" class="c-ButtonText">{{
+      buttonTekst
+    }}</span>
     <span v-if="$slots['c-icon-right']" class="c-icon-container">
       <slot name="c-icon-right"></slot>
     </span>
-  </button>
+  </a>
 </template>
 
 <style scoped>

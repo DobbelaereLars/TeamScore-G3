@@ -1,5 +1,6 @@
 .c-btn{
     display: inline-flex;
+    width: fit-content;
     height: 2.875rem;
     padding: 0.5rem  1.5rem;
     justify-content: center;
@@ -13,6 +14,7 @@
     line-height: 1.375rem;
     border-color: transparent;
     box-shadow: $box-shadow;
+    text-decoration: none;
     
 
     border-radius: 0.3125rem;
