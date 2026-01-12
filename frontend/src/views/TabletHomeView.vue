@@ -1,11 +1,11 @@
 <script setup>
-import Toggle from "../components/Toggle.vue";
+import ToggleWithDropdown from "../components/ToggleWithDropdown.vue";
 </script>
 
 <template>
   <div>
     <h1>Tablet Home View</h1>
-    <Toggle />
+    <ToggleWithDropdown inputId="toggle1" />
   </div>
 </template>
 
