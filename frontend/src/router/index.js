@@ -53,6 +53,11 @@ const routes = [
     name: 'display-player-list',
     component: DisplayPlayerListView,
   },
+  {
+    path: '/test',
+    name: 'test',
+    component: () => import('../test/test.vue'),
+  }
 ];
 
 const router = createRouter({
