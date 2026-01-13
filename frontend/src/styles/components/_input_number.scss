@@ -1,7 +1,13 @@
 .c-input-number {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: $spacing-4;
 
-  width: fit-content;
+  &__container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    width: fit-content;
+  }
 }

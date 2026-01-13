@@ -7,11 +7,7 @@ import { ref } from "vue";
 const props = defineProps({
   label: {
     type: [String, Boolean],
-    default: "Input label",
-  },
-  placeholder: {
-    type: String,
-    default: "Input placeholder",
+    default: false,
   },
   id: {
     type: String,
@@ -31,7 +27,7 @@ const props = defineProps({
   },
   max: {
     type: [Number],
-    default: 10,
+    default: Infinity,
   },
 
 });
@@ -55,18 +51,21 @@ const updateValue = (delta) => {
 
 <template>
   <div class="c-input-number">
-    <Button :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= min">
-      <template #c-icon-left>
-        <Minus :size="18" />
-      </template>
-    </Button>
-    <InputField v-model="inputValue" :label="label" :placeholder="placeholder" :id="id" :name="name" :type="type"
-      :min="min" :max="max" />
-    <Button :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= max">
-      <template #c-icon-left>
-        <Plus :size="18" />
-      </template>
-    </Button>
+    <p v-if="label">{{ label }}</p>
+    <div class="c-input-number__container">
+      <Button :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= min">
+        <template #c-icon-left>
+          <Minus :size="18" />
+        </template>
+      </Button>
+      <InputField v-model="inputValue" :label="false" :placeholder="min" :id="id" :name="name" :type="type" :min="min"
+        :max="max" />
+      <Button :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= max">
+        <template #c-icon-left>
+          <Plus :size="18" />
+        </template>
+      </Button>
+    </div>
   </div>
 </template>
 

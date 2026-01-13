@@ -7,7 +7,7 @@ import ToggleWithDropdown from "../components/ToggleWithDropdown.vue";
   <div class="tablet-home">
     <h1>Tablet Home View</h1>
     <!-- <ToggleWithDropdown inputId="toggle1" /> -->
-    <InputNumber :label="false" placeholder="1" id="numberInput" name="numberInput" type="number" />
+    <InputNumber label="Number" id="numberInput" name="numberInput" type="number" />
   </div>
 </template>
 
