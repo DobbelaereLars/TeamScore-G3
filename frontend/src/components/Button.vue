@@ -19,6 +19,11 @@ const props = defineProps({
     default: 'primary',
     validator: (v) => ['primary', 'secondary'].includes(v),
   },
+
+  isDisabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const realHref = computed(() => {
@@ -35,6 +40,7 @@ const realHref = computed(() => {
     :class="[
       `c-btn--${props.variant}`,
       { 'c-btn--icon-only': props.isIconButton },
+      { 'c-btn--disabled': props.isDisabled },
     ]"
   >
     <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">

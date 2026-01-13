@@ -1,11 +1,13 @@
 <script setup>
+import InputNumber from "../components/InputNumber.vue";
 import ToggleWithDropdown from "../components/ToggleWithDropdown.vue";
 </script>
 
 <template>
-   <div class="tablet-home">
+  <div class="tablet-home">
     <h1>Tablet Home View</h1>
-    <ToggleWithDropdown inputId="toggle1" />
+    <!-- <ToggleWithDropdown inputId="toggle1" /> -->
+    <InputNumber label="Number" id="numberInput" name="numberInput" type="number" />
   </div>
 </template>
 

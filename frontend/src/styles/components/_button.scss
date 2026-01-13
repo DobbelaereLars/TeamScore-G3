@@ -38,6 +38,13 @@
   color: $color-secondary-grey-50;
 }
 
+.c-btn--disabled {
+  background: $color-secondary-grey-200;
+  color: $color-secondary-grey-300;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 /* Icon-only variant color differences */
 .c-btn--icon-only.c-btn--primary {
   background-color: $color-primary-blue-500;
@@ -59,6 +66,13 @@
 }
 
 .c-btn--icon-only {
+  width: 2.875rem;
+  height: 2.875rem;
+  padding: 0;
+  gap: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 2.875rem;
   height: 2.875rem;
   padding: 0;
