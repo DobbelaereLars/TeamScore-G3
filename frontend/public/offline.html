@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>TeamScore - Offline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f0efff;
+            color: #1d1d1d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .offline {
+            max-width: 22rem;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            background: #ffffff;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .offline h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .offline p {
+            margin: 0.25rem 0;
+        }
+
+        .offline__hint {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: #7d7f83;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="offline">
+        <h1>Geen verbinding met TeamScore</h1>
+        <p>De iPad heeft momenteel geen verbinding met de scoreboard-Pi.</p>
+        <p>Controleer of je verbonden bent met de juiste hotspot of wifi.</p>
+        <p class="offline__hint">Zodra de verbinding terug is, laad deze pagina opnieuw om verder te gaan.</p>
+    </main>
+</body>
+
+</html>
