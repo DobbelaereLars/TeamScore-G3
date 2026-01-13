@@ -11,6 +11,7 @@ import Progressbar from '../components/Progressbar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
 import TabList from '../components/TabList.vue';
+import TabBar from '../components/TabBar.vue';
 
 import {
   Gamepad2,
@@ -47,23 +48,45 @@ const radioItems = [
   },
 ];
 
-const tabItems = [
+const tabListItems = [
   {
-    id: 'tab1',
-    value: 'tab1',
+    id: 'tabList1',
+    value: 'tabList1',
     label: 'Tab 1',
     icon: Gamepad2,
     checked: true,
   },
   {
-    id: 'tab2',
-    value: 'tab2',
+    id: 'tabList2',
+    value: 'tabList2',
     label: 'Tab 2',
     icon: Calendar,
   },
   {
-    id: 'tab3',
-    value: 'tab3',
+    id: 'tabList3',
+    value: 'tabList3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+];
+
+const tabBarItems = [
+  {
+    id: 'tabBar1',
+    value: 'tabBar1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabBar2',
+    value: 'tabBar2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabBar3',
+    value: 'tabBar3',
     label: 'Tab 3',
     icon: Settings,
   },
@@ -138,7 +161,8 @@ const tabItems = [
       :position="2"
     />
 
-    <TabList :items="tabItems" name="test-tabs"></TabList>
+    <TabList :items="tabListItems" name="test-tablist"></TabList>
+    <TabBar :items="tabBarItems" name="test-tabbar"></TabBar>
   </div>
 </template>
 
