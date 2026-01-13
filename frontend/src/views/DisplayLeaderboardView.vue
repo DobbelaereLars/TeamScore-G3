@@ -2,7 +2,7 @@
 
 <template>
   <div>
-    <h1>Display Scoreboard View</h1>
+    <h1>Display Leaderboard View</h1>
   </div>
 </template>
 

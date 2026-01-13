@@ -62,7 +62,7 @@ const profileInitials = computed(() => {
     
       <p class="c-player-card-name h5">{{ spelersnaam }}</p>
       <div class="c-player-card-score-section">
-        <p class="c-player-card-score-value h4 u-bold" :class="[`c-player-card-score-value--${variant}`, $attrs.class]">0</p>
+        <p class="c-player-card-score-value h4 u-bold" :class="[`c-player-card-score-value--${variant}`, $attrs.class]">{{ score }}</p>
         <p class="c-player-card-score-label" >punten</p>
       </div>
 
