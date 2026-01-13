@@ -10,6 +10,8 @@ import Playercard from '../components/ScoreboardPlayercard.vue';
 import Progressbar from '../components/Progressbar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
+import TabList from '../components/TabList.vue';
+
 import {
   Gamepad2,
   Calendar,
@@ -105,8 +107,16 @@ const radioItems = [
 
     <ToggleWithDropdown></ToggleWithDropdown>
     <br />
-    <Playercard variant="P1" spelersnaam="Lars Dehe" :score="5" :maxValue="100" :position="2" />
-   
+
+    <Playercard
+      variant="P1"
+      spelersnaam="Lars Dehe"
+      :score="5"
+      :maxValue="100"
+      :position="2"
+    />
+
+    <TabList></TabList>
   </div>
 </template>
 

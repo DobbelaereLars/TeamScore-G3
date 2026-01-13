@@ -1,0 +1,43 @@
+.c-tablist {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+
+  &__wrapper {
+  }
+
+  &__input {
+    &:checked {
+      & + .c-tablist__label {
+        background-color: $color-primary-blue-75;
+      }
+
+      & + .c-tablist__label .c-tablist__label__icon,
+      & + .c-tablist__label .c-tablist__label__tekst {
+        color: $color-primary-blue-500;
+      }
+    }
+  }
+
+  &__label {
+    padding: $spacing-3 $spacing-5;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: $spacing-3;
+    cursor: pointer;
+    border-radius: $border-radius-10;
+    width: fit-content;
+    height: auto;
+
+    &__icon {
+      color: $color-secondary-grey-400;
+    }
+
+    &__tekst {
+      color: $color-secondary-grey-400;
+    }
+  }
+}
