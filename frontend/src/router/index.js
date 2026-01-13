@@ -49,6 +49,11 @@ const routes = [
     component: DisplayScoreboardView,
   },
   {
+    path: '/display/leaderboard',
+    name: 'display-leaderboard',
+    component: DisplayLeaderboardView,
+  },
+  {
     path: '/display/players',
     name: 'display-player-list',
     component: DisplayPlayerListView,
