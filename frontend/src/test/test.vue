@@ -7,7 +7,7 @@ import InputNumber from '../components/InputNumber.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 
 import Playercard from '../components/ScoreboardPlayercard.vue';
-import Progressbar from '../components/Progressbar.vue';
+import ProgressBar from '../components/ProgressBar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
 import TabList from '../components/TabList.vue';

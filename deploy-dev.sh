@@ -28,18 +28,18 @@ ssh ${PI_USER}@${PI_HOST} /bin/bash << EOF
   echo ">> Using Node: \$(node -v)"
   echo ">> Using npm: \$(npm -v)"
 
-  # 1) Repo clonen of updaten (altijd main-branch)
+  # 1) Repo clonen of updaten (altijd develop-branch)
   if [ ! -d "${PI_APP_DIR}/.git" ]; then
-    echo ">> Cloning repository (main branch)..."
-    git clone --branch main --single-branch "${REPO_URL}" "${PI_APP_DIR}"
+    echo ">> Cloning repository (develop branch)..."
+    git clone --branch develop --single-branch "${REPO_URL}" "${PI_APP_DIR}"
   else
-    echo ">> Repository exists, resetting and pulling latest changes for main..."
+    echo ">> Repository exists, resetting and pulling latest changes for develop..."
     cd "${PI_APP_DIR}"
     git fetch origin
     # Gooi lokale wijzigingen weg op de Pi (deploy target)
     git reset --hard HEAD
-    git checkout main || git checkout -b main origin/main
-    git reset --hard origin/main
+    git checkout develop || git checkout -b develop origin/develop
+    git reset --hard origin/develop
   fi
 
   cd "${PI_APP_DIR}"
