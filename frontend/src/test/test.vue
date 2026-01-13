@@ -1,6 +1,8 @@
 <script setup>
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
+import InputRadioCards from '../components/InputRadioCards.vue';
+
 import {
   Gamepad2,
   Calendar,
@@ -13,7 +15,7 @@ import {
 </script>
 
 <template>
-  <div class="container d-flex gap-4 flex-column">
+  <div class="container d-flex gap-4 flex-column mt-5 mb-5">
     <Button button-tekst="Test Button met Icons">
       <template #c-btn_icon-left>
         <Gamepad2 :size="18" />
@@ -57,6 +59,8 @@ import {
       name="defaultInput"
       placeholder="Default label placeholder"
     />
+
+    <InputRadioCards />
   </div>
 </template>
 
