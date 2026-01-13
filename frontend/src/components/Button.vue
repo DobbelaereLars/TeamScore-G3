@@ -14,6 +14,11 @@ const props = defineProps({
     type: String,
     default: '#',
   },
+
+  isDisabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const realHref = computed(() => {
@@ -24,11 +29,8 @@ const realHref = computed(() => {
 </script>
 
 <template>
-  <a
-    :href="realHref"
-    class="c-btn"
-    :class="{ 'c-btn--icon-only': isIconButton }"
-  >
+  <a :href="realHref"
+    :class="'c-btn' + (isIconButton ? ' c-btn--icon-only' : '') + (isDisabled ? ' c-btn--disabled' : '')">
     <span v-if="$slots['c-icon-left']" class="c-icon-container">
       <slot name="c-icon-left"></slot>
     </span>
