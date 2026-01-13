@@ -1,16 +1,19 @@
 <script setup>
+import { ref } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
 import InputNumber from '../components/InputNumber.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 
-import {
-  Gamepad2,
-  Calendar,
-  Plus,
-  Settings,
-} from 'lucide-vue-next';
+import Playercard from '../components/ScoreboardPlayercard.vue';
+import Progressbar from '../components/Progressbar.vue';
+import PlayerIcon from '../components/ProfileIcon.vue';
+
+import TabList from '../components/TabList.vue';
+import TabBar from '../components/TabBar.vue';
+
+import { Gamepad2, Calendar, Plus, Settings } from 'lucide-vue-next';
 import PlayersSetting from '../components/PlayersSetting.vue';
 
 const radioItems = [
@@ -34,6 +37,101 @@ const radioItems = [
     value: 'settings',
     label: 'Opties',
     description: 'Beschrijving van Opties',
+    icon: Settings,
+  },
+];
+
+const tabListItems = ref([
+  {
+    id: 'tabList1',
+    value: 'tabList1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabList2',
+    value: 'tabList2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabList3',
+    value: 'tabList3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+]);
+
+const tabListItemsClose = ref([
+  {
+    id: 'tabListClose1',
+    value: 'tabListClose1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabListClose2',
+    value: 'tabListClose2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabListClose3',
+    value: 'tabListClose3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+]);
+
+const handleTabListClose = (itemId) => {
+  // Find the item being closed met actuele checked-state
+  const closedItem = tabListItemsClose.value.find((item) => item.id === itemId);
+  const wasChecked = closedItem?.checked ?? false;
+
+  // Verwijder het item uit de array
+  tabListItemsClose.value = tabListItemsClose.value.filter(
+    (item) => item.id !== itemId
+  );
+
+  // Alleen een andere tab selecteren als de gesloten tab geselecteerd was
+  if (wasChecked && tabListItemsClose.value.length > 0) {
+    // Kies de eerste overblijvende tab als nieuwe geselecteerde
+    const newSelectedId = tabListItemsClose.value[0].id;
+    tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
+      ...item,
+      checked: item.id === newSelectedId,
+    }));
+  }
+};
+
+const handleTabListChange = (itemId) => {
+  // Update de checked-state zodat die altijd overeenkomt met de DOM
+  tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
+    ...item,
+    checked: item.id === itemId,
+  }));
+};
+
+const tabBarItems = [
+  {
+    id: 'tabBar1',
+    value: 'tabBar1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabBar2',
+    value: 'tabBar2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabBar3',
+    value: 'tabBar3',
+    label: 'Tab 3',
     icon: Settings,
   },
 ];
@@ -65,19 +163,67 @@ const radioItems = [
       </template>
     </Button>
 
-    <InputField id="session-name" name="sessionName" label="Sessienaam" placeholder="Bv. Sportdag 05/01/2026" />
+    <InputField
+      id="session-name"
+      name="sessionName"
+      label="Sessienaam"
+      placeholder="Bv. Sportdag 05/01/2026"
+    />
     <br />
-    <InputField id="no-label" name="noLabel" :label="false" placeholder="Geen label" />
+    <InputField
+      id="no-label"
+      name="noLabel"
+      :label="false"
+      placeholder="Geen label"
+    />
     <br />
-    <InputField id="default-input" name="defaultInput" placeholder="Default label placeholder" />
+    <InputField
+      id="default-input"
+      name="defaultInput"
+      placeholder="Default label placeholder"
+    />
 
     <InputRadioCards :items="radioItems" name="test-radio" />
 
-    <InputNumber min="2" max="10" label="Number" id="numberInput" name="numberInput" type="number" />
+    <InputNumber
+      min="2"
+      max="10"
+      label="Number"
+      id="numberInput"
+      name="numberInput"
+      type="number"
+    />
 
-    <ToggleWithDropdown />
+    <ToggleWithDropdown></ToggleWithDropdown>
 
     <PlayersSetting player-mode="teams-with-players" />
+
+    <br />
+
+    <Playercard
+      variant="P3"
+      spelersnaam="Lars Dehe"
+      :score="5"
+      :maxValue="100"
+      :position="2"
+    />
+
+    <TabList
+      :items="tabListItems"
+      name="test-tablist"
+      :hideIcon="false"
+    ></TabList>
+
+    <TabList
+      :items="tabListItemsClose"
+      name="test-tablist-close"
+      :hideIcon="false"
+      :closeable="true"
+      @close="handleTabListClose"
+      @change="handleTabListChange"
+    ></TabList>
+
+    <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
   </div>
 </template>
 

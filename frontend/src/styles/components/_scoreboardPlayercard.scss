@@ -1,0 +1,159 @@
+.c-player-card {
+  width: 17.5rem;
+  height: 17.9375rem;
+  position: relative;
+}
+
+.c-player-card-rank {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.3125rem 0.5rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  position: absolute;
+  top: -0.625rem;
+  right: -0.625rem;
+  z-index: 10;
+
+  border-radius: 1.03125rem;
+  background: $colors-gradient-blue;
+}
+.c-player-card-rank p {
+  color: $color-primary-blue-50;
+}
+
+.c-player-card-container {
+  display: flex;
+  width: 17.4rem;
+  height: 16.75638rem;
+  padding: 1.25rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 0.625rem;
+  background: #fff;
+}
+
+.c-player-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.c-player-card-name {
+  align-self: stretch;
+}
+
+.c-player-card-score-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3125rem;
+  align-self: stretch;
+}
+
+.c-player-card-score-value {
+  background: $colors-gradient-blue;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-label {
+  color: $color-secondary-grey-500;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.c-player-card-score-value--P1 {
+  background: $colors-gradient-blue;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--P2 {
+  background: $colors-gradient-red;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--P3 {
+  background: $colors-gradient-orange;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--Px {
+  background: $color-primary-blue-500;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-rank--P1 {
+  background: $colors-gradient-blue;
+}
+
+.c-player-card-rank--P2 {
+  background: $colors-gradient-red;
+}
+
+.c-player-card-rank--P3 {
+  background: $colors-gradient-orange;
+}
+
+.c-player-card-rank--Px {
+  background: $color-primary-blue-500;
+}
+
+.c-player-card-icon-wrapper {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.7rem;
+  width: 28px;
+  height: 28px;
+}
+
+.c-player-card-icon-wrapper--P1 {
+  background: $colors-gradient-blue;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z'/%3E%3Cpath d='M5 21h14'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z'/%3E%3Cpath d='M5 21h14'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.c-player-card-icon-wrapper--P2 {
+  background: $colors-gradient-red;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15'/%3E%3Cpath d='M11 12 5.12 2.2'/%3E%3Cpath d='m13 12 5.88-9.8'/%3E%3Cpath d='M8 7h8'/%3E%3Ccircle cx='12' cy='17' r='5'/%3E%3Cpath d='M12 18v-2h-.5'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15'/%3E%3Cpath d='M11 12 5.12 2.2'/%3E%3Cpath d='m13 12 5.88-9.8'/%3E%3Cpath d='M8 7h8'/%3E%3Ccircle cx='12' cy='17' r='5'/%3E%3Cpath d='M12 18v-2h-.5'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.c-player-card-icon-wrapper--P3 {
+  background: $colors-gradient-orange;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9H4.5a2.5 2.5 0 0 1 0-5H6'/%3E%3Cpath d='M18 9h1.5a2.5 2.5 0 0 0 0-5H18'/%3E%3Cpath d='M4 22h16'/%3E%3Cpath d='M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22'/%3E%3Cpath d='M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22'/%3E%3Cpath d='M18 2H6v7a6 6 0 0 0 12 0z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9H4.5a2.5 2.5 0 0 1 0-5H6'/%3E%3Cpath d='M18 9h1.5a2.5 2.5 0 0 0 0-5H18'/%3E%3Cpath d='M4 22h16'/%3E%3Cpath d='M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22'/%3E%3Cpath d='M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22'/%3E%3Cpath d='M18 2H6v7a6 6 0 0 0 12 0z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.c-player-card-icon {
+  color: black;
+  opacity: 1;
+}
