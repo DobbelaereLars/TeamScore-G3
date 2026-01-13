@@ -2,6 +2,11 @@
     import Progressbar from './Progressbar.vue';
     import ProfileIcon from './ProfileIcon.vue';
     import { computed } from 'vue';
+   import {
+  Crown,
+  Medal,
+  Trophy
+} from 'lucide-vue-next'
     
     const props = defineProps({
   variant: {
@@ -39,6 +44,15 @@ const profileInitials = computed(() => {
 
 <template>
   <div class="c-player-card">
+    <div v-if="variant === 'P1'" class="c-player-card-icon-wrapper c-player-card-icon-wrapper--P1">
+      <Crown :size="28" style="position: absolute; visibility: hidden;" />
+    </div>
+    <div v-else-if="variant === 'P2'" class="c-player-card-icon-wrapper c-player-card-icon-wrapper--P2">
+      <Medal :size="28" style="position: absolute; visibility: hidden;" />
+    </div>
+    <div v-else-if="variant === 'P3'" class="c-player-card-icon-wrapper c-player-card-icon-wrapper--P3">
+      <Trophy :size="28" style="position: absolute; visibility: hidden;" />
+    </div>
     <div class="c-player-card-rank" :class="[`c-player-card-rank--${variant}`, $attrs.class]">
       <p class="u-bold">#{{ position }}</p>
     </div>
