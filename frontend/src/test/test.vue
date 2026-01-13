@@ -93,25 +93,32 @@ const tabListItemsClose = ref([
 ]);
 
 const handleTabListClose = (itemId) => {
-  const closedItemIndex = tabListItemsClose.value.findIndex(
-    (item) => item.id === itemId
-  );
-  const closedItem = tabListItemsClose.value[closedItemIndex];
+  // Find the item being closed met actuele checked-state
+  const closedItem = tabListItemsClose.value.find((item) => item.id === itemId);
+  const wasChecked = closedItem?.checked ?? false;
 
-  // Filter out the closed item
+  // Verwijder het item uit de array
   tabListItemsClose.value = tabListItemsClose.value.filter(
     (item) => item.id !== itemId
   );
 
-  // If the closed item was checked, select another one
-  if (closedItem?.checked && tabListItemsClose.value.length > 0) {
-    // Select the next item, or the previous one if it was the last
-    const newIndex = Math.min(
-      closedItemIndex,
-      tabListItemsClose.value.length - 1
-    );
-    tabListItemsClose.value[newIndex].checked = true;
+  // Alleen een andere tab selecteren als de gesloten tab geselecteerd was
+  if (wasChecked && tabListItemsClose.value.length > 0) {
+    // Kies de eerste overblijvende tab als nieuwe geselecteerde
+    const newSelectedId = tabListItemsClose.value[0].id;
+    tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
+      ...item,
+      checked: item.id === newSelectedId,
+    }));
   }
+};
+
+const handleTabListChange = (itemId) => {
+  // Update de checked-state zodat die altijd overeenkomt met de DOM
+  tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
+    ...item,
+    checked: item.id === itemId,
+  }));
 };
 
 const tabBarItems = [
@@ -217,6 +224,7 @@ const tabBarItems = [
       :hideIcon="false"
       :closeable="true"
       @close="handleTabListClose"
+      @change="handleTabListChange"
     ></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
