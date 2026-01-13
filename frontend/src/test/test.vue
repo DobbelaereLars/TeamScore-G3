@@ -1,6 +1,9 @@
 <script setup>
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
+import Playercard from '../components/ScoreboardPlayercard.vue';
+import Progressbar from '../components/Progressbar.vue';
+import PlayerIcon from '../components/ProfileIcon.vue';
 import {
   Gamepad2,
   Calendar,
@@ -48,6 +51,9 @@ import {
       name="defaultInput"
       placeholder="Default label placeholder"
     />
+    <br />
+    <Playercard variant="P1" spelersnaam="Lars Dehe" :score="5" :maxValue="100" :position="2" />
+   
   </div>
 </template>
 
