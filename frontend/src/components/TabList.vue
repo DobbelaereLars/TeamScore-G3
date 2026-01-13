@@ -10,6 +10,10 @@ const props = defineProps({
     type: String,
     default: 'tablist',
   },
+  hideIcon: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
@@ -31,7 +35,7 @@ const getId = (item, index) => item.id ?? `${props.name}-${index}`;
         :checked="item.checked ?? false"
       />
       <label class="c-tablist__label" :for="getId(item, index)">
-        <div class="c-tablist__label__icon">
+        <div v-if="!hideIcon" class="c-tablist__label__icon">
           <component :is="item.icon ?? Dices" />
         </div>
 

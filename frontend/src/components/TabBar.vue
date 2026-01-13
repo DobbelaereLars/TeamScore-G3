@@ -10,6 +10,10 @@ const props = defineProps({
     type: String,
     default: 'tabbar',
   },
+  hideIcon: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
@@ -32,7 +36,7 @@ const getId = (item, index) => item.id ?? `${props.name}-${index}`;
       />
 
       <label class="c-tabbar__label" :for="getId(item, index)">
-        <div class="c-tabbar__label__icon">
+        <div v-if="!hideIcon" class="c-tabbar__label__icon">
           <component :is="item.icon ?? Dices" />
         </div>
 
