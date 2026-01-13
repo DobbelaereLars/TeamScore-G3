@@ -2,7 +2,7 @@
 import { Minus, Plus } from "lucide-vue-next";
 import Button from "./Button.vue";
 import InputField from "./InputField.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps({
   label: {
@@ -22,27 +22,30 @@ const props = defineProps({
     default: "text",
   },
   min: {
-    type: [Number],
+    type: [Number, String],
     default: 0,
   },
   max: {
-    type: [Number],
+    type: [Number, String],
     default: Infinity,
   },
 
 });
 
-const inputValue = ref(props.min);
+const minValue = computed(() => Number(props.min) || 0);
+const maxValue = computed(() => {
+  const val = Number(props.max);
+  return isNaN(val) ? Infinity : val;
+});
+
+const inputValue = ref(minValue.value);
 
 const updateValue = (delta) => {
-  const min = props.min ?? 0;          // default 0 als je wil
-  const max = props.max ?? Infinity;   // geen limiet als niet gezet
-
-  const current = Number(inputValue.value) || 0;
+  const current = Number(inputValue.value) || minValue.value;
   let next = current + delta;
 
-  if (next < min) next = min;
-  if (next > max) next = max;
+  if (next < minValue.value) next = minValue.value;
+  if (next > maxValue.value) next = maxValue.value;
 
   inputValue.value = next;
 };
@@ -53,14 +56,14 @@ const updateValue = (delta) => {
   <div class="c-input-number">
     <p v-if="label">{{ label }}</p>
     <div class="c-input-number__container">
-      <Button :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= min">
+      <Button :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= minValue">
         <template #c-icon-left>
           <Minus :size="18" />
         </template>
       </Button>
-      <InputField v-model="inputValue" :label="false" :placeholder="min" :id="id" :name="name" :type="type" :min="min"
-        :max="max" />
-      <Button :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= max">
+      <InputField v-model="inputValue" :label="false" :placeholder="minValue" :id="id" :name="name" :type="type"
+        :min="minValue" :max="maxValue" />
+      <Button :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= maxValue">
         <template #c-icon-left>
           <Plus :size="18" />
         </template>
