@@ -1,7 +1,3 @@
-p {
-  font-family: var(--font-family-inter);
-}
-
 .c-player-card {
   width: 17.5rem;
   height: 17.9375rem;
@@ -27,9 +23,6 @@ p {
 }
 .c-player-card-rank p {
   color: $color-primary-blue-50;
-  font-family: var(--font-family-inter);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-bold);
 }
 
 .c-player-card-container {
@@ -54,13 +47,6 @@ p {
 
 .c-player-card-name {
   align-self: stretch;
-  color: #000;
-
-  /* Heading 5 */
-  font-size: var(--font-size-h5);
-  font-style: normal;
-  font-weight: var(--font-semibold);
-  line-height: 1.65rem; /* 110% */
 }
 
 .c-player-card-score-section {
@@ -73,55 +59,52 @@ p {
 }
 
 .c-player-card-score-value {
-  font-size: var(--font-size-h4);
-  font-style: normal;
-  font-weight: var(--font-bold);
-  line-height: 2.2rem; /* 110% */
   background: $colors-gradient-blue;
-  
   -webkit-text-fill-color: transparent;
 }
+
 .c-player-card-score-label {
   color: $color-secondary-grey-500;
-
-  /* Body Normal */
-  font-size: var(--font-size-body);
-  font-style: normal;
-  font-weight: var(--font-regular);
-  line-height: 1.375rem; /* 157.143% */
   -webkit-background-clip: text;
-background-clip: text;
+  background-clip: text;
 }
 
 .c-player-card-score-value--P1 {
-    background: $colors-gradient-blue;
+  background: $colors-gradient-blue;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .c-player-card-score-value--P2 {
-    background: $colors-gradient-red;
+  background: $colors-gradient-red;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .c-player-card-score-value--P3 {
-    background: $colors-gradient-orange;
+  background: $colors-gradient-orange;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .c-player-card-score-value--Px {
-    background: $color-primary-blue-500;
-    -webkit-background-clip: text;
+  background: $color-primary-blue-500;
+  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .c-player-card-rank--P1 {
-    background: $colors-gradient-blue;
+  background: $colors-gradient-blue;
 }
+
 .c-player-card-rank--P2 {
-    background: $colors-gradient-red;
+  background: $colors-gradient-red;
 }
+
 .c-player-card-rank--P3 {
-    background: $colors-gradient-orange;
+  background: $colors-gradient-orange;
 }
+
 .c-player-card-rank--Px {
-    background: $color-primary-blue-500;
+  background: $color-primary-blue-500;
 }

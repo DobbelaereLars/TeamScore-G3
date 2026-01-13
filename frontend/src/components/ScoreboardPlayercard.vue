@@ -40,15 +40,15 @@ const profileInitials = computed(() => {
 <template>
   <div class="c-player-card">
     <div class="c-player-card-rank" :class="[`c-player-card-rank--${variant}`, $attrs.class]">
-      <p>#{{ position }}</p>
+      <p class="u-bold">#{{ position }}</p>
     </div>
     <div class="c-player-card-container">
     <div class="c-player-card-info">
         <ProfileIcon class="c-player-card-profile" :ProfileName="profileInitials" :variant="`scoreboard-${variant}`" />
     
-      <p class="c-player-card-name">{{ spelersnaam }}</p>
+      <p class="c-player-card-name h5">{{ spelersnaam }}</p>
       <div class="c-player-card-score-section">
-        <p class="c-player-card-score-value" :class="[`c-player-card-score-value--${variant}`, $attrs.class]">0</p>
+        <p class="c-player-card-score-value h4 u-bold" :class="[`c-player-card-score-value--${variant}`, $attrs.class]">0</p>
         <p class="c-player-card-score-label" >punten</p>
       </div>
 
