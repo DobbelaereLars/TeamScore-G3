@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
@@ -12,6 +13,31 @@ import {
   Minus,
   MinusCircle,
 } from 'lucide-vue-next';
+
+const radioItems = [
+  {
+    id: 'game',
+    value: 'game',
+    label: 'Speltype',
+    description: 'Beschrijving van Speltype',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'date',
+    value: 'date',
+    label: 'Datum',
+    description: 'Beschrijving van Datum',
+    icon: Calendar,
+  },
+  {
+    id: 'settings',
+    value: 'settings',
+    label: 'Opties',
+    description: 'Beschrijving van Opties',
+    icon: Settings,
+  },
+];
 </script>
 
 <template>
@@ -60,7 +86,7 @@ import {
       placeholder="Default label placeholder"
     />
 
-    <InputRadioCards />
+    <InputRadioCards :items="radioItems" name="test-radio" />
   </div>
 </template>
 

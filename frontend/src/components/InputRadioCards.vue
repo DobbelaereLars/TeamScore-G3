@@ -1,62 +1,43 @@
 <script setup>
 import { Dices } from 'lucide-vue-next';
+
+const props = defineProps({
+  items: {
+    type: Array,
+    required: true,
+  },
+  name: {
+    type: String,
+    default: 'radio-cards',
+  },
+});
+
+const getId = (item, index) => item.id ?? `${props.name}-${index}`;
 </script>
 
 <template>
   <div class="c-input-radio-cards">
-    <div class="c-input-radio-cards__wrapper">
+    <div
+      v-for="(item, index) in items"
+      :key="item.id ?? index"
+      class="c-input-radio-cards__wrapper"
+    >
       <input
         class="c-input-radio-cards__input u-hide"
         type="radio"
-        name="radio-cards"
-        id="radio-card-1"
+        :name="name"
+        :id="getId(item, index)"
+        :value="item.value ?? item.id ?? index"
+        :checked="item.checked ?? false"
       />
-      <label class="c-input-radio-cards__label" for="radio-card-1">
+      <label class="c-input-radio-cards__label" :for="getId(item, index)">
         <div class="c-input-radio-cards__label__icon">
-          <Dices />
+          <component :is="item.icon ?? Dices" />
         </div>
 
         <div class="c-input-radio-cards__label__tekst">
-          <p class="u-bold">Speltype</p>
-          <span>Beschrijving</span>
-        </div>
-      </label>
-    </div>
-
-    <div class="c-input-radio-cards__wrapper">
-      <input
-        class="c-input-radio-cards__input u-hide"
-        type="radio"
-        name="radio-cards"
-        id="radio-card-2"
-      />
-      <label class="c-input-radio-cards__label" for="radio-card-2">
-        <div class="c-input-radio-cards__label__icon">
-          <Dices />
-        </div>
-
-        <div class="c-input-radio-cards__label__tekst">
-          <p class="u-bold">Speltype</p>
-          <span>Beschrijving</span>
-        </div>
-      </label>
-    </div>
-
-    <div class="c-input-radio-cards__wrapper">
-      <input
-        class="c-input-radio-cards__input u-hide"
-        type="radio"
-        name="radio-cards"
-        id="radio-card-3"
-      />
-      <label class="c-input-radio-cards__label" for="radio-card-3">
-        <div class="c-input-radio-cards__label__icon">
-          <Dices />
-        </div>
-
-        <div class="c-input-radio-cards__label__tekst">
-          <p class="u-bold">Speltype</p>
-          <span>Beschrijving</span>
+          <p class="u-bold">{{ item.label }}</p>
+          <span>{{ item.description }}</span>
         </div>
       </label>
     </div>
