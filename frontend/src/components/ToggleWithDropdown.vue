@@ -11,7 +11,7 @@ const isChecked = ref(false);
 </script>
 
 <template>
-    <div>
+    <div class="c-toggle-dropdown">
         <Toggle :inputId="inputId" @change="isChecked = !isChecked" />
         <div class="c-toggle__dropdown" :class="{ 'c-toggle__dropdown--active': isChecked }">
             <InputNumber min="2" max="10" label="Aantal bonuspunten (voorbeeld)" id="bonuspunten" name="bonuspunten"
