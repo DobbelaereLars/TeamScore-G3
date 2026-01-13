@@ -20,7 +20,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'change']);
 
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
 
@@ -28,6 +28,10 @@ const handleClose = (item, event) => {
   event.preventDefault();
   event.stopPropagation();
   emit('close', item.id ?? item);
+};
+
+const handleChange = (item) => {
+  emit('change', item.id ?? item.value ?? null);
 };
 </script>
 
@@ -45,6 +49,7 @@ const handleClose = (item, event) => {
         :id="getId(item, index)"
         :value="item.value ?? item.id ?? index"
         :checked="item.checked ?? false"
+        @change="handleChange(item)"
       />
       <label class="c-tablist__label" :for="getId(item, index)">
         <div v-if="!hideIcon" class="c-tablist__label__icon">
