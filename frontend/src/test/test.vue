@@ -161,7 +161,7 @@ const tabBarItems = [
       :position="2"
     />
 
-    <TabList :items="tabListItems" name="test-tablist"></TabList>
+    <TabList :items="tabListItems" name="test-tablist" :hideIcon="false"></TabList>
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
   </div>
 </template>

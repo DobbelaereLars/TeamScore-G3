@@ -36,7 +36,7 @@ const getId = (item, index) => item.id ?? `${props.name}-${index}`;
       />
       <label class="c-tablist__label" :for="getId(item, index)">
         <div v-if="!hideIcon" class="c-tablist__label__icon">
-          <component :is="item.icon ?? Dices" />
+          <component :is="item.icon ?? Dices" :size="20" />
         </div>
 
         <div class="c-tablist__label__tekst">
