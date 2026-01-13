@@ -39,10 +39,10 @@
 }
 
 .c-btn--disabled {
-  background: $color-secondary-grey-200;
-  color: $color-secondary-grey-300;
-  box-shadow: none;
-  cursor: not-allowed;
+  background: $color-secondary-grey-200 !important;
+  color: $color-secondary-grey-300 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
 }
 
 /* Icon-only variant color differences */
