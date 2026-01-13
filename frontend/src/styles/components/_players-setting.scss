@@ -1,0 +1,45 @@
+.c-players-setting {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-7;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-5;
+  }
+
+  &__intro {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+  }
+
+  &__input {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    gap: $spacing-3;
+    align-items: center;
+  }
+
+  &__list,
+  &__emptylist {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-3;
+
+    padding: $spacing-6;
+    width: 100%;
+  }
+}
+
+.c-container {
+  width: 736px;
+  margin: 0 auto;
+
+  padding: 2rem;
+  background-color: $color-secondary-grey-75;
+}

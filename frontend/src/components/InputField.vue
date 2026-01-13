@@ -56,7 +56,7 @@ const onChange = (e) => {
 </script>
 
 <template>
-  <div class="c-input-field">
+  <div :class="'c-input-field' + (type === 'number' ? ' c-input-field--number' : '')">
     <label v-if="labelText" :for="id">{{ labelText }}</label>
     <input :id="id" :name="name"
       :class="'c-input-field__input' + (type === 'number' ? ' c-input-field__input--number' : '')" :type="type"

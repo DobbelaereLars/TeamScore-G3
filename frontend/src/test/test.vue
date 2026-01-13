@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
@@ -18,10 +17,8 @@ import {
   Calendar,
   Plus,
   Settings,
-  Trash2,
-  Minus,
-  MinusCircle,
 } from 'lucide-vue-next';
+import PlayersSetting from '../components/PlayersSetting.vue';
 
 const radioItems = [
   {
@@ -170,38 +167,20 @@ const tabBarItems = [
       </template>
     </Button>
 
-    <InputField
-      id="session-name"
-      name="sessionName"
-      label="Sessienaam"
-      placeholder="Bv. Sportdag 05/01/2026"
-    />
+    <InputField id="session-name" name="sessionName" label="Sessienaam" placeholder="Bv. Sportdag 05/01/2026" />
     <br />
-    <InputField
-      id="no-label"
-      name="noLabel"
-      :label="false"
-      placeholder="Geen label"
-    />
+    <InputField id="no-label" name="noLabel" :label="false" placeholder="Geen label" />
     <br />
-    <InputField
-      id="default-input"
-      name="defaultInput"
-      placeholder="Default label placeholder"
-    />
+    <InputField id="default-input" name="defaultInput" placeholder="Default label placeholder" />
 
     <InputRadioCards :items="radioItems" name="test-radio" />
 
-    <InputNumber
-      min="2"
-      max="10"
-      label="Number"
-      id="numberInput"
-      name="numberInput"
-      type="number"
-    />
+    <InputNumber min="2" max="10" label="Number" id="numberInput" name="numberInput" type="number" />
 
     <ToggleWithDropdown></ToggleWithDropdown>
+
+    <PlayersSetting player-mode="teams-with-players" />
+    
     <br />
 
     <Playercard
