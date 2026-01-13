@@ -15,16 +15,16 @@ import {
 <template>
   <div class="container d-flex gap-4 flex-column">
     <Button button-tekst="Test Button met Icons">
-      <template #c-icon-left>
+      <template #c-btn_icon-left>
         <Gamepad2 :size="18" />
       </template>
-      <template #c-icon-right>
+      <template #c-btn_icon-right>
         <Plus :size="18" />
       </template>
     </Button>
 
     <Button :is-icon-button="true">
-      <template #c-icon-left>
+      <template #c-btn_icon-left>
         <Calendar :size="18" />
       </template>
     </Button>
