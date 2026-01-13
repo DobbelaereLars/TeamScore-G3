@@ -2,32 +2,23 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-  buttonTekst: {
-    type: String,
-    default: '',
-  },
-  isIconButton: {
-    type: Boolean,
-    default: false,
-  },
-  href: {
-    type: String,
-    default: '#',
-  },
+  buttonTekst: { type: String, default: '' },
+  isIconButton: { type: Boolean, default: false },
+  href: { type: String, default: '#' },
   variant: {
     type: String,
     default: 'primary',
     validator: (v) => ['primary', 'secondary'].includes(v),
   },
-
-  isDisabled: {
-    type: Boolean,
-    default: false,
-  },
+  isDisabled: { type: Boolean, default: false },
+  clickable: { type: Boolean, default: true },
 });
 
-const realHref = computed(() => {
-  // normalize missing or empty href to '#'
+const resolvedHref = computed(() => {
+  // als niet klikbaar: href verwijderen
+  if (!props.clickable || props.isDisabled) return undefined;
+
+  // anders normaliseren
   if (props.href === '' || props.href == null) return '#';
   return props.href;
 });
@@ -35,7 +26,7 @@ const realHref = computed(() => {
 
 <template>
   <a
-    :href="realHref"
+    :href="resolvedHref"
     class="c-btn"
     :class="[
       `c-btn--${props.variant}`,
@@ -44,13 +35,13 @@ const realHref = computed(() => {
     ]"
   >
     <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">
-      <slot name="c-btn_icon-left"></slot>
+      <slot name="c-btn_icon-left" />
     </span>
 
     <span v-if="buttonTekst && !isIconButton">{{ buttonTekst }}</span>
 
     <span v-if="$slots['c-btn_icon-right']" class="c-btn_icon-container">
-      <slot name="c-btn_icon-right"></slot>
+      <slot name="c-btn_icon-right" />
     </span>
   </a>
 </template>

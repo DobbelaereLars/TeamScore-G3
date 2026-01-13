@@ -54,14 +54,14 @@ const updateValue = (delta) => {
   <div class="c-input-number">
     <p v-if="label">{{ label }}</p>
     <div class="c-input-number__container">
-      <Button :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= minValue">
+      <Button :clickable="false" :is-icon-button="true" @click="updateValue(-1)" :is-disabled="inputValue <= minValue">
         <template #c-btn_icon-left>
           <Minus :size="18" />
         </template>
       </Button>
       <InputField v-model="inputValue" :label="false" :placeholder="minValue" :id="id" :name="name" :type="type"
         :min="minValue" :max="maxValue" />
-      <Button :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= maxValue">
+      <Button :clickable="false" :is-icon-button="true" @click="updateValue(1)" :is-disabled="inputValue >= maxValue">
         <template #c-btn_icon-left>
           <Plus :size="18" />
         </template>

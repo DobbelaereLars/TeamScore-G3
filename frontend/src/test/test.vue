@@ -3,6 +3,8 @@ import { ref } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
+import InputNumber from '../components/InputNumber.vue';
+import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 
 import {
   Gamepad2,
@@ -87,6 +89,17 @@ const radioItems = [
     />
 
     <InputRadioCards :items="radioItems" name="test-radio" />
+
+    <InputNumber
+      min="2"
+      max="10"
+      label="Number"
+      id="numberInput"
+      name="numberInput"
+      type="number"
+    />
+
+    <ToggleWithDropdown></ToggleWithDropdown>
   </div>
 </template>
 
