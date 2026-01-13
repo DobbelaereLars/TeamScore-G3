@@ -8,7 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Verwachte paden voor key/cert (worden NIET meegecommit)
-const CERT_DIR = path.join(__dirname, '..', '..', 'certs');
+// Certificaten worden door het deploy-script aangemaakt in backend/certs
+const CERT_DIR = path.join(__dirname, '..', 'certs');
 const KEY_PATH = path.join(CERT_DIR, 'key.pem');
 const CERT_PATH = path.join(CERT_DIR, 'cert.pem');
 
