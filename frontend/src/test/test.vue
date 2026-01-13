@@ -10,6 +10,9 @@ import Playercard from '../components/ScoreboardPlayercard.vue';
 import Progressbar from '../components/Progressbar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
+import TabList from '../components/TabList.vue';
+import TabBar from '../components/TabBar.vue';
+
 import {
   Gamepad2,
   Calendar,
@@ -41,6 +44,94 @@ const radioItems = [
     value: 'settings',
     label: 'Opties',
     description: 'Beschrijving van Opties',
+    icon: Settings,
+  },
+];
+
+const tabListItems = ref([
+  {
+    id: 'tabList1',
+    value: 'tabList1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabList2',
+    value: 'tabList2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabList3',
+    value: 'tabList3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+]);
+
+const tabListItemsClose = ref([
+  {
+    id: 'tabListClose1',
+    value: 'tabListClose1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabListClose2',
+    value: 'tabListClose2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabListClose3',
+    value: 'tabListClose3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+]);
+
+const handleTabListClose = (itemId) => {
+  const closedItemIndex = tabListItemsClose.value.findIndex(
+    (item) => item.id === itemId
+  );
+  const closedItem = tabListItemsClose.value[closedItemIndex];
+
+  // Filter out the closed item
+  tabListItemsClose.value = tabListItemsClose.value.filter(
+    (item) => item.id !== itemId
+  );
+
+  // If the closed item was checked, select another one
+  if (closedItem?.checked && tabListItemsClose.value.length > 0) {
+    // Select the next item, or the previous one if it was the last
+    const newIndex = Math.min(
+      closedItemIndex,
+      tabListItemsClose.value.length - 1
+    );
+    tabListItemsClose.value[newIndex].checked = true;
+  }
+};
+
+const tabBarItems = [
+  {
+    id: 'tabBar1',
+    value: 'tabBar1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabBar2',
+    value: 'tabBar2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabBar3',
+    value: 'tabBar3',
+    label: 'Tab 3',
     icon: Settings,
   },
 ];
@@ -105,8 +196,30 @@ const radioItems = [
 
     <ToggleWithDropdown></ToggleWithDropdown>
     <br />
-    <Playercard variant="P3" spelersnaam="Lars Dehe" :score="5" :maxValue="100" :position="2" />
-   
+
+    <Playercard
+      variant="P3"
+      spelersnaam="Lars Dehe"
+      :score="5"
+      :maxValue="100"
+      :position="2"
+    />
+
+    <TabList
+      :items="tabListItems"
+      name="test-tablist"
+      :hideIcon="false"
+    ></TabList>
+
+    <TabList
+      :items="tabListItemsClose"
+      name="test-tablist-close"
+      :hideIcon="false"
+      :closeable="true"
+      @close="handleTabListClose"
+    ></TabList>
+
+    <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
   </div>
 </template>
 
