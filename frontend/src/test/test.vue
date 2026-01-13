@@ -48,7 +48,7 @@ const radioItems = [
   },
 ];
 
-const tabListItems = [
+const tabListItems = ref([
   {
     id: 'tabList1',
     value: 'tabList1',
@@ -68,7 +68,35 @@ const tabListItems = [
     label: 'Tab 3',
     icon: Settings,
   },
-];
+]);
+
+const tabListItemsClose = ref([
+  {
+    id: 'tabListClose1',
+    value: 'tabListClose1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tabListClose2',
+    value: 'tabListClose2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tabListClose3',
+    value: 'tabListClose3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+]);
+
+const handleTabListClose = (itemId) => {
+  tabListItemsClose.value = tabListItemsClose.value.filter(
+    (item) => item.id !== itemId
+  );
+};
 
 const tabBarItems = [
   {
@@ -161,7 +189,20 @@ const tabBarItems = [
       :position="2"
     />
 
-    <TabList :items="tabListItems" name="test-tablist" :hideIcon="false"></TabList>
+    <TabList
+      :items="tabListItems"
+      name="test-tablist"
+      :hideIcon="false"
+    ></TabList>
+
+    <TabList
+      :items="tabListItemsClose"
+      name="test-tablist-close"
+      :hideIcon="false"
+      :closeable="true"
+      @close="handleTabListClose"
+    ></TabList>
+
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
   </div>
 </template>

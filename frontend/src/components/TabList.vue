@@ -1,5 +1,5 @@
 <script setup>
-import { Dices } from 'lucide-vue-next';
+import { Dices, X } from 'lucide-vue-next';
 
 const props = defineProps({
   items: {
@@ -14,9 +14,21 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  closeable: {
+    type: Boolean,
+    default: false,
+  },
 });
 
+const emit = defineEmits(['close']);
+
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
+
+const handleClose = (item, event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  emit('close', item.id ?? item);
+};
 </script>
 
 <template>
@@ -42,6 +54,16 @@ const getId = (item, index) => item.id ?? `${props.name}-${index}`;
         <div class="c-tablist__label__tekst">
           <p>{{ item.label }}</p>
         </div>
+
+        <button
+          v-if="closeable"
+          class="c-tablist__label__close"
+          @click="handleClose(item, $event)"
+          type="button"
+          aria-label="Close tab"
+        >
+          <X :size="14" />
+        </button>
       </label>
     </div>
   </div>
