@@ -40,13 +40,26 @@ ssh ${PI_USER}@${PI_HOST} /bin/bash << EOF
 
   cd "${PI_APP_DIR}"
 
-  # 2) Backend deps + migrations
+  # 2) Backend deps + migrations + HTTPS certs
   echo ">> Backend deps..."
   cd backend
   npm install --production
 
   echo ">> Ensure data dir..."
   mkdir -p data
+
+  echo ">> Ensure HTTPS certs (backend/certs)..."
+  CERT_DIR="${PI_APP_DIR}/backend/certs"
+  mkdir -p "${CERT_DIR}"
+
+  if [ ! -f "${CERT_DIR}/key.pem" ] || [ ! -f "${CERT_DIR}/cert.pem" ]; then
+    echo ">> Generating self-signed certificate for ${PI_HOST}..."
+    openssl req -x509 -newkey rsa:2048 -nodes \
+      -keyout "${CERT_DIR}/key.pem" -out "${CERT_DIR}/cert.pem" -days 365 \
+      -subj "/CN=${PI_HOST}"
+  else
+    echo ">> Existing HTTPS certs found, skipping generation."
+  fi
 
   echo ">> Run migrations..."
   npm run migrate
