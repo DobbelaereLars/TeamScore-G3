@@ -93,9 +93,25 @@ const tabListItemsClose = ref([
 ]);
 
 const handleTabListClose = (itemId) => {
+  const closedItemIndex = tabListItemsClose.value.findIndex(
+    (item) => item.id === itemId
+  );
+  const closedItem = tabListItemsClose.value[closedItemIndex];
+
+  // Filter out the closed item
   tabListItemsClose.value = tabListItemsClose.value.filter(
     (item) => item.id !== itemId
   );
+
+  // If the closed item was checked, select another one
+  if (closedItem?.checked && tabListItemsClose.value.length > 0) {
+    // Select the next item, or the previous one if it was the last
+    const newIndex = Math.min(
+      closedItemIndex,
+      tabListItemsClose.value.length - 1
+    );
+    tabListItemsClose.value[newIndex].checked = true;
+  }
 };
 
 const tabBarItems = [
