@@ -23,7 +23,16 @@ import {
       </template>
     </Button>
 
-    <Button :is-icon-button="true">
+    <Button button-tekst="Primary (normal)" variant="primary" />
+    <Button button-tekst="Secondary (normal)" variant="secondary" />
+
+    <Button :is-icon-button="true" variant="primary">
+      <template #c-btn_icon-left>
+        <Calendar :size="18" />
+      </template>
+    </Button>
+
+    <Button :is-icon-button="true" variant="secondary">
       <template #c-btn_icon-left>
         <Calendar :size="18" />
       </template>

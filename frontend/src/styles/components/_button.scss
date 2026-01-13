@@ -6,7 +6,6 @@
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
-  color: $color-secondary-grey-50;
   font-family: Inter;
   font-size: 0.875rem;
   font-style: normal;
@@ -16,21 +15,47 @@
   box-shadow: $box-shadow;
   text-decoration: none;
   border-radius: 0.3125rem;
-  background: $color-primary-blue-500;
   transition: all 0.2s ease-in-out;
 }
 
-.c-btn:hover {
-  border-radius: 0.3125rem;
-  border-color: transparent;
-  background: $color-secondary-grey-75;
-  color: $color-primary-blue-500;
-  cursor: pointer;
-  transform: translateY(-2px);
+/* Variants */
+.c-btn--primary {
+  background-color: $color-primary-blue-500;
+  color: $color-secondary-grey-50;
 }
 
-.c-btn:active {
-  transform: translateY(0);
+.c-btn--primary:active {
+  background-color: $color-primary-blue-400;
+}
+
+.c-btn--secondary {
+  background-color: $color-secondary-grey-75;
+  color: $color-primary-blue-500;
+}
+
+.c-btn--secondary:active {
+  background-color: $color-primary-blue-400;
+  color: $color-secondary-grey-50;
+}
+
+/* Icon-only variant color differences */
+.c-btn--icon-only.c-btn--primary {
+  background-color: $color-primary-blue-500;
+  color: $color-secondary-grey-50;
+}
+
+.c-btn--icon-only.c-btn--primary:active {
+  background-color: $color-primary-blue-400;
+}
+
+.c-btn--icon-only.c-btn--secondary {
+  background-color: $color-primary-blue-75;
+  color: $color-primary-blue-500;
+}
+
+.c-btn--icon-only.c-btn--secondary:active {
+  background-color: $color-primary-blue-400;
+  color: $color-secondary-grey-50;
 }
 
 .c-btn--icon-only {

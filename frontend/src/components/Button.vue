@@ -14,6 +14,11 @@ const props = defineProps({
     type: String,
     default: '#',
   },
+  variant: {
+    type: String,
+    default: 'primary',
+    validator: (v) => ['primary', 'secondary'].includes(v),
+  },
 });
 
 const realHref = computed(() => {
@@ -27,14 +32,17 @@ const realHref = computed(() => {
   <a
     :href="realHref"
     class="c-btn"
-    :class="{ 'c-btn--icon-only': isIconButton }"
+    :class="[
+      `c-btn--${props.variant}`,
+      { 'c-btn--icon-only': props.isIconButton },
+    ]"
   >
     <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">
       <slot name="c-btn_icon-left"></slot>
     </span>
 
     <span v-if="buttonTekst && !isIconButton">{{ buttonTekst }}</span>
-    
+
     <span v-if="$slots['c-btn_icon-right']" class="c-btn_icon-container">
       <slot name="c-btn_icon-right"></slot>
     </span>
