@@ -1,41 +1,42 @@
 <script setup>
-import { Gamepad2 } from 'lucide-vue-next';
+import { Dices } from 'lucide-vue-next';
+
+const props = defineProps({
+  items: {
+    type: Array,
+    required: true,
+  },
+  name: {
+    type: String,
+    default: 'tablist',
+  },
+});
+
+const getId = (item, index) => item.id ?? `${props.name}-${index}`;
 </script>
 
 <template>
   <div class="c-tablist">
-    <div class="c-tablist__wrapper">
+    <div
+      v-for="(item, index) in items"
+      :key="item.id ?? index"
+      class="c-tablist__wrapper"
+    >
       <input
         class="c-tablist__input u-hide"
         type="radio"
-        name="tablist"
-        id="tablist"
+        :name="name"
+        :id="getId(item, index)"
+        :value="item.value ?? item.id ?? index"
+        :checked="item.checked ?? false"
       />
-      <label class="c-tablist__label" for="tablist">
+      <label class="c-tablist__label" :for="getId(item, index)">
         <div class="c-tablist__label__icon">
-          <Gamepad2 />
+          <component :is="item.icon ?? Dices" />
         </div>
 
         <div class="c-tablist__label__tekst">
-          <p>Tab</p>
-        </div>
-      </label>
-    </div>
-
-    <div class="c-tablist__wrapper">
-      <input
-        class="c-tablist__input u-hide"
-        type="radio"
-        name="tablist"
-        id="tablist"
-      />
-      <label class="c-tablist__label" for="tablist">
-        <div class="c-tablist__label__icon">
-          <Gamepad2 />
-        </div>
-
-        <div class="c-tablist__label__tekst">
-          <p>Tab</p>
+          <p>{{ item.label }}</p>
         </div>
       </label>
     </div>

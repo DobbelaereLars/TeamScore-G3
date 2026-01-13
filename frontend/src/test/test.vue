@@ -46,6 +46,28 @@ const radioItems = [
     icon: Settings,
   },
 ];
+
+const tabItems = [
+  {
+    id: 'tab1',
+    value: 'tab1',
+    label: 'Tab 1',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'tab2',
+    value: 'tab2',
+    label: 'Tab 2',
+    icon: Calendar,
+  },
+  {
+    id: 'tab3',
+    value: 'tab3',
+    label: 'Tab 3',
+    icon: Settings,
+  },
+];
 </script>
 
 <template>
@@ -116,7 +138,7 @@ const radioItems = [
       :position="2"
     />
 
-    <TabList></TabList>
+    <TabList :items="tabItems" name="test-tabs"></TabList>
   </div>
 </template>
 
