@@ -9,6 +9,7 @@ import PreviousSessionView from '../views/PreviousSessionView.vue';
 
 import DisplaySplashView from '../views/DisplaySplashView.vue';
 import DisplayScoreboardView from '../views/DisplayScoreboardView.vue';
+import DisplayLeaderboardView from '../views/DisplayLeaderboardView.vue';
 import DisplayPlayerListView from '../views/DisplayPlayerListView.vue';
 
 const routes = [
@@ -47,6 +48,11 @@ const routes = [
     path: '/display/scoreboard',
     name: 'display-scoreboard',
     component: DisplayScoreboardView,
+  },
+  {
+    path: '/display/leaderboard',
+    name: 'display-leaderboard',
+    component: DisplayLeaderboardView,
   },
   {
     path: '/display/players',
