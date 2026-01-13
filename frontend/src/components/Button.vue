@@ -14,6 +14,11 @@ const props = defineProps({
     type: String,
     default: '#',
   },
+  variant: {
+    type: String,
+    default: 'primary',
+    validator: (v) => ['primary', 'secondary'].includes(v),
+  },
 
   isDisabled: {
     type: Boolean,
@@ -29,24 +34,23 @@ const realHref = computed(() => {
 </script>
 
 <template>
-  <a :href="realHref"
-    :class="'c-btn' + (isIconButton ? ' c-btn--icon-only' : '') + (isDisabled ? ' c-btn--disabled' : '')">
-    <span v-if="$slots['c-icon-left']" class="c-icon-container">
-      <slot name="c-icon-left"></slot>
+  <a
+    :href="realHref"
+    class="c-btn"
+    :class="[
+      `c-btn--${props.variant}`,
+      { 'c-btn--icon-only': props.isIconButton },
+      { 'c-btn--disabled': props.isDisabled },
+    ]"
+  >
+    <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">
+      <slot name="c-btn_icon-left"></slot>
     </span>
-    <span v-if="buttonTekst && !isIconButton" class="c-ButtonText">{{
-      buttonTekst
-    }}</span>
-    <span v-if="$slots['c-icon-right']" class="c-icon-container">
-      <slot name="c-icon-right"></slot>
+
+    <span v-if="buttonTekst && !isIconButton">{{ buttonTekst }}</span>
+
+    <span v-if="$slots['c-btn_icon-right']" class="c-btn_icon-container">
+      <slot name="c-btn_icon-right"></slot>
     </span>
   </a>
 </template>
-
-<style scoped>
-.c-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>

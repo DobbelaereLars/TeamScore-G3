@@ -1,6 +1,9 @@
 <script setup>
+import { ref } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
+import InputRadioCards from '../components/InputRadioCards.vue';
+
 import {
   Gamepad2,
   Calendar,
@@ -10,21 +13,55 @@ import {
   Minus,
   MinusCircle,
 } from 'lucide-vue-next';
+
+const radioItems = [
+  {
+    id: 'game',
+    value: 'game',
+    label: 'Speltype',
+    description: 'Beschrijving van Speltype',
+    icon: Gamepad2,
+    checked: true,
+  },
+  {
+    id: 'date',
+    value: 'date',
+    label: 'Datum',
+    description: 'Beschrijving van Datum',
+    icon: Calendar,
+  },
+  {
+    id: 'settings',
+    value: 'settings',
+    label: 'Opties',
+    description: 'Beschrijving van Opties',
+    icon: Settings,
+  },
+];
 </script>
 
 <template>
-  <div class="container d-flex gap-4 flex-column">
+  <div class="container d-flex gap-4 flex-column mt-5 mb-5">
     <Button button-tekst="Test Button met Icons">
-      <template #c-icon-left>
+      <template #c-btn_icon-left>
         <Gamepad2 :size="18" />
       </template>
-      <template #c-icon-right>
+      <template #c-btn_icon-right>
         <Plus :size="18" />
       </template>
     </Button>
 
-    <Button :is-icon-button="true">
-      <template #c-icon-left>
+    <Button button-tekst="Primary (normal)" variant="primary" />
+    <Button button-tekst="Secondary (normal)" variant="secondary" />
+
+    <Button :is-icon-button="true" variant="primary">
+      <template #c-btn_icon-left>
+        <Calendar :size="18" />
+      </template>
+    </Button>
+
+    <Button :is-icon-button="true" variant="secondary">
+      <template #c-btn_icon-left>
         <Calendar :size="18" />
       </template>
     </Button>
@@ -48,6 +85,8 @@ import {
       name="defaultInput"
       placeholder="Default label placeholder"
     />
+
+    <InputRadioCards :items="radioItems" name="test-radio" />
   </div>
 </template>
 
