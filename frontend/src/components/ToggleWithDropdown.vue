@@ -1,4 +1,5 @@
 <script setup>
+import InputField from './InputField.vue';
 import Toggle from './Toggle.vue';
 import { ref } from 'vue';
 
@@ -12,7 +13,8 @@ const isChecked = ref(false);
 <template>
     <div>
         <Toggle :inputId="inputId" @change="isChecked = !isChecked" />
-        <div class="c-toggle__dropdown" :class="{ 'c-toggle__dropdown--active': isChecked }"></div>
+        <div class="c-toggle__dropdown" :class="{ 'c-toggle__dropdown--active': isChecked }">
+        </div>
     </div>
 </template>
 

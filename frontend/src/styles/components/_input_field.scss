@@ -13,6 +13,19 @@
     border-radius: $border-radius-5;
     color: $color-secondary-grey-900;
 
+    &--number {
+      width: 3rem;
+      -moz-appearance: textfield;
+      appearance: textfield;
+      text-align: center;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+
     &::placeholder {
       color: $color-secondary-grey-400;
     }
