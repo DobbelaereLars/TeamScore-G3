@@ -1,5 +1,5 @@
 <script setup>
-    import Progressbar from './Progressbar.vue';
+    import ProgressBar from './ProgressBar.vue';
     import ProfileIcon from './ProfileIcon.vue';
     import { computed } from 'vue';
    import {
@@ -67,7 +67,7 @@ const profileInitials = computed(() => {
       </div>
 
     </div>
-        <Progressbar :current-value="score" :max-value="`${maxValue}`" :variant="`${variant}`" />
+        <ProgressBar :current-value="score" :max-value="`${maxValue}`" :variant="`${variant}`" />
 
     </div>
   </div>
