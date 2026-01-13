@@ -6,6 +6,10 @@ import InputRadioCards from '../components/InputRadioCards.vue';
 import InputNumber from '../components/InputNumber.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 
+import Playercard from '../components/ScoreboardPlayercard.vue';
+import Progressbar from '../components/Progressbar.vue';
+import PlayerIcon from '../components/ProfileIcon.vue';
+
 import {
   Gamepad2,
   Calendar,
@@ -100,6 +104,9 @@ const radioItems = [
     />
 
     <ToggleWithDropdown></ToggleWithDropdown>
+    <br />
+    <Playercard variant="P1" spelersnaam="Lars Dehe" :score="5" :maxValue="100" :position="2" />
+   
   </div>
 </template>
 

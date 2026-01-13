@@ -1,0 +1,110 @@
+.c-player-card {
+  width: 17.5rem;
+  height: 17.9375rem;
+  position: relative;
+}
+
+.c-player-card-rank {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.3125rem 0.5rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  position: absolute;
+  top: -0.625rem;
+  right: -0.625rem;
+  z-index: 10;
+
+  border-radius: 1.03125rem;
+  background: $colors-gradient-blue;
+}
+.c-player-card-rank p {
+  color: $color-primary-blue-50;
+}
+
+.c-player-card-container {
+  display: flex;
+  width: 17.4rem;
+  height: 16.75638rem;
+  padding: 1.25rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 0.625rem;
+  background: #fff;
+}
+
+.c-player-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.c-player-card-name {
+  align-self: stretch;
+}
+
+.c-player-card-score-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3125rem;
+  align-self: stretch;
+}
+
+.c-player-card-score-value {
+  background: $colors-gradient-blue;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-label {
+  color: $color-secondary-grey-500;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.c-player-card-score-value--P1 {
+  background: $colors-gradient-blue;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--P2 {
+  background: $colors-gradient-red;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--P3 {
+  background: $colors-gradient-orange;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-score-value--Px {
+  background: $color-primary-blue-500;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.c-player-card-rank--P1 {
+  background: $colors-gradient-blue;
+}
+
+.c-player-card-rank--P2 {
+  background: $colors-gradient-red;
+}
+
+.c-player-card-rank--P3 {
+  background: $colors-gradient-orange;
+}
+
+.c-player-card-rank--Px {
+  background: $color-primary-blue-500;
+}
