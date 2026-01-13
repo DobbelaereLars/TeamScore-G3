@@ -41,6 +41,12 @@
             font-size: 0.85rem;
             color: #7d7f83;
         }
+
+        .offline__status {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
     </style>
 </head>
 
@@ -48,9 +54,47 @@
     <main class="offline">
         <h1>Geen verbinding met TeamScore</h1>
         <p>De iPad heeft momenteel geen verbinding met de scoreboard-Pi.</p>
-        <p>Controleer of je verbonden bent met de juiste hotspot of wifi.</p>
-        <p class="offline__hint">Zodra de verbinding terug is, laad deze pagina opnieuw om verder te gaan.</p>
+        <p>Dit kan betekenen dat er geen netwerkverbinding is, of dat de Pi/backend niet draait.</p>
+        <p class="offline__hint">Deze pagina probeert automatisch opnieuw verbinding te maken.</p>
+        <p id="offline-status" class="offline__status">Laatste poging: nog niet geprobeerd</p>
     </main>
+
+    <script>
+        const HEALTH_URL = '/health';
+        const CHECK_INTERVAL_MS = 5000;
+
+        const statusEl = document.getElementById('offline-status');
+
+        async function checkBackend() {
+            const now = new Date().toLocaleTimeString();
+
+            // Geen internet op de iPad zelf
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                statusEl.textContent = `Laatste poging (${now}): geen netwerkverbinding op de iPad`;
+                return;
+            }
+
+            try {
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 3000);
+
+                const res = await fetch(HEALTH_URL, { signal: ctrl.signal });
+                clearTimeout(timeout);
+
+                if (res.ok) {
+                    // Backend is terug online: ga terug naar de tablet-app
+                    window.location.href = '/tablet';
+                } else {
+                    statusEl.textContent = `Laatste poging (${now}): server reageert niet correct (${res.status})`;
+                }
+            } catch (err) {
+                statusEl.textContent = `Laatste poging (${now}): geen verbinding met de server`;
+            }
+        }
+
+        checkBackend();
+        setInterval(checkBackend, CHECK_INTERVAL_MS);
+    </script>
 </body>
 
 </html>

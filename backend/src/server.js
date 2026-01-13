@@ -19,6 +19,11 @@ app.use(express.json());
 // const sessionsRouter = require('./routes/sessions');
 // app.use('/api/sessions', sessionsRouter);
 
+// Simpele healthcheck zodat de tablet/offline-pagina kan zien of de backend leeft
+app.get('/health', (req, res) => {
+  res.sendStatus(200);
+});
+
 // Frontend dist serveren
 const distPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
 app.use(express.static(distPath));
