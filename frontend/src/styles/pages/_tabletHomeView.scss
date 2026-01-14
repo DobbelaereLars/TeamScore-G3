@@ -1,0 +1,56 @@
+.p-tablet-home-view {
+  margin-top: $spacing-9;
+  margin-bottom: $spacing-9;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-7;
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-7;
+    align-items: center;
+  }
+
+  &__logo {
+    width: 12.25rem;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  &__subtitle {
+    text-align: center;
+    color: $color-secondary-grey-500;
+  }
+
+  &__history {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-6;
+
+    &__subtitle {
+      display: flex;
+      flex-direction: row;
+      gap: $spacing-5;
+      align-items: center;
+    }
+
+    &__cards {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-6;
+
+      &__text {
+        color: $color-secondary-grey-800;
+      }
+
+      .row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: $spacing-3;
+      }
+    }
+  }
+}

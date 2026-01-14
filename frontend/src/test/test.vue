@@ -17,6 +17,9 @@ import TabBar from '../components/TabBar.vue';
 
 import { Gamepad2, Calendar, Plus, Settings } from 'lucide-vue-next';
 import PlayersSetting from '../components/PlayersSetting.vue';
+import HostPlayerItem from '../components/HostPlayerItem.vue';
+
+import SessionCard from '../components/SessionCard.vue';
 
 const radioItems = [
   {
@@ -196,8 +199,11 @@ const tabBarItems = [
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
 
+    <HostPlayerItem name="Renz Deheegher" />
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
+
+    <SessionCard />
   </div>
 </template>
 

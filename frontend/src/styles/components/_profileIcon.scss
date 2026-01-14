@@ -19,20 +19,18 @@
     font-size: var(--font-size-h6);
   }
 
+  &--large {
+    width: 4.5rem;
+    height: 4.5rem;
+    font-size: var(--font-size-h5);
+  }
+
   &--scoreboard-P1 {
-    display: flex;
-    width: 4.68306rem;
-    height: 4.68306rem;
-    padding: var(--space-4, 1.70025rem);
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.41688rem;
     aspect-ratio: 74.93/74.93;
 
-    border-radius: 141.54506rem;
-    background: var(--Secondary-grey-50, #fdffff);
-    box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+    border-radius: $border-radius-999;
+    background: var(--secondary-grey-50, #fdffff);
+    box-shadow: $box-shadow;
   }
 
   &--scoreboard-P1 p {
@@ -46,19 +44,11 @@
   }
 
   &--scoreboard-P2 {
-    display: flex;
-    width: 4.68306rem;
-    height: 4.68306rem;
-    padding: var(--space-4, 1.70025rem);
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.41688rem;
     aspect-ratio: 74.93/74.93;
 
     border-radius: $border-radius-999;
-    background: var(--Secondary-grey-50, #fdffff);
-    box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+    background: var(--secondary-grey-50, #fdffff);
+    box-shadow: $box-shadow;
   }
 
   &--scoreboard-P2 p {
@@ -70,20 +60,13 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
   &--scoreboard-P3 {
-    display: flex;
-    width: 4.68306rem;
-    height: 4.68306rem;
-    padding: var(--space-4, 1.70025rem);
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.41688rem;
     aspect-ratio: 74.93/74.93;
 
-    border-radius: 141.54506rem;
-    background: var(--Secondary-grey-50, #fdffff);
-    box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+    border-radius: $border-radius-999;
+    background: var(--secondary-grey-50, #fdffff);
+    box-shadow: $box-shadow;
   }
 
   &--scoreboard-P3 p {
@@ -97,23 +80,16 @@
   }
 
   &--scoreboard-Px {
-    display: flex;
-    width: 4.68306rem;
-    height: 4.68306rem;
-    padding: $spacing-4;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: $spacing-6;
     aspect-ratio: 74.93/74.93;
 
     border-radius: $border-radius-999;
     background: $spacing-4;
-    box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: $box-shadow;
   }
 
   &--scoreboard-Px p {
     font-size: var(--font-size-h4);
+    font-weight: var(--font-bold);
     line-height: 2.25rem;
     font-style: normal;
     background: $color-primary-blue-500;
