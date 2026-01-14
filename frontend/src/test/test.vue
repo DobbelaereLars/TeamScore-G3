@@ -15,6 +15,7 @@ import TabBar from '../components/TabBar.vue';
 
 import { Gamepad2, Calendar, Plus, Settings } from 'lucide-vue-next';
 import PlayersSetting from '../components/PlayersSetting.vue';
+import HostPlayerItem from '../components/HostPlayerItem.vue';
 
 const radioItems = [
   {
@@ -187,6 +188,8 @@ const tabBarItems = [
       @close="handleTabListClose" @change="handleTabListChange"></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
+
+    <HostPlayerItem name="Renz Deheegher" />
   </div>
 </template>
 
