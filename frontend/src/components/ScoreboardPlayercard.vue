@@ -74,5 +74,6 @@ const profileInitials = computed(() => {
 </template>
 
 <style scoped>
+  
 
 </style>

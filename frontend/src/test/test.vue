@@ -204,7 +204,7 @@ const tabBarItems = [
 
     <Playercard
       variant="P3"
-      spelersnaam="Lars Dehe"
+      spelersnaam="Yarne"
       :score="5"
       :maxValue="100"
       :position="2"
@@ -227,9 +227,11 @@ const tabBarItems = [
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
 
-    <LeaderboardPodiumIcon />
-
+    <LeaderboardPodiumIcon color="blue" />
+    <LeaderboardPodiumIcon color="red" />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+  
+</style>
