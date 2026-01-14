@@ -5,7 +5,6 @@ const props = defineProps({
   buttonTekst: { type: String, default: '' },
   isIconButton: { type: Boolean, default: false },
   href: { type: String, default: '#' },
-  jsClasses: { type: [String, Array, Object], default: '' },
   variant: {
     type: String,
     default: 'primary',
@@ -33,7 +32,6 @@ const resolvedHref = computed(() => {
       `c-btn--${props.variant}`,
       { 'c-btn--icon-only': props.isIconButton },
       { 'c-btn--disabled': props.isDisabled },
-      props.jsClasses,
     ]"
   >
     <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">

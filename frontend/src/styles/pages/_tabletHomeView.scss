@@ -53,4 +53,11 @@
       }
     }
   }
+
+  // Socket.io test button
+  &__socket-test-btn {
+    position: absolute;
+    top: $spacing-5;
+    right: $spacing-5;
+  }
 }

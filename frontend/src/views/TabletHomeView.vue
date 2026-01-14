@@ -20,6 +20,9 @@ import { Gamepad2, History } from 'lucide-vue-next';
           <Gamepad2 :size="18" />
         </template>
       </Button>
+
+      <Button class="p-tablet-home-view__socket-test-btn" button-tekst="Socket.io test" variant="secondary">
+      </Button>
     </div>
 
     <div class="p-tablet-home-view__body">
