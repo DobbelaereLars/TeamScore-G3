@@ -36,23 +36,48 @@ import { Gamepad2, History } from 'lucide-vue-next';
 
           <div class="row g-4">
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard />
+              <SessionCard
+                title="Standaardspel - 6/01/2026"
+                subtitle="6 teams"
+                image-src="/podium_screens/podium_screen_ph.png"
+                href="#"
+              />
             </div>
 
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard />
+              <SessionCard
+                title="Battle Royale - 10/01/2026"
+                subtitle="4 teams"
+                image-src="/podium_screens/podium_screen_ph.png"
+                href="#"
+              />
             </div>
 
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard />
+              <SessionCard
+                title="Toernooi - 12/01/2026"
+                subtitle="8 teams"
+                image-src="/podium_screens/podium_screen_ph.png"
+                href="#"
+              />
             </div>
 
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard />
+              <SessionCard
+                title="Sprint Challenge"
+                subtitle="3 teams"
+                image-src="/podium_screens/podium_screen_ph.png"
+                href="#"
+              />
             </div>
 
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard />
+              <SessionCard
+                title="Finaleavond"
+                subtitle="5 teams"
+                image-src="/podium_screens/podium_screen_ph.png"
+                href="#"
+              />
             </div>
           </div>
         </div>
