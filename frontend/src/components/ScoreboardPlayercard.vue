@@ -34,12 +34,7 @@ const props = defineProps({
 
 });
 
-const profileInitials = computed(() => {
-  const nameParts = props.spelersnaam.trim().split(' ').filter(part => part.length > 0);
-  if (nameParts.length === 0) return 'S';
-  if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
-  return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-});
+;
 
 </script>
 
@@ -59,7 +54,7 @@ const profileInitials = computed(() => {
     </div>
     <div class="c-player-card-container">
       <div class="c-player-card-info">
-        <ProfileIcon class="c-player-card-profile" :ProfileName="profileInitials" :variant="`scoreboard-${variant}`" />
+        <ProfileIcon class="c-player-card-profile" :playerName="spelersnaam" :variant="`scoreboard-${variant}`" />
 
         <p class="c-player-card-name h5">{{ spelersnaam }}</p>
         <div class="c-player-card-score-section">

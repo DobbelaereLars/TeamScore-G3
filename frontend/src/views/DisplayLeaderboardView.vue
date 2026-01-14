@@ -1,9 +1,18 @@
-<script setup></script>
+<script setup>
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+</script>
 
 <template>
-  <div>
-    <h1>Display Leaderboard View</h1>
+  <div class="test-cont">
+    <LeaderboardPodiumIcon color="blue" />
+    <LeaderboardPodiumIcon color="blue" />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+  .test-cont {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+</style>
