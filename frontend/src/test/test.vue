@@ -11,6 +11,7 @@ import ProgressBar from '../components/ProgressBar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
 import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+import LeaderboardPlayercard from '../components/LeaderboardPlayercard.vue';
 
 import TabList from '../components/TabList.vue';
 import TabBar from '../components/TabBar.vue';
@@ -233,6 +234,8 @@ const tabBarItems = [
     <HostPlayerItem name="Renz Deheegher" />
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
+
+    <LeaderboardPlayercard :position="5" :playerName="'Yarne de speler'" :score="5" :currentValue="50" :maxValue="100" />
 
     <SessionCard
       title="Standaardspel - 6/01/2026"
