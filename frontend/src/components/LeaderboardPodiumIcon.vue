@@ -52,16 +52,15 @@ const profileInitials = computed(() => {
           'c-leaderboard-podium-icon__rank--orange': color === 'orange'
         }"
       >
-        <h4 v-if="color == 'blue'">2</h4>
-        <h4 v-else>2</h4>
+        <h4>
+          {{ color === 'blue' ? 1 : color === 'red' ? 2 : color === 'orange' ? 3 : '4' }}
+        </h4>
       </div>
     </div>
 
     <div class="c-leaderboard-podium-icon__details">
-      <h5 v-if="color == 'blue'">{{ spelersnaam }}</h5>
-      <h5 v-else>{{ spelersnaam }}</h5>
-      <h3 v-if="color=='blue'">{{ score }}</h3>
-      <h3 v-else>{{ score }}</h3>
+      <h5>{{ spelersnaam }}</h5>
+      <h3>{{ score }}</h3>
     </div>
   </div>
 </template>
