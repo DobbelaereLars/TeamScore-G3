@@ -1,5 +1,6 @@
 <script setup>
 import Button from '../components/Button.vue';
+import SessionCard from '../components/SessionCard.vue';
 import { Gamepad2, History } from 'lucide-vue-next';
 </script>
 
@@ -29,9 +30,31 @@ import { Gamepad2, History } from 'lucide-vue-next';
         </div>
 
         <div class="p-tablet-home-view__history__cards">
-          <p class="p-tablet-home-view__history__cards__text">
+          <!-- <p class="p-tablet-home-view__history__cards__text">
             Nog geen sessies gestart
-          </p>
+          </p> -->
+
+          <div class="row g-4">
+            <div class="col-3">
+              <SessionCard />
+            </div>
+
+            <div class="col-3">
+              <SessionCard />
+            </div>
+
+            <div class="col-3">
+              <SessionCard />
+            </div>
+
+            <div class="col-3">
+              <SessionCard />
+            </div>
+
+            <div class="col-3">
+              <SessionCard />
+            </div>
+          </div>
         </div>
       </div>
     </div>

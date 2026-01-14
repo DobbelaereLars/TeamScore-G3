@@ -35,6 +35,10 @@
     }
 
     &__cards {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-6;
+      
       &__text {
         color: $color-secondary-grey-800;
       }
