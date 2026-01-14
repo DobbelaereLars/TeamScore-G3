@@ -19,13 +19,15 @@ app.use(express.json());
 // const sessionsRouter = require('./routes/sessions');
 // app.use('/api/sessions', sessionsRouter);
 
-// Simpele healthcheck zodat de tablet/offline-pagina kan zien of de backend leeft
-app.get('/health', (req, res) => {
-  res.sendStatus(200);
-});
-
 // Frontend dist serveren
 const distPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+
+// Manifest expliciet met juist content-type
+app.get('/favicon/site.webmanifest', (req, res) => {
+  res.type('application/manifest+json');
+  res.sendFile(path.join(distPath, 'favicon', 'site.webmanifest'));
+});
+
 app.use(express.static(distPath));
 
 app.get(/.*/, (req, res) => {
