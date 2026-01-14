@@ -19,6 +19,8 @@ import { Gamepad2, Calendar, Plus, Settings } from 'lucide-vue-next';
 import PlayersSetting from '../components/PlayersSetting.vue';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 
+import SessionCard from '../components/SessionCard.vue';
+
 const radioItems = [
   {
     id: 'game',
@@ -200,6 +202,8 @@ const tabBarItems = [
     <HostPlayerItem name="Renz Deheegher" />
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
+
+    <SessionCard />
   </div>
 </template>
 
