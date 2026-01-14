@@ -38,7 +38,7 @@ const resolvedHref = computed(() => {
       <slot name="c-btn_icon-left" />
     </span>
 
-    <span v-if="buttonTekst && !isIconButton">{{ buttonTekst }}</span>
+    <span class="u-bold" v-if="buttonTekst && !isIconButton">{{ buttonTekst }}</span>
 
     <span v-if="$slots['c-btn_icon-right']" class="c-btn_icon-container">
       <slot name="c-btn_icon-right" />
