@@ -10,6 +10,8 @@ import Playercard from '../components/ScoreboardPlayercard.vue';
 import ProgressBar from '../components/ProgressBar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+
 import TabList from '../components/TabList.vue';
 import TabBar from '../components/TabBar.vue';
 
@@ -224,6 +226,9 @@ const tabBarItems = [
     ></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
+
+    <LeaderboardPodiumIcon />
+
   </div>
 </template>
 
