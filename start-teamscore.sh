@@ -11,4 +11,5 @@ fi
 sleep 3
 
 # Chromium openen op de Pi
-chromium-browser --kiosk --app=http://localhost:3000/display/splash
+# --ignore-certificate-errors is nodig omdat we een self-signed certificaat gebruiken
+chromium-browser --kiosk --ignore-certificate-errors --app=https://localhost:3000/display/splash
