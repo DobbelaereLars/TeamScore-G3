@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const { setupSockets } = require('./sockets');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,20 +36,27 @@ app.get(/.*/, (req, res) => {
 });
 
 // Probeer HTTPS te starten als key/cert bestaan, anders val terug op HTTP
+let server;
 if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
   const options = {
     key: fs.readFileSync(KEY_PATH),
     cert: fs.readFileSync(CERT_PATH),
   };
 
-  https.createServer(options, app).listen(PORT, () => {
+  server = https.createServer(options, app);
+  server.listen(PORT, () => {
     console.log(`HTTPS server running on port ${PORT}`);
   });
 } else {
-  http.createServer(app).listen(PORT, () => {
+  server = http.createServer(app);
+  server.listen(PORT, () => {
     console.warn(
       '⚠️  HTTPS certificaten niet gevonden (backend/certs/key.pem & cert.pem). Server draait nu op HTTP.'
     );
     console.log(`HTTP server running on port ${PORT}`);
   });
 }
+
+// Setup Socket.io
+setupSockets(server);
+console.log('Socket.io initialized');

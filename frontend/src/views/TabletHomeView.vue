@@ -2,6 +2,14 @@
 import Button from '../components/Button.vue';
 import SessionCard from '../components/SessionCard.vue';
 import { Gamepad2, History } from 'lucide-vue-next';
+import socket from '../utils/socket';
+
+const handleSocketTest = () => {
+  console.log('Sending test-popup event...');
+  socket.emit('test-popup', {
+    message: 'Dit is een test popup vanuit Tablet Home View!',
+  });
+};
 </script>
 
 <template>
@@ -21,7 +29,14 @@ import { Gamepad2, History } from 'lucide-vue-next';
         </template>
       </Button>
 
-      <Button class="p-tablet-home-view__socket-test-btn" button-tekst="Socket.io test" variant="secondary">
+      <Button
+        class="p-tablet-home-view__socket-test-btn"
+        button-tekst="Socket.io test"
+        variant="secondary"
+        :clickable="true"
+        href="#"
+        @click.prevent="handleSocketTest"
+      >
       </Button>
     </div>
 

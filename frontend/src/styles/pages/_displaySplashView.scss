@@ -18,3 +18,40 @@
     text-align: center;
   }
 }
+
+// Socket.io test popup styles
+
+.p-display-splash-view__popup {
+  position: absolute;
+  top: $spacing-5;
+  right: $spacing-5;
+  background-color: $color-secondary-grey-75;
+  padding: 2rem 3rem;
+  border-radius: $border-radius-8;
+  box-shadow: $box-shadow-lg;
+  z-index: 1000;
+  text-align: center;
+  min-width: 20rem;
+  color: $color-primary-blue-500;
+}
+
+.p-display-splash-view__popup p {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.popup-enter-active,
+.popup-leave-active {
+  transition: all 0.3s ease;
+}
+
+.popup-enter-from {
+  opacity: 0;
+  transform: translate(0, -60%);
+}
+
+.popup-leave-to {
+  opacity: 0;
+  transform: translate(0, -40%);
+}
