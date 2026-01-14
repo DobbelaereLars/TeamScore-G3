@@ -54,7 +54,7 @@ const props = defineProps({
     </div>
     <div class="c-player-card-container">
       <div class="c-player-card-info">
-        <ProfileIcon class="c-player-card-profile" :playerName="spelersnaam" :variant="`scoreboard-${variant}`" />
+        <ProfileIcon class="c-player-card-profile" :playerName="spelersnaam" :variant="`scoreboard-${variant}`" :sizeUp="true" />
 
         <p class="c-player-card-name h5">{{ spelersnaam }}</p>
         <div class="c-player-card-score-section">
