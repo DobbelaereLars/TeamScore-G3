@@ -183,7 +183,7 @@ const tabBarItems = [
 
     <Playercard
       variant="P3"
-      spelersnaam="Yarne"
+      spelersnaam="Yarne s"
       :score="5"
       :maxValue="100"
       :position="2"
