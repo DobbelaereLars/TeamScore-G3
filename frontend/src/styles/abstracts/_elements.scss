@@ -94,6 +94,16 @@ body {
   line-height: 22px;
 }
 
+::selection {
+  background-color: $color-primary-blue-100;
+  color: $color-primary-blue-400;
+}
+
+::-moz-selection {
+  background-color: $color-primary-blue-100;
+  color: $color-primary-blue-400;
+}
+
 * {
   &::-webkit-scrollbar {
     width: 0.5rem;

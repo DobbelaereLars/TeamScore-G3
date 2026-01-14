@@ -33,8 +33,7 @@ const handleSocketTest = () => {
         class="p-tablet-home-view__socket-test-btn"
         button-tekst="Socket.io test"
         variant="secondary"
-        :clickable="true"
-        href="#"
+        :clickable="false"
         @click.prevent="handleSocketTest"
       >
       </Button>
