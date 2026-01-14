@@ -10,6 +10,8 @@ import Playercard from '../components/ScoreboardPlayercard.vue';
 import ProgressBar from '../components/ProgressBar.vue';
 import PlayerIcon from '../components/ProfileIcon.vue';
 
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+
 import TabList from '../components/TabList.vue';
 import TabBar from '../components/TabBar.vue';
 
@@ -179,7 +181,13 @@ const tabBarItems = [
 
     <br />
 
-    <Playercard variant="P3" spelersnaam="Lars Dehe" :score="5" :maxValue="100" :position="2" />
+    <Playercard
+      variant="P3"
+      spelersnaam="Yarne"
+      :score="5"
+      :maxValue="100"
+      :position="2"
+    />
 
     <TabList :items="tabListItems" name="test-tablist" :hideIcon="false"></TabList>
 
@@ -187,7 +195,12 @@ const tabBarItems = [
       @close="handleTabListClose" @change="handleTabListChange"></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
+
+    <LeaderboardPodiumIcon color="blue" />
+    <LeaderboardPodiumIcon color="red" />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+  
+</style>
