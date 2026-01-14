@@ -9,6 +9,10 @@ const props = defineProps({
     type: String,
     default: 'default',
     validator: (value) => ['default', 'scoreboard-P1', 'scoreboard-P2', 'scoreboard-P3',].includes(value)
+  },
+  sizeUp: {
+    type: Boolean,
+    default: false,
   }
 });
 
@@ -21,7 +25,8 @@ const profileInitials = computed(() => {
 </script>
 
 <template>
-  <div class="c-profile__icon" :class="[`c-profile__icon--${variant}`, $attrs.class]">
+  <div class="c-profile__icon"
+    :class="[`c-profile__icon--${variant}`, $attrs.class, props.sizeUp ? 'c-profile__icon--large' : '']">
     <p>{{ profileInitials }}</p>
   </div>
 </template>
