@@ -168,15 +168,36 @@ const tabBarItems = [
       </template>
     </Button>
 
-    <InputField id="session-name" name="sessionName" label="Sessienaam" placeholder="Bv. Sportdag 05/01/2026" />
+    <InputField
+      id="session-name"
+      name="sessionName"
+      label="Sessienaam"
+      placeholder="Bv. Sportdag 05/01/2026"
+    />
     <br />
-    <InputField id="no-label" name="noLabel" :label="false" placeholder="Geen label" />
+    <InputField
+      id="no-label"
+      name="noLabel"
+      :label="false"
+      placeholder="Geen label"
+    />
     <br />
-    <InputField id="default-input" name="defaultInput" placeholder="Default label placeholder" />
+    <InputField
+      id="default-input"
+      name="defaultInput"
+      placeholder="Default label placeholder"
+    />
 
     <InputRadioCards :items="radioItems" name="test-radio" />
 
-    <InputNumber min="2" max="10" label="Number" id="numberInput" name="numberInput" type="number" />
+    <InputNumber
+      min="2"
+      max="10"
+      label="Number"
+      id="numberInput"
+      name="numberInput"
+      type="number"
+    />
 
     <ToggleWithDropdown></ToggleWithDropdown>
 
@@ -192,10 +213,20 @@ const tabBarItems = [
       :position="2"
     />
 
-    <TabList :items="tabListItems" name="test-tablist" :hideIcon="false"></TabList>
+    <TabList
+      :items="tabListItems"
+      name="test-tablist"
+      :hideIcon="false"
+    ></TabList>
 
-    <TabList :items="tabListItemsClose" name="test-tablist-close" :hideIcon="false" :closeable="true"
-      @close="handleTabListClose" @change="handleTabListChange"></TabList>
+    <TabList
+      :items="tabListItemsClose"
+      name="test-tablist-close"
+      :hideIcon="false"
+      :closeable="true"
+      @close="handleTabListClose"
+      @change="handleTabListChange"
+    ></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
 
@@ -203,10 +234,13 @@ const tabBarItems = [
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
 
-    <SessionCard />
+    <SessionCard
+      title="Standaardspel - 6/01/2026"
+      subtitle="6 teams"
+      image-src="/podium_screens/podium_screen_ph.png"
+      href="#"
+    />
   </div>
 </template>
 
-<style scoped>
-  
-</style>
+<style scoped></style>
