@@ -43,7 +43,7 @@ const profileInitials = computed(() => {
         }"
       >
         <div class="c-leaderboard-podium-icon__profileIcon">
-          <h2>{{ profileInitials }}</h2>
+          <p class="h2">{{ profileInitials }}</p>
         </div>
       </div>
       <div class="c-leaderboard-podium-icon__rank"
@@ -52,15 +52,15 @@ const profileInitials = computed(() => {
           'c-leaderboard-podium-icon__rank--orange': color === 'orange'
         }"
       >
-        <h4>
+        <p class="h4">
           {{ color === 'blue' ? 1 : color === 'red' ? 2 : color === 'orange' ? 3 : '4' }}
-        </h4>
+        </p>
       </div>
     </div>
 
     <div class="c-leaderboard-podium-icon__details">
-      <h5>{{ spelersnaam }}</h5>
-      <h3>{{ score }}</h3>
+      <p class="h5">{{ spelersnaam }}</p>
+      <p class="h3">{{ score }}</p>
     </div>
   </div>
 </template>
