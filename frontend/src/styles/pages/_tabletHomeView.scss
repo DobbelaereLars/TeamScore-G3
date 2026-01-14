@@ -1,0 +1,19 @@
+.p-tablet-home-view {
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-7;
+    align-items: center;
+  }
+
+  &__logo {
+    width: 12.25rem;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  &__subtitle {
+    text-align: center;
+    color: $color-secondary-grey-500;
+  }
+}
