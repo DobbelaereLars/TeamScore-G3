@@ -73,14 +73,33 @@ const onInput = (value) => {
   <div class="c-input-number">
     <p v-if="label">{{ label }}</p>
     <div class="c-input-number__container">
-      <Button :clickable="false" :is-icon-button="true" @click="updateValue(-1)" :is-disabled="internalValue <= minValue">
+      <Button
+        :clickable="false"
+        :is-icon-button="true"
+        @click="updateValue(-1)"
+        :is-disabled="internalValue <= minValue"
+      >
         <template #c-btn_icon-left>
           <Minus :size="18" />
         </template>
       </Button>
-      <InputField :modelValue="internalValue" @update:modelValue="onInput" :label="false" :placeholder="String(minValue)"
-        :id="id" :name="name" :type="type" :min="minValue" :max="maxValue" />
-      <Button :clickable="false" :is-icon-button="true" @click="updateValue(1)" :is-disabled="internalValue >= maxValue">
+      <InputField
+        :modelValue="internalValue"
+        @update:modelValue="onInput"
+        :label="false"
+        :placeholder="String(minValue)"
+        :id="id"
+        :name="name"
+        :type="type"
+        :min="minValue"
+        :max="maxValue"
+      />
+      <Button
+        :clickable="false"
+        :is-icon-button="true"
+        @click="updateValue(1)"
+        :is-disabled="internalValue >= maxValue"
+      >
         <template #c-btn_icon-left>
           <Plus :size="18" />
         </template>
