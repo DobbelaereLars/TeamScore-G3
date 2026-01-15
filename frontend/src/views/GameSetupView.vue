@@ -566,7 +566,7 @@ const goToNextTab = () => {
                   <InputSelect
                     :id="`time-notation-${activeGameId}`"
                     :name="`timeNotation-${activeGameId}`"
-                    label="Kies tijdformaat"
+                    :label="false"
                     :options="timeNotationOptions"
                     v-model="activeGame.timeNotation"
                   />
