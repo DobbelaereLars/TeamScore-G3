@@ -537,6 +537,10 @@ const goToNextTab = () => {
                     labelTekst="Bonus punten per actie"
                     min="0"
                     max="100"
+                    label="Aantal bonus punten"
+                    :id="`points-bonus-${activeGameId}`"
+                    :name="`pointsBonus-${activeGameId}`"
+                    type="number"
                     v-model:toggled="activeGame.useBonusPoints"
                     v-model="activeGame.bonusPoints"
                   ></ToggleWithDropdown>
