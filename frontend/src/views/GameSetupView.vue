@@ -417,6 +417,7 @@ const goToNextTab = () => {
                     variant="secondary"
                     button-tekst="Game toevoegen"
                     @click="addGame"
+                    :clickable="false"
                   >
                     <template #c-btn_icon-left>
                       <Plus :size="18" />
@@ -623,6 +624,7 @@ const goToNextTab = () => {
               variant="secondary"
               button-tekst="Terug"
               @click="goToPreviousTab"
+              :clickable="false"
             >
               <template #c-btn_icon-left>
                 <ArrowLeft :size="18" />
@@ -633,6 +635,7 @@ const goToNextTab = () => {
               variant="primary"
               :button-tekst="nextButtonText"
               @click="goToNextTab"
+              :clickable="false"
             >
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />
