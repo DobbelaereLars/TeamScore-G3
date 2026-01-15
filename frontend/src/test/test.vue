@@ -243,8 +243,13 @@ const tabBarItems = [
       image-src="/podium_screens/podium_screen_ph.png"
       href="#"
     />
+=========
+    <LeaderboardPlayercard :position="5" :playerName="'Yarne de speler'" :score="5" :currentValue="50" :maxValue="100" />
+
+    <SessionCard />
 
 
+>>>>>>>>> Temporary merge branch 2
   </div>
 </template>
 
