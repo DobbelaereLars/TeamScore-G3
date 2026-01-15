@@ -12,7 +12,13 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['change']);
+
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
+
+const handleChange = (item) => {
+  emit('change', item.value ?? item.id);
+};
 </script>
 
 <template>
@@ -29,6 +35,7 @@ const getId = (item, index) => item.id ?? `${props.name}-${index}`;
         :id="getId(item, index)"
         :value="item.value ?? item.id ?? index"
         :checked="item.checked ?? false"
+        @change="handleChange(item)"
       />
       <label class="c-input-radio-cards__label" :for="getId(item, index)">
         <div class="c-input-radio-cards__label__icon">

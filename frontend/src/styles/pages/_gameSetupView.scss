@@ -6,6 +6,7 @@
     flex-direction: column;
     gap: $spacing-7;
     margin-top: 4.375rem;
+    margin-bottom: 4.375rem;
 
     &__head {
       display: flex;
@@ -37,7 +38,7 @@
         flex-direction: column;
         gap: $spacing-7;
 
-        &__session {
+        &__sessionname {
           display: flex;
           flex-direction: column;
           gap: $spacing-4;
@@ -74,6 +75,119 @@
             display: flex;
             flex-direction: column;
             gap: $spacing-2;
+          }
+        }
+
+        &__gameseries {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+
+          &__subtitle {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+
+            & p {
+              color: $color-secondary-grey-500;
+            }
+          }
+
+          &__content {
+            display: flex;
+            flex-direction: row;
+            gap: $spacing-5;
+            align-items: center;
+
+            &__tabbar {
+              flex-grow: 1;
+              overflow: auto;
+            }
+          }
+        }
+
+        &__gamename {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+        }
+
+        &__gamestructure {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-6;
+
+          &__subtitle {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+
+            & p {
+              color: $color-secondary-grey-500;
+            }
+          }
+
+          &__content {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-6;
+          }
+        }
+
+        &__scoremodel {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-6;
+
+          &__subtitle {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+
+            & p {
+              color: $color-secondary-grey-500;
+            }
+          }
+
+          &__settings {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-7;
+
+            &__section {
+              display: flex;
+              flex-direction: column;
+              gap: $spacing-5;
+            }
+          }
+        }
+
+        &__participants {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+
+          &__subtitle {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+
+            & p {
+              color: $color-secondary-grey-500;
+            }
+          }
+
+          &__content {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-7;
+
+            &__head {
+              display: flex;
+              flex-direction: row;
+              gap: $spacing-5;
+              font-weight: 600;
+            }
           }
         }
       }

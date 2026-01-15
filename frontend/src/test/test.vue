@@ -154,7 +154,7 @@ const tabBarItems = [
 
     <ToggleWithDropdown></ToggleWithDropdown>
 
-    <PlayersSetting player-mode="players" />
+    <PlayersSetting player-mode="teams-with-players" />
 
     <br />
 

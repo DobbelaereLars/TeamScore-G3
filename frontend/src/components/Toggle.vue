@@ -1,16 +1,52 @@
 <script setup>
-defineProps({
-  inputId: String
-})
+import { ref, watch } from 'vue';
 
-const emit = defineEmits(['change'])
+const props = defineProps({
+  inputId: String,
+  labelTekst: {
+    type: String,
+    default: '',
+  },
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(['update:modelValue', 'change']);
+
+const internalChecked = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    internalChecked.value = newVal;
+  }
+);
+
+const handleChange = (event) => {
+  internalChecked.value = event.target.checked;
+  emit('update:modelValue', event.target.checked);
+  emit('change', event);
+};
 </script>
 
 <template>
-  <label class="c-toggle" :for="inputId">
-    <input :id="inputId" :name="inputId" class="c-toggle__input" type="checkbox" @change="emit('change', $event)" />
-    <span class="c-toggle__thumb"></span>
-  </label>
+  <div class="c-toggle">
+    <label class="c-toggle__label" :for="inputId">
+      <input
+        :id="inputId"
+        :name="inputId"
+        class="c-toggle__label__input"
+        type="checkbox"
+        :checked="internalChecked"
+        @change="handleChange"
+      />
+      <span class="c-toggle__label__thumb"></span>
+    </label>
+
+    <span class="c-toggle__labeltekst">{{ labelTekst }}</span>
+  </div>
 </template>
 
 <style scoped></style>
