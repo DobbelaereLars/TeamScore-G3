@@ -22,6 +22,7 @@ import HostPlayerItem from '../components/HostPlayerItem.vue';
 
 import SessionCard from '../components/SessionCard.vue';
 import Notice from '../components/Notice.vue';
+import Modal from '../components/Modal.vue';
 
 const radioItems = [
   {
@@ -141,36 +142,15 @@ const tabBarItems = [
       </template>
     </Button>
 
-    <InputField
-      id="session-name"
-      name="sessionName"
-      label="Sessienaam"
-      placeholder="Bv. Sportdag 05/01/2026"
-    />
+    <InputField id="session-name" name="sessionName" label="Sessienaam" placeholder="Bv. Sportdag 05/01/2026" />
     <br />
-    <InputField
-      id="no-label"
-      name="noLabel"
-      :label="false"
-      placeholder="Geen label"
-    />
+    <InputField id="no-label" name="noLabel" :label="false" placeholder="Geen label" />
     <br />
-    <InputField
-      id="default-input"
-      name="defaultInput"
-      placeholder="Default label placeholder"
-    />
+    <InputField id="default-input" name="defaultInput" placeholder="Default label placeholder" />
 
     <InputRadioCards :items="radioItems" name="test-radio" />
 
-    <InputNumber
-      min="2"
-      max="10"
-      label="Number"
-      id="numberInput"
-      name="numberInput"
-      type="number"
-    />
+    <InputNumber min="2" max="10" label="Number" id="numberInput" name="numberInput" type="number" />
 
     <ToggleWithDropdown></ToggleWithDropdown>
 
@@ -178,26 +158,11 @@ const tabBarItems = [
 
     <br />
 
-    <Playercard
-      variant="P3"
-      spelersnaam="Yarne s"
-      :score="5"
-      :maxValue="100"
-      :position="2"
-    />
+    <Playercard variant="P3" spelersnaam="Yarne s" :score="5" :maxValue="100" :position="2" />
 
-    <TabList
-      :items="tabListItems"
-      name="test-tablist"
-      :hideIcon="false"
-    ></TabList>
+    <TabList :items="tabListItems" name="test-tablist" :hideIcon="false"></TabList>
 
-    <TabList
-      v-model:items="tabListItemsClose"
-      name="test-tablist-close"
-      :hideIcon="false"
-      :closeable="true"
-    ></TabList>
+    <TabList v-model:items="tabListItemsClose" name="test-tablist-close" :hideIcon="false" :closeable="true"></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
 
@@ -205,22 +170,20 @@ const tabBarItems = [
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
 
-    <LeaderboardPlayercard
-      :position="5"
-      :playerName="'Yarne de speler'"
-      :score="5"
-      :currentValue="50"
-      :maxValue="100"
-    />
+    <LeaderboardPlayercard :position="5" :playerName="'Yarne de speler'" :score="5" :currentValue="50"
+      :maxValue="100" />
 
-    <SessionCard
-      title="Standaardspel - 6/01/2026"
-      subtitle="6 teams"
-      image-src="/podium_screens/podium_screen_ph.png"
-      href="#"
-    />
+    <SessionCard title="Standaardspel - 6/01/2026" subtitle="6 teams" image-src="/podium_screens/podium_screen_ph.png"
+      href="#" />
 
     <Notice text="Dit is een aangepaste melding"></Notice>
+
+
+    <Modal modal-id="modaltest" title="Klaar om te starten?"
+      text="Je kunt nu nog terugkeren om al je instellingen te controleren. Sommige keuzes zijn straks definitief, maar je kunt tijdens de sessie nog punten per ronde en extra rondes toevoegen (niet verminderen)."
+      cancel-btn-text="Terug" accept-btn-text="Volgende" />
+    <Button onclick="modaltest.showModal()" button-tekst="Open Modal" :clickable="false" variant="primary" />
+
   </div>
 </template>
 
