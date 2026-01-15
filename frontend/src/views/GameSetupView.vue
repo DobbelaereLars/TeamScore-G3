@@ -5,7 +5,33 @@ import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
 import TabBar from '../components/TabBar.vue';
 import Notice from '../components/Notice.vue';
-import { ArrowLeft, Gamepad2, Settings2, Users } from 'lucide-vue-next';
+import InputRadioCards from '../components/InputRadioCards.vue';
+import { ArrowLeft, Gamepad2, Dices, Settings2, Users, Route, Workflow } from 'lucide-vue-next';
+
+const gameModusTabBar = [
+  {
+    id: 'single-game',
+    value: 'single-game',
+    label: 'Scoreboard voor één game',
+    description: 'Eén scoreboard voor een enkele game.',
+    icon: Dices,
+    checked: true,
+  },
+  {
+    id: 'series-of-games',
+    value: 'series-of-games',
+    label: 'Serie van games',
+    description: 'Meerdere games na elkaar in één reeks.',
+    icon: Route,
+  },
+  {
+    id: 'parallel-games',
+    value: 'parallel-games',
+    label: 'Parallelle games',
+    description: 'Meerdere games tegelijk met verdeelde spelers/teams.',
+    icon: Workflow,
+  },
+];
 
 const gameSetupTabList = ref([
   {
@@ -106,9 +132,25 @@ const participantModusTabList = ref([
                 >
                   <TabBar
                     :items="participantModusTabList"
-                    name="test-tabbar"
+                    name="participant-modus"
                     :hideIcon="true"
                   ></TabBar>
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
+                </div>
+              </div>
+
+              <div
+                class="p-game-setup-view__settings__body__content__gamemodus"
+              >
+                <h2 class="h6">Spelmodus</h2>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__gamemodus__content"
+                >
+                  <InputRadioCards :items="gameModusTabBar" name="game-modus" />
 
                   <Notice
                     text="Dit kan later niet meer worden gewijzigd"

@@ -47,7 +47,7 @@
           display: flex;
           flex-direction: column;
           gap: $spacing-4;
-          
+
           &__subtitle {
             display: flex;
             flex-direction: column;
@@ -57,6 +57,18 @@
               color: $color-secondary-grey-500;
             }
           }
+
+          &__content {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+          }
+        }
+
+        &__gamemodus {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
 
           &__content {
             display: flex;
