@@ -170,13 +170,13 @@ const participantModusTabList = ref([
           </div>
 
           <div class="p-game-setup-view__settings__footer">
-            <Button variant="secondary" button-tekst="Terug">
+            <Button href="/tablet" variant="secondary" button-tekst="Terug">
               <template #c-btn_icon-left>
                 <ArrowLeft :size="18" />
               </template>
             </Button>
 
-            <Button variant="primary" button-tekst="Volgende">
+            <Button clickable="false" variant="primary" button-tekst="Volgende">
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />
               </template>
