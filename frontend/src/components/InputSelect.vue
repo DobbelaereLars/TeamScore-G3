@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { ChevronDown } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -24,6 +25,12 @@ const props = defineProps({
   },
 });
 
+const labelText = computed(() => {
+  if (props.label === false) return '';
+  if (typeof props.label === 'string' && props.label !== '') return props.label;
+  return 'Input label';
+});
+
 const emit = defineEmits(['update:modelValue']);
 
 const handleChange = (event) => {
@@ -33,8 +40,8 @@ const handleChange = (event) => {
 
 <template>
   <div class="c-input-select">
-    <label v-if="label !== false" class="c-input-select__label" :for="id">
-      {{ label }}
+    <label v-if="labelText" class="c-input-select__label" :for="id">
+      {{ labelText }}
     </label>
     <div class="c-input-select__wrapper">
       <select

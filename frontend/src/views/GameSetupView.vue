@@ -544,7 +544,7 @@ const goToNextTab = () => {
                     labelTekst="Bonus punten per actie"
                     min="0"
                     max="100"
-                    label="Aantal bonus punten"
+                    label="Aantal bonus punten per actie"
                     :id="`points-bonus-${activeGameId}`"
                     :name="`pointsBonus-${activeGameId}`"
                     type="number"
@@ -566,7 +566,7 @@ const goToNextTab = () => {
                   <InputSelect
                     :id="`time-notation-${activeGameId}`"
                     :name="`timeNotation-${activeGameId}`"
-                    label="Kies tijdformaat"
+                    :label="false"
                     :options="timeNotationOptions"
                     v-model="activeGame.timeNotation"
                   />
@@ -593,7 +593,7 @@ const goToNextTab = () => {
                     labelTekst="Bonus punten per actie"
                     min="0"
                     max="100"
-                    label="Aantal bonus punten"
+                    label="Aantal bonus punten per actie"
                     :id="`time-bonus-${activeGameId}`"
                     :name="`timeBonus-${activeGameId}`"
                     type="number"
