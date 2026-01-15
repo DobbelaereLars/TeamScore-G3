@@ -1,0 +1,14 @@
+.c-notice {
+  display: flex;
+  flex-direction: row;
+  gap: $spacing-3;
+  align-items: center;
+
+  &__icon {
+    color: $color-primary-blue-200;
+  }
+
+  &__tekst {
+    color: $color-secondary-grey-500;
+  }
+}

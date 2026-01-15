@@ -1,0 +1,89 @@
+.p-game-setup-view {
+  position: relative;
+
+  &__settings {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-7;
+    margin-top: 4.375rem;
+
+    &__head {
+      display: flex;
+      flex-direction: row;
+      gap: $spacing-7;
+
+      &__title {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-2;
+
+        & p {
+          color: $color-secondary-grey-500;
+        }
+      }
+    }
+
+    &__body {
+      padding: $spacing-7;
+      background-color: $color-secondary-grey-50;
+      border-radius: $border-radius-10;
+      box-shadow: $box-shadow-lg;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-8;
+
+      &__content {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-7;
+
+        &__session {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+        }
+
+        &__participantmodus {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+
+          &__subtitle {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+
+            & p {
+              color: $color-secondary-grey-500;
+            }
+          }
+
+          &__content {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+          }
+        }
+
+        &__gamemodus {
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-4;
+
+          &__content {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-2;
+          }
+        }
+      }
+    }
+
+    &__footer {
+      display: flex;
+      flex-direction: row;
+      gap: $spacing-5;
+      justify-content: flex-end;
+    }
+  }
+}

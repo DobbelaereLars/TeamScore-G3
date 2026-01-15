@@ -23,7 +23,7 @@ const handleSocketTest = () => {
         ronde meteen zichtbaar.
       </p>
 
-      <Button href="/tablet/game/settings" button-tekst="Maak een spel">
+      <Button href="/tablet/setup" button-tekst="Maak een spel">
         <template #c-btn_icon-left>
           <Gamepad2 :size="18" />
         </template>
