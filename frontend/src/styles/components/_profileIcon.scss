@@ -8,6 +8,7 @@
   align-items: center;
   gap: $spacing-3;
   aspect-ratio: 1/1;
+  font-weight: var(--font-bold);
 
   border-radius: $border-radius-999;
   background: $color-primary-blue-300;
@@ -35,7 +36,6 @@
 
   &--scoreboard-P1 p {
     font-size: var(--font-size-h4);
-    font-weight: var(--font-bold);
     line-height: 2.25rem;
     font-style: normal;
     background: $colors-gradient-blue;
@@ -53,7 +53,6 @@
 
   &--scoreboard-P2 p {
     font-size: var(--font-size-h4);
-    font-weight: var(--font-bold);
     line-height: 2.25rem;
     font-style: normal;
     background: $colors-gradient-red;
@@ -71,7 +70,6 @@
 
   &--scoreboard-P3 p {
     font-size: var(--font-size-h4);
-    font-weight: var(--font-bold);
     line-height: 2.25rem;
     font-style: normal;
     background: $colors-gradient-orange;
@@ -89,7 +87,6 @@
 
   &--scoreboard-Px p {
     font-size: var(--font-size-h4);
-    font-weight: var(--font-bold);
     line-height: 2.25rem;
     font-style: normal;
     background: $color-primary-blue-500;
