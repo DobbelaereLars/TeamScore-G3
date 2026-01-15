@@ -1,16 +1,30 @@
 <script setup>
 defineProps({
-  inputId: String
-})
+  inputId: String,
+  labelTekst: {
+    type: String,
+    default: '',
+  },
+});
 
-const emit = defineEmits(['change'])
+const emit = defineEmits(['change']);
 </script>
 
 <template>
-  <label class="c-toggle" :for="inputId">
-    <input :id="inputId" :name="inputId" class="c-toggle__input" type="checkbox" @change="emit('change', $event)" />
-    <span class="c-toggle__thumb"></span>
-  </label>
+  <div class="c-toggle">
+    <label class="c-toggle__label" :for="inputId">
+      <input
+        :id="inputId"
+        :name="inputId"
+        class="c-toggle__label__input"
+        type="checkbox"
+        @change="emit('change', $event)"
+      />
+      <span class="c-toggle__label__thumb"></span>
+    </label>
+
+    <span class="c-toggle__labeltekst">{{ labelTekst }}</span>
+  </div>
 </template>
 
 <style scoped></style>

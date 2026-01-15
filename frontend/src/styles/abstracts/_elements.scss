@@ -76,6 +76,10 @@ h6,
   line-height: 110%;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
   background-color: $color-secondary-grey-75;
   width: 100%;

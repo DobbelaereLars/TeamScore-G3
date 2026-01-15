@@ -6,6 +6,7 @@ import InputField from '../components/InputField.vue';
 import TabBar from '../components/TabBar.vue';
 import Notice from '../components/Notice.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
+import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,7 +17,11 @@ import {
   Route,
   Workflow,
   Plus,
+  Target,
+  Clock7,
+  SquareCheck,
 } from 'lucide-vue-next';
+import InputNumber from '../components/InputNumber.vue';
 
 const gameSeriesTabBar = [
   {
@@ -34,6 +39,31 @@ const gameSeriesTabBar = [
     id: 'game-3',
     value: 'game-3',
     label: 'Spel 3',
+  },
+];
+
+const scoreModelRadioCards = [
+  {
+    id: 'points',
+    value: 'points',
+    label: 'Puntenscore',
+    description: 'Punten op basis van juiste antwoorden of acties.',
+    icon: Target,
+    checked: true,
+  },
+  {
+    id: 'time',
+    value: 'time',
+    label: 'Tijdscore',
+    description: 'Score bepaald door snelheid en tijdslimiet.',
+    icon: Clock7,
+  },
+  {
+    id: 'completed',
+    value: 'completed',
+    label: 'Voltooid / niet voltooid',
+    description: 'Punten alleen voor afgeronde opdrachten.',
+    icon: SquareCheck,
   },
 ];
 
@@ -144,8 +174,10 @@ const activeTab = computed(() => {
               v-show="activeTab === 'session'"
               class="p-game-setup-view__settings__body__content"
             >
-              <div class="p-game-setup-view__settings__body__content__session">
-                <h2 class="h6">Sessienaam</h2>
+              <div
+                class="p-game-setup-view__settings__body__content__sessionname"
+              >
+                <h2 class="h5">Sessienaam</h2>
                 <InputField
                   id="session-name"
                   name="sessionName"
@@ -160,7 +192,7 @@ const activeTab = computed(() => {
                 <div
                   class="p-game-setup-view__settings__body__content__participantmodus__subtitle"
                 >
-                  <h2 class="h6">Deelnemersmodus</h2>
+                  <h2 class="h5">Deelnemersmodus</h2>
                   <p>
                     Kies of je met individuele spelers of in teams zal spelen.
                   </p>
@@ -184,7 +216,7 @@ const activeTab = computed(() => {
               <div
                 class="p-game-setup-view__settings__body__content__gamemodus"
               >
-                <h2 class="h6">Spelmodus</h2>
+                <h2 class="h5">Spelmodus</h2>
 
                 <div
                   class="p-game-setup-view__settings__body__content__gamemodus__content"
@@ -212,7 +244,7 @@ const activeTab = computed(() => {
                 <div
                   class="p-game-setup-view__settings__body__content__gameseries__subtitle"
                 >
-                  <h2 class="h6">Games in deze reeks</h2>
+                  <h2 class="h5">Games in deze reeks</h2>
                   <p>Kies een spel om de instellingen daarvan aan te passen</p>
                 </div>
 
@@ -241,49 +273,108 @@ const activeTab = computed(() => {
                   </Button>
                 </div>
               </div>
+              <div class="p-game-setup-view__settings__body__content__gamename">
+                <h2 class="h5">Spelnaam</h2>
+                <InputField
+                  id="game-name-1"
+                  name="gameName1"
+                  :label="false"
+                  placeholder="Bv. Tafeltennis"
+                />
+              </div>
+
               <div
-                class="p-game-setup-view__settings__body__content__participantmodus"
+                class="p-game-setup-view__settings__body__content__gamestructure"
               >
                 <div
-                  class="p-game-setup-view__settings__body__content__participantmodus__subtitle"
+                  class="p-game-setup-view__settings__body__content__gamestructure__subtitle"
                 >
-                  <h2 class="h6">Deelnemersmodus</h2>
+                  <h2 class="h5">Spelstructuur: rondes en sets</h2>
                   <p>
-                    Kies of je met individuele spelers of in teams zal spelen.
+                    Bepaal hier het aantal rondes, de punten per ronde en of er
+                    gebruikt wordt gemaakt van sets.
                   </p>
                 </div>
 
                 <div
-                  class="p-game-setup-view__settings__body__content__participantmodus__content"
+                  class="p-game-setup-view__settings__body__content__gamestructure__content"
                 >
-                  <TabBar
-                    :items="participantModusTabBar"
-                    name="participant-modus-rules"
-                    :hideIcon="true"
-                  ></TabBar>
+                  <ToggleWithDropdown
+                    inputId="rounds-toggle"
+                    labelTekst="Gebruik van rondes"
+                    min="1"
+                    max="10"
+                    label="Aantal rondes"
+                    id="rounds"
+                    name="rounds"
+                    type="number"
+                  ></ToggleWithDropdown>
 
-                  <Notice
-                    text="Dit kan later niet meer worden gewijzigd"
-                  ></Notice>
+                  <ToggleWithDropdown
+                    inputId="sets-toggle"
+                    labelTekst="Gebruik van sets"
+                    min="1"
+                    max="10"
+                    label="Aantal sets per ronde/game"
+                    id="sets"
+                    name="sets"
+                    type="number"
+                  ></ToggleWithDropdown>
                 </div>
               </div>
 
               <div
-                class="p-game-setup-view__settings__body__content__gamemodus"
+                class="p-game-setup-view__settings__body__content__scoremodel"
               >
-                <h2 class="h6">Spelmodus</h2>
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__subtitle"
+                >
+                  <h2 class="h5">Scoremodel voor deze game</h2>
+                  <p>
+                    Bepaal hier het aantal rondes, de punten per ronde en of er
+                    gebruikt wordt gemaakt van sets.
+                  </p>
+                </div>
 
                 <div
-                  class="p-game-setup-view__settings__body__content__gamemodus__content"
+                  class="p-game-setup-view__settings__body__content__scoremodel__content"
                 >
                   <InputRadioCards
-                    :items="gameModusRadioCards"
-                    name="game-modus-rules"
+                    :items="scoreModelRadioCards"
+                    name="score-model-participants"
                   />
+                </div>
+              </div>
 
-                  <Notice
-                    text="Dit kan later niet meer worden gewijzigd"
-                  ></Notice>
+              <div
+                class="p-game-setup-view__settings__body__content__scoremodel__settings"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h5">Puntenscore instellingen</h2>
+                  <InputNumber
+                    id="points-per-correct-answer"
+                    name="pointsPerCorrectAnswer"
+                    label="Punten per correcte actie"
+                    type="number"
+                  />
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h5">Bonuspunten</h2>
+                    <ToggleWithDropdown
+                    inputId="bonus-points-toggle"
+                    labelTekst="Bonus punten per actie"
+                    min="0"
+                    max="100"
+                    label="Aantal bonus punten"
+                    id="bonus-points"
+                    name="bonusPoints"
+                    type="number"
+                    ></ToggleWithDropdown>
                 </div>
               </div>
             </div>
