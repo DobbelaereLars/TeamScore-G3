@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
+import InputSelect from '../components/InputSelect.vue';
 import TabBar from '../components/TabBar.vue';
 import Notice from '../components/Notice.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
@@ -24,58 +26,114 @@ import {
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
 
-const gameSeriesTabBar = [
-  {
-    id: 'game-1',
-    value: 'game-1',
-    label: 'Spel 1',
-    checked: true,
-  },
-  {
-    id: 'game-2',
-    value: 'game-2',
-    label: 'Spel 2',
-  },
-  {
-    id: 'game-3',
-    value: 'game-3',
-    label: 'Spel 3',
-  },
+const router = useRouter();
+
+// Form state
+const sessionName = ref('');
+const selectedParticipantMode = ref('individuals');
+const selectedGameMode = ref('single-game');
+
+// Time notation options
+const timeNotationOptions = [
+  { value: 'hh:mm:ss', label: 'Uur : minuut : seconde' },
+  { value: 'mm:ss', label: 'Minuut : seconde' },
+  { value: 'ss', label: 'Seconde' },
+  { value: 'hh:mm:ss:ms', label: 'Uur : minuut : seconde : milliseconde' },
 ];
 
-const scoreModelRadioCards = [
+// Games management (voor serie en parallelle games)
+const games = ref([
   {
-    id: 'points',
+    id: 'game-1',
+    name: '',
+    scoreModel: 'points',
+    useRounds: false,
+    roundsCount: 1,
+    useSets: false,
+    setsCount: 1,
+    pointsPerAction: 1,
+    useBonusPoints: false,
+    bonusPoints: 0,
+    timeNotation: 'mm:ss',
+    timeRanking: 'fastest-first',
+    useTimeBonusPoints: false,
+    timeBonusPoints: 0,
+  },
+]);
+
+const activeGameIndex = ref(0);
+
+// Computed
+const activeGameId = computed(
+  () => games.value[activeGameIndex.value]?.id ?? 'game-1'
+);
+const activeGame = computed(() => games.value[activeGameIndex.value]);
+
+const showGameSeries = computed(
+  () =>
+    selectedGameMode.value === 'series-of-games' ||
+    selectedGameMode.value === 'parallel-games'
+);
+
+const gameSeriesTabBar = computed(() =>
+  games.value.map((game, index) => ({
+    id: game.id,
+    value: game.id,
+    label: game.name || `Spel ${index + 1}`,
+    checked: index === activeGameIndex.value,
+  }))
+);
+
+const timerankingTabBar = computed(() => [
+  {
+    id: 'fastest-first',
+    value: 'fastest-first',
+    label: 'Snelste tijd wint',
+    checked: activeGame.value?.timeRanking === 'fastest-first',
+  },
+  {
+    id: 'slowest-first',
+    value: 'slowest-first',
+    label: 'Langzaamste tijd wint',
+    checked: activeGame.value?.timeRanking === 'slowest-first',
+  },
+]);
+
+const scoreModelRadioCards = computed(() => [
+  {
+    id: `points-${activeGameId.value}`,
     value: 'points',
     label: 'Puntenscore',
     description: 'Punten op basis van juiste antwoorden of acties.',
     icon: Target,
-    checked: true,
+    checked: activeGame.value?.scoreModel === 'points',
   },
   {
-    id: 'time',
+    id: `time-${activeGameId.value}`,
     value: 'time',
     label: 'Tijdscore',
     description: 'Score bepaald door snelheid en tijdslimiet.',
     icon: Clock7,
+    checked: activeGame.value?.scoreModel === 'time',
   },
   {
-    id: 'completed',
+    id: `completed-${activeGameId.value}`,
     value: 'completed',
     label: 'Voltooid / niet voltooid',
     description: 'Punten alleen voor afgeronde opdrachten.',
     icon: SquareCheck,
+    checked: activeGame.value?.scoreModel === 'completed',
   },
-];
+]);
 
-const gameModusRadioCards = [
+const gameModusRadioCards = computed(() => [
   {
     id: 'single-game',
     value: 'single-game',
     label: 'Scoreboard voor één game',
     description: 'Eén scoreboard voor een enkele game.',
     icon: Dices,
-    checked: true,
+    checked: selectedGameMode.value === 'single-game',
   },
   {
     id: 'series-of-games',
@@ -83,6 +141,7 @@ const gameModusRadioCards = [
     label: 'Serie van games',
     description: 'Meerdere games na elkaar in één reeks.',
     icon: Route,
+    checked: selectedGameMode.value === 'series-of-games',
   },
   {
     id: 'parallel-games',
@@ -90,8 +149,9 @@ const gameModusRadioCards = [
     label: 'Parallelle games',
     description: 'Meerdere games tegelijk met verdeelde spelers/teams.',
     icon: Workflow,
+    checked: selectedGameMode.value === 'parallel-games',
   },
-];
+]);
 
 const gameSetupTabList = ref([
   {
@@ -139,6 +199,92 @@ const activeTab = computed(() => {
   const activeItem = gameSetupTabList.value.find((item) => item.checked);
   return activeItem?.id ?? 'session';
 });
+
+const activeTabIndex = computed(() =>
+  gameSetupTabList.value.findIndex((item) => item.checked)
+);
+
+const isFirstTab = computed(() => activeTabIndex.value === 0);
+const isLastTab = computed(
+  () => activeTabIndex.value === gameSetupTabList.value.length - 1
+);
+
+const nextButtonText = computed(() => (isLastTab.value ? 'Klaar' : 'Volgende'));
+
+// Methods
+const handleGameModeChange = (value) => {
+  selectedGameMode.value = value;
+
+  // Reset to single game if switching to single-game mode
+  if (value === 'single-game' && games.value.length > 1) {
+    games.value = [games.value[0]];
+    activeGameIndex.value = 0;
+  }
+};
+
+const handleScoreModelChange = (value) => {
+  if (activeGame.value) {
+    activeGame.value.scoreModel = value;
+  }
+};
+
+const handleGameTabChange = (gameId) => {
+  const index = games.value.findIndex((g) => g.id === gameId);
+  if (index !== -1) {
+    activeGameIndex.value = index;
+  }
+};
+
+const handleTimeRankingChange = (value) => {
+  if (activeGame.value) {
+    activeGame.value.timeRanking = value;
+  }
+};
+
+const addGame = () => {
+  const newGameNumber = games.value.length + 1;
+  games.value.push({
+    id: `game-${newGameNumber}`,
+    name: '',
+    scoreModel: 'points',
+    useRounds: false,
+    roundsCount: 1,
+    useSets: false,
+    setsCount: 1,
+    pointsPerAction: 1,
+    useBonusPoints: false,
+    bonusPoints: 0,
+    timeNotation: 'mm:ss',
+    timeRanking: 'fastest-first',
+    useTimeBonusPoints: false,
+    timeBonusPoints: 0,
+  });
+};
+
+const goToPreviousTab = () => {
+  if (isFirstTab.value) {
+    router.push('/tablet');
+  } else {
+    const prevIndex = activeTabIndex.value - 1;
+    gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
+      ...item,
+      checked: idx === prevIndex,
+    }));
+  }
+};
+
+const goToNextTab = () => {
+  if (isLastTab.value) {
+    // TODO: Submit form
+    console.log('Form klaar!');
+  } else {
+    const nextIndex = activeTabIndex.value + 1;
+    gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
+      ...item,
+      checked: idx === nextIndex,
+    }));
+  }
+};
 </script>
 
 <template>
@@ -225,6 +371,7 @@ const activeTab = computed(() => {
                   <InputRadioCards
                     :items="gameModusRadioCards"
                     name="game-modus"
+                    @change="handleGameModeChange"
                   />
 
                   <Notice
@@ -239,7 +386,9 @@ const activeTab = computed(() => {
               v-show="activeTab === 'rules'"
               class="p-game-setup-view__settings__body__content"
             >
+              <!-- Games in deze reeks - Alleen voor Serie/Parallelle games -->
               <div
+                v-show="showGameSeries"
                 class="p-game-setup-view__settings__body__content__gameseries"
               >
                 <div
@@ -260,13 +409,14 @@ const activeTab = computed(() => {
                       name="game-series-rules"
                       :hideIcon="true"
                       class="c-tabbar--hug"
+                      @change="handleGameTabChange"
                     ></TabBar>
                   </div>
 
                   <Button
-                    :clickable="false"
                     variant="secondary"
                     button-tekst="Game toevoegen"
+                    @click="addGame"
                   >
                     <template #c-btn_icon-left>
                       <Plus :size="18" />
@@ -274,13 +424,19 @@ const activeTab = computed(() => {
                   </Button>
                 </div>
               </div>
-              <div class="p-game-setup-view__settings__body__content__gamename">
+
+              <!-- Spelnaam - Alleen voor Serie/Parallelle games -->
+              <div
+                v-show="showGameSeries"
+                class="p-game-setup-view__settings__body__content__gamename"
+              >
                 <h2 class="h6">Spelnaam</h2>
                 <InputField
-                  id="game-name-1"
-                  name="gameName1"
+                  :id="`game-name-${activeGameId}`"
+                  :name="`gameName-${activeGameId}`"
                   :label="false"
                   placeholder="Bv. Tafeltennis"
+                  v-model="activeGame.name"
                 />
               </div>
 
@@ -301,25 +457,29 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__gamestructure__content"
                 >
                   <ToggleWithDropdown
-                    inputId="rounds-toggle"
+                    :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
                     min="1"
                     max="10"
                     label="Aantal rondes"
-                    id="rounds"
-                    name="rounds"
+                    :id="`rounds-${activeGameId}`"
+                    :name="`rounds-${activeGameId}`"
                     type="number"
+                    v-model:toggled="activeGame.useRounds"
+                    v-model="activeGame.roundsCount"
                   ></ToggleWithDropdown>
 
                   <ToggleWithDropdown
-                    inputId="sets-toggle"
+                    :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
                     min="1"
                     max="10"
                     label="Aantal sets per ronde/game"
-                    id="sets"
-                    name="sets"
+                    :id="`sets-${activeGameId}`"
+                    :name="`sets-${activeGameId}`"
                     type="number"
+                    v-model:toggled="activeGame.useSets"
+                    v-model="activeGame.setsCount"
                   ></ToggleWithDropdown>
                 </div>
               </div>
@@ -332,8 +492,7 @@ const activeTab = computed(() => {
                 >
                   <h2 class="h6">Scoremodel voor deze game</h2>
                   <p>
-                    Bepaal hier het aantal rondes, de punten per ronde en of er
-                    gebruikt wordt gemaakt van sets.
+                    Kies het type scoring dat voor deze game gebruikt wordt.
                   </p>
                 </div>
 
@@ -342,12 +501,15 @@ const activeTab = computed(() => {
                 >
                   <InputRadioCards
                     :items="scoreModelRadioCards"
-                    name="score-model-participants"
+                    :name="`score-model-${activeGameId}`"
+                    @change="handleScoreModelChange"
                   />
                 </div>
               </div>
 
+              <!-- Puntenscore instellingen -->
               <div
+                v-show="activeGame?.scoreModel === 'points'"
                 class="p-game-setup-view__settings__body__content__scoremodel__settings"
               >
                 <div
@@ -355,10 +517,13 @@ const activeTab = computed(() => {
                 >
                   <h2 class="h6">Puntenscore instellingen</h2>
                   <InputNumber
-                    id="points-per-correct-answer"
-                    name="pointsPerCorrectAnswer"
+                    :id="`points-per-action-${activeGameId}`"
+                    :name="`pointsPerAction-${activeGameId}`"
                     label="Punten per correcte actie"
                     type="number"
+                    min="1"
+                    max="100"
+                    v-model="activeGame.pointsPerAction"
                   />
                 </div>
 
@@ -367,17 +532,77 @@ const activeTab = computed(() => {
                 >
                   <h2 class="h6">Bonuspunten</h2>
                   <ToggleWithDropdown
-                    inputId="bonus-points-toggle"
+                    :inputId="`points-bonus-toggle-${activeGameId}`"
+                    labelTekst="Bonus punten per actie"
+                    min="0"
+                    max="100"
+                    v-model:toggled="activeGame.useBonusPoints"
+                    v-model="activeGame.bonusPoints"
+                  ></ToggleWithDropdown>
+                </div>
+              </div>
+
+              <!-- Tijdscore instellingen -->
+              <div
+                v-show="activeGame?.scoreModel === 'time'"
+                class="p-game-setup-view__settings__body__content__scoremodel__settings"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h6">Tijdnotatie</h2>
+                  <InputSelect
+                    :id="`time-notation-${activeGameId}`"
+                    :name="`timeNotation-${activeGameId}`"
+                    label="Kies tijdformaat"
+                    :options="timeNotationOptions"
+                    v-model="activeGame.timeNotation"
+                  />
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h6">Rangorde</h2>
+                  <TabBar
+                    :items="timerankingTabBar"
+                    :name="`time-ranking-${activeGameId}`"
+                    :hideIcon="true"
+                    @change="handleTimeRankingChange"
+                  ></TabBar>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h6">Bonuspunten</h2>
+                  <ToggleWithDropdown
+                    :inputId="`time-bonus-toggle-${activeGameId}`"
                     labelTekst="Bonus punten per actie"
                     min="0"
                     max="100"
                     label="Aantal bonus punten"
-                    id="bonus-points"
-                    name="bonusPoints"
+                    :id="`time-bonus-${activeGameId}`"
+                    :name="`timeBonus-${activeGameId}`"
                     type="number"
+                    v-model:toggled="activeGame.useTimeBonusPoints"
+                    v-model="activeGame.timeBonusPoints"
                   ></ToggleWithDropdown>
                 </div>
               </div>
+
+              <!-- Voltooid instellingen -->
+              <!-- <div
+                v-show="activeGame?.scoreModel === 'completed'"
+                class="p-game-setup-view__settings__body__content__scoremodel__settings"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h6">Voltooid instellingen</h2>
+                  <p>Deze modus vereist geen extra instellingen.</p>
+                </div>
+              </div> -->
             </div>
 
             <!-- Deelnemers Tab Content -->
@@ -394,16 +619,20 @@ const activeTab = computed(() => {
           </div>
 
           <div class="p-game-setup-view__settings__footer">
-            <Button href="/tablet" variant="secondary" button-tekst="Terug">
+            <Button
+              variant="secondary"
+              button-tekst="Terug"
+              @click="goToPreviousTab"
+            >
               <template #c-btn_icon-left>
                 <ArrowLeft :size="18" />
               </template>
             </Button>
 
             <Button
-              :clickable="false"
               variant="primary"
-              button-tekst="Volgende"
+              :button-tekst="nextButtonText"
+              @click="goToNextTab"
             >
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />

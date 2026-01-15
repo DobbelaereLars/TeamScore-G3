@@ -1,7 +1,7 @@
 <script setup>
 import InputNumber from './InputNumber.vue';
 import Toggle from './Toggle.vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   inputId: {
@@ -13,11 +13,11 @@ const props = defineProps({
     default: '',
   },
   min: {
-    type: String,
+    type: [Number, String],
     default: '0',
   },
   max: {
-    type: String,
+    type: [Number, String],
     default: '100',
   },
   label: {
@@ -36,12 +36,30 @@ const props = defineProps({
     type: String,
     default: 'number',
   },
+  toggled: {
+    type: Boolean,
+    default: false,
+  },
+  modelValue: {
+    type: [Number, String],
+    default: 0,
+  },
 });
 
-const isChecked = ref(false);
+const emit = defineEmits(['update:toggled', 'update:modelValue']);
 
-const handleToggleChange = (event) => {
-  isChecked.value = event.target.checked;
+const internalToggled = ref(props.toggled);
+
+watch(
+  () => props.toggled,
+  (newVal) => {
+    internalToggled.value = newVal;
+  }
+);
+
+const handleToggleUpdate = (val) => {
+  internalToggled.value = val;
+  emit('update:toggled', val);
 };
 </script>
 
@@ -50,11 +68,12 @@ const handleToggleChange = (event) => {
     <Toggle
       :inputId="inputId"
       :labelTekst="labelTekst"
-      @change="handleToggleChange"
+      :modelValue="internalToggled"
+      @update:modelValue="handleToggleUpdate"
     />
     <div
       class="c-toggle__label__dropdown"
-      :class="{ 'c-toggle__label__dropdown--active': isChecked }"
+      :class="{ 'c-toggle__label__dropdown--active': internalToggled }"
     >
       <InputNumber
         :min="min"
@@ -63,6 +82,8 @@ const handleToggleChange = (event) => {
         :id="id"
         :name="name"
         :type="type"
+        :modelValue="modelValue"
+        @update:modelValue="emit('update:modelValue', $event)"
       />
     </div>
   </div>
