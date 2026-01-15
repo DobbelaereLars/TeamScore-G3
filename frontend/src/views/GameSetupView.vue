@@ -6,7 +6,16 @@ import InputField from '../components/InputField.vue';
 import TabBar from '../components/TabBar.vue';
 import Notice from '../components/Notice.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
-import { ArrowLeft, Gamepad2, Dices, Settings2, Users, Route, Workflow } from 'lucide-vue-next';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Gamepad2,
+  Dices,
+  Settings2,
+  Users,
+  Route,
+  Workflow,
+} from 'lucide-vue-next';
 
 const gameModusTabBar = [
   {
@@ -158,6 +167,20 @@ const participantModusTabList = ref([
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="p-game-setup-view__settings__footer">
+            <Button variant="secondary" button-tekst="Terug">
+              <template #c-btn_icon-left>
+                <ArrowLeft :size="18" />
+              </template>
+            </Button>
+
+            <Button variant="primary" button-tekst="Volgende">
+              <template #c-btn_icon-right>
+                <ArrowRight :size="18" />
+              </template>
+            </Button>
           </div>
         </div>
       </div>
