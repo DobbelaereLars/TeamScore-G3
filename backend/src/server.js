@@ -4,9 +4,20 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const { setupSockets } = require('./sockets');
+const { initDatabase } = require('./database/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize database
+initDatabase()
+  .then(() => {
+    console.log('Database ready');
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });
 
 // Verwachte paden voor key/cert (worden NIET meegecommit)
 // Certificaten worden door het deploy-script aangemaakt in backend/certs
