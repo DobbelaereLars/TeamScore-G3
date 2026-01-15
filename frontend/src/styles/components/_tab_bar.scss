@@ -8,6 +8,9 @@
   gap: $spacing-3;
   flex-wrap: nowrap;
   align-items: stretch;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 
   &--hug {
     width: max-content;
@@ -24,6 +27,7 @@
   &__wrapper {
     display: flex;
     flex: 1 1 0;
+    position: relative;
   }
 
   &__input {
