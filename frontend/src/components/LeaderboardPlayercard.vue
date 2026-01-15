@@ -26,7 +26,7 @@
 <template>
   <div class="c-leaderboard-playercard">
     <div class="c-leaderboard-playercard__rank-and-icon">
-      <p class="h4">#{{ props.position }}</p>
+      <p class="h4 c-leaderboard-playercard__rank-and-icon__rank">#{{ props.position }}</p>
         <ProfileIcon :sizeUp="true" :playerName="props.playerName"/>
     </div>
     <div class="c-leaderboard-playercard__name-and-progress">

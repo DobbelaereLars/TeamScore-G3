@@ -16,6 +16,13 @@
     height: 4.375rem;
     align-items: center;
     gap: $spacing-6;
+
+    .c-leaderboard-playercard__rank-and-icon__rank {
+      width: 3rem;
+      flex-shrink: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
   }
   .c-leaderboard-playercard__name-and-progress {
     display: flex;
