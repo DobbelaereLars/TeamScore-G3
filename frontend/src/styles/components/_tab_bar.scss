@@ -10,7 +10,7 @@
   align-items: stretch;
 
   &--hug {
-    width: fit-content;
+    width: max-content;
 
     .c-tabbar__label {
       flex: 0 0 auto;
