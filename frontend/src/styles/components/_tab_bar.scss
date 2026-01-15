@@ -9,6 +9,18 @@
   flex-wrap: nowrap;
   align-items: stretch;
 
+  &--hug {
+    width: fit-content;
+
+    .c-tabbar__label {
+      flex: 0 0 auto;
+    }
+
+    .c-tabbar__wrapper {
+      flex: 0 0 auto;
+    }
+  }
+
   &__wrapper {
     display: flex;
     flex: 1 1 0;

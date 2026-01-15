@@ -15,9 +15,29 @@ import {
   Users,
   Route,
   Workflow,
+  Plus,
 } from 'lucide-vue-next';
 
-const gameModusTabBar = [
+const gameSeriesTabBar = [
+  {
+    id: 'game-1',
+    value: 'game-1',
+    label: 'Spel 1',
+    checked: true,
+  },
+  {
+    id: 'game-2',
+    value: 'game-2',
+    label: 'Spel 2',
+  },
+  {
+    id: 'game-3',
+    value: 'game-3',
+    label: 'Spel 3',
+  },
+];
+
+const gameModusRadioCards = [
   {
     id: 'single-game',
     value: 'single-game',
@@ -64,7 +84,7 @@ const gameSetupTabList = ref([
   },
 ]);
 
-const participantModusTabList = ref([
+const participantModusTabBar = ref([
   {
     id: 'individuals',
     value: 'individuals',
@@ -150,7 +170,7 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__participantmodus__content"
                 >
                   <TabBar
-                    :items="participantModusTabList"
+                    :items="participantModusTabBar"
                     name="participant-modus"
                     :hideIcon="true"
                   ></TabBar>
@@ -169,7 +189,10 @@ const activeTab = computed(() => {
                 <div
                   class="p-game-setup-view__settings__body__content__gamemodus__content"
                 >
-                  <InputRadioCards :items="gameModusTabBar" name="game-modus" />
+                  <InputRadioCards
+                    :items="gameModusRadioCards"
+                    name="game-modus"
+                  />
 
                   <Notice
                     text="Dit kan later niet meer worden gewijzigd"
@@ -183,16 +206,41 @@ const activeTab = computed(() => {
               v-show="activeTab === 'rules'"
               class="p-game-setup-view__settings__body__content"
             >
-              <div class="p-game-setup-view__settings__body__content__session">
-                <h2 class="h6">Sessienaam</h2>
-                <InputField
-                  id="session-name-rules"
-                  name="sessionNameRules"
-                  :label="false"
-                  placeholder="Bv. Sportdag 05/01/2026"
-                />
-              </div>
+              <div
+                class="p-game-setup-view__settings__body__content__gameseries"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__gameseries__subtitle"
+                >
+                  <h2 class="h6">Games in deze reeks</h2>
+                  <p>Kies een spel om de instellingen daarvan aan te passen</p>
+                </div>
 
+                <div
+                  class="p-game-setup-view__settings__body__content__gameseries__content"
+                >
+                  <div
+                    class="p-game-setup-view__settings__body__content__gameseries__content__tabbar"
+                  >
+                    <TabBar
+                      :items="gameSeriesTabBar"
+                      name="game-series-rules"
+                      :hideIcon="true"
+                      class="c-tabbar--hug"
+                    ></TabBar>
+                  </div>
+
+                  <Button
+                    :clickable="false"
+                    variant="secondary"
+                    button-tekst="Game toevoegen"
+                  >
+                    <template #c-btn_icon-left>
+                      <Plus :size="18" />
+                    </template>
+                  </Button>
+                </div>
+              </div>
               <div
                 class="p-game-setup-view__settings__body__content__participantmodus"
               >
@@ -209,7 +257,7 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__participantmodus__content"
                 >
                   <TabBar
-                    :items="participantModusTabList"
+                    :items="participantModusTabBar"
                     name="participant-modus-rules"
                     :hideIcon="true"
                   ></TabBar>
@@ -229,7 +277,7 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__gamemodus__content"
                 >
                   <InputRadioCards
-                    :items="gameModusTabBar"
+                    :items="gameModusRadioCards"
                     name="game-modus-rules"
                   />
 
@@ -271,7 +319,7 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__participantmodus__content"
                 >
                   <TabBar
-                    :items="participantModusTabList"
+                    :items="participantModusTabBar"
                     name="participant-modus-participants"
                     :hideIcon="true"
                   ></TabBar>
@@ -291,7 +339,7 @@ const activeTab = computed(() => {
                   class="p-game-setup-view__settings__body__content__gamemodus__content"
                 >
                   <InputRadioCards
-                    :items="gameModusTabBar"
+                    :items="gameModusRadioCards"
                     name="game-modus-participants"
                   />
 
