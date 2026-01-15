@@ -129,6 +129,7 @@ const TeamRadioButtons = [];
             @click="selectedTeamId = team.id"
           />
           <button
+            type="button"
             class="c-players-setting__tab c-players-setting__tab--add"
             @click="addTeam"
           >

@@ -30,7 +30,7 @@ const router = useRouter();
 
 // Form state
 const sessionName = ref('');
-const selectedParticipantMode = ref('individuals');
+const selectedParticipantMode = ref('players');
 const selectedGameMode = ref('single-game');
 
 // Time notation options
@@ -175,22 +175,24 @@ const gameSetupTabList = ref([
   },
 ]);
 
-const participantModusTabBar = ref([
+const participantModusTabBar = computed(() => [
   {
-    id: 'individuals',
-    value: 'individuals',
+    id: 'players',
+    value: 'players',
     label: 'Individuele spelers',
-    checked: true,
+    checked: selectedParticipantMode.value === 'players',
   },
   {
     id: 'teams',
     value: 'teams',
     label: 'Teams',
+    checked: selectedParticipantMode.value === 'teams',
   },
   {
     id: 'teams-with-players',
     value: 'teams-with-players',
     label: 'Teams met spelers',
+    checked: selectedParticipantMode.value === 'teams-with-players',
   },
 ]);
 
@@ -212,6 +214,10 @@ const isLastTab = computed(
 const nextButtonText = computed(() => (isLastTab.value ? 'Klaar' : 'Volgende'));
 
 // Methods
+const handleParticipantModeChange = (value) => {
+  selectedParticipantMode.value = value;
+};
+
 const handleGameModeChange = (value) => {
   selectedGameMode.value = value;
 
@@ -295,7 +301,7 @@ const goToNextTab = () => {
 
     <div class="row">
       <div class="col-8 offset-2">
-        <form class="p-game-setup-view__settings">
+        <form class="p-game-setup-view__settings" @submit.prevent>
           <div class="p-game-setup-view__settings__head">
             <Button href="/tablet" :is-icon-button="true" variant="secondary">
               <template #c-btn_icon-left>
@@ -352,6 +358,7 @@ const goToNextTab = () => {
                     :items="participantModusTabBar"
                     name="participant-modus"
                     :hideIcon="true"
+                    @change="handleParticipantModeChange"
                   ></TabBar>
 
                   <Notice
@@ -618,7 +625,7 @@ const goToNextTab = () => {
               <div
                 class="p-game-setup-view__settings__body__content__participants"
               >
-                <PlayersSetting player-mode="players" />
+                <PlayersSetting :player-mode="selectedParticipantMode" />
               </div>
             </div>
           </div>
