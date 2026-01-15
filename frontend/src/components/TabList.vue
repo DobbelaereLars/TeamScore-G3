@@ -20,18 +20,49 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['close', 'change']);
+const emit = defineEmits(['update:items', 'close', 'change']);
 
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
 
 const handleClose = (item, event) => {
   event.preventDefault();
   event.stopPropagation();
-  emit('close', item.id ?? item);
+
+  const itemId = item.id ?? item;
+
+  // Find the item being closed met actuele checked-state
+  const closedItem = props.items.find((i) => i.id === itemId);
+  const wasChecked = closedItem?.checked ?? false;
+
+  // Verwijder het item uit de array
+  const newItems = props.items.filter((i) => i.id !== itemId);
+
+  // Alleen een andere tab selecteren als de gesloten tab geselecteerd was
+  if (wasChecked && newItems.length > 0) {
+    // Kies de eerste overblijvende tab als nieuwe geselecteerde
+    const updatedItems = newItems.map((i, index) => ({
+      ...i,
+      checked: index === 0,
+    }));
+    emit('update:items', updatedItems);
+  } else {
+    emit('update:items', newItems);
+  }
+
+  emit('close', itemId);
 };
 
 const handleChange = (item) => {
-  emit('change', item.id ?? item.value ?? null);
+  const itemId = item.id ?? item.value ?? null;
+
+  // Update de checked-state zodat die altijd overeenkomt met de DOM
+  const updatedItems = props.items.map((i) => ({
+    ...i,
+    checked: i.id === itemId,
+  }));
+
+  emit('update:items', updatedItems);
+  emit('change', itemId);
 };
 </script>
 

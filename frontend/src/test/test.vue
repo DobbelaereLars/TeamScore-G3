@@ -91,35 +91,6 @@ const tabListItemsClose = ref([
   },
 ]);
 
-const handleTabListClose = (itemId) => {
-  // Find the item being closed met actuele checked-state
-  const closedItem = tabListItemsClose.value.find((item) => item.id === itemId);
-  const wasChecked = closedItem?.checked ?? false;
-
-  // Verwijder het item uit de array
-  tabListItemsClose.value = tabListItemsClose.value.filter(
-    (item) => item.id !== itemId
-  );
-
-  // Alleen een andere tab selecteren als de gesloten tab geselecteerd was
-  if (wasChecked && tabListItemsClose.value.length > 0) {
-    // Kies de eerste overblijvende tab als nieuwe geselecteerde
-    const newSelectedId = tabListItemsClose.value[0].id;
-    tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
-      ...item,
-      checked: item.id === newSelectedId,
-    }));
-  }
-};
-
-const handleTabListChange = (itemId) => {
-  // Update de checked-state zodat die altijd overeenkomt met de DOM
-  tabListItemsClose.value = tabListItemsClose.value.map((item) => ({
-    ...item,
-    checked: item.id === itemId,
-  }));
-};
-
 const tabBarItems = [
   {
     id: 'tabBar1',
@@ -221,12 +192,10 @@ const tabBarItems = [
     ></TabList>
 
     <TabList
-      :items="tabListItemsClose"
+      v-model:items="tabListItemsClose"
       name="test-tablist-close"
       :hideIcon="false"
       :closeable="true"
-      @close="handleTabListClose"
-      @change="handleTabListChange"
     ></TabList>
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
@@ -235,7 +204,13 @@ const tabBarItems = [
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
 
-    <LeaderboardPlayercard :position="5" :playerName="'Yarne de speler'" :score="5" :currentValue="50" :maxValue="100" />
+    <LeaderboardPlayercard
+      :position="5"
+      :playerName="'Yarne de speler'"
+      :score="5"
+      :currentValue="50"
+      :maxValue="100"
+    />
 
     <SessionCard
       title="Standaardspel - 6/01/2026"
