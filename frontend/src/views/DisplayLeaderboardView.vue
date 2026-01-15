@@ -4,13 +4,13 @@ import LeaderboardPlayerCard from "../components/LeaderboardPlayerCard.vue";
 
 import logo from "../assets/logo.webp";
 
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 
 const players = ref([
   {
     id: 1,
     spelersnaam: "John Doe",
-    score: 85,
+    score: 121,
   },
   {
     id: 2,
@@ -19,28 +19,28 @@ const players = ref([
   },
   {
     id: 3,
+    spelersnaam: "Bob Johfdsdnson",
+    score: 78,
+  },
+  {
+    id: 6,
+    spelersnaam: "Bob Johnson",
+    score: 85,
+  },
+  {
+    id: 7,
     spelersnaam: "Bob Johnson",
     score: 65,
   },
   {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 3,
+    id: 8,
     spelersnaam: "Bob Johnson",
     score: 65,
   },
   {
     id: 4,
     spelersnaam: "Alice Williams",
-    score: 58,
+    score: 78,
   },
   {
     id: 5,
@@ -48,17 +48,17 @@ const players = ref([
     score: 84,
   },
   {
-    id: 5,
+    id: 9,
     spelersnaam: "Yarne Diopere",
     score: 124,
   },
   {
-    id: 5,
+    id: 10,
     spelersnaam: "Lars Dobbelaere",
     score: 114,
   },
   {
-    id: 5,
+    id: 11,
     spelersnaam: "Renz Deheegher",
     score: 118,
   },
@@ -66,7 +66,13 @@ const players = ref([
 
 // Sort players by score (highest first)
 const sortedPlayers = computed(() => {
-  return [...players.value].sort((a, b) => b.score - a.score);
+  return [...players.value].sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    // Secondary sort by ID to ensure stable order
+    return a.id - b.id;
+  });
 });
 
 // Get the maximum score for progress bars
@@ -87,38 +93,101 @@ const remainingPlayers = computed(() => {
 
 // Screen height and scroll animation
 const screenHeight = ref(window.innerHeight);
-const scrollPosition = ref(0); // Current scroll position in pixels
+const scrollContainer = ref(null); // Direct DOM Ref
+let currentScrollPos = 0; // Using plain let for performance loop
 
 // Handle window resize
 const handleResize = () => {
   screenHeight.value = window.innerHeight;
+  updateCardHeight(); // Update card height on resize
 };
 
 // Continuous smooth scroll animation (no pauses)
 let scrollAnimationFrame = null;
-const cardHeight = 115; // 100px card + 15px gap
 const scrollSpeed = 0.2; // Constant smooth speed
-const gapHeight = 50; // Gap between the two lists
+
+const cardHeight = ref(115); // Will be measured dynamically
 
 const animateScroll = () => {
-  if (remainingPlayers.value.length === 0) return;
+  if (remainingPlayers.value.length === 0 || !scrollContainer.value) return;
 
   // Calculate total scrollable height: list height + gap
-  const listHeight = remainingPlayers.value.length * cardHeight;
-  const totalLoopHeight = listHeight + gapHeight;
+  const listHeight = remainingPlayers.value.length * cardHeight.value;
+  const totalLoopHeight = listHeight;
 
   // Increment scroll position
-  scrollPosition.value += scrollSpeed;
+  currentScrollPos += scrollSpeed;
 
   // Reset when we've scrolled past the first list AND the gap
   // At this point, the duplicate list's top aligns with where the original list started
-  if (scrollPosition.value >= totalLoopHeight) {
-    scrollPosition.value = 0;
+  if (currentScrollPos >= totalLoopHeight) {
+    currentScrollPos = 0;
   }
+
+  // Direct DOM update for performance (bypassing Vue reactivity)
+  scrollContainer.value.style.transform = `translateY(-${currentScrollPos}px)`;
 
   // Continuous loop
   scrollAnimationFrame = requestAnimationFrame(animateScroll);
 };
+
+// Measure accurate card height for seamless looping
+const updateCardHeight = () => {
+  // Assuming LeaderboardPlayerCard's root element has the class 'c-leaderboard-playercard'
+  const card = document.querySelector(".c-leaderboard-playercard");
+  if (card) {
+    // Height + Gap (assuming 15px gap from SCSS)
+    // We can also measure the gap by checking distance between two cards
+    const cards = document.querySelectorAll(".c-leaderboard-playercard");
+    if (cards.length >= 2) {
+      const first = cards[0].getBoundingClientRect();
+      const second = cards[1].getBoundingClientRect();
+      cardHeight.value = second.top - first.top;
+    } else {
+      // Fallback
+      cardHeight.value = card.offsetHeight + 15;
+    }
+  }
+};
+
+// Watch for changes in the list to maintain scroll position (Anchor Scrolling)
+watch(remainingPlayers, (newVal, oldPlayers) => {
+  console.log(
+    "WATCHER DEBUG: Fired. Old:",
+    oldPlayers ? oldPlayers.length : "null",
+    "New:",
+    newVal ? newVal.length : "null"
+  );
+  if (!oldPlayers || oldPlayers.length === 0 || !cardHeight.value) {
+    console.log("WATCHER DEBUG: Skipped (initial/empty)");
+    return;
+  }
+
+  const listCount = oldPlayers.length;
+  // Calculate which item is visually at the top, handling the loop (duplicates)
+  const rawIndex = Math.floor(currentScrollPos / cardHeight.value);
+  const effectiveIndex = rawIndex % listCount;
+  const offset = currentScrollPos % cardHeight.value;
+  const loopIteration = Math.floor(rawIndex / listCount);
+
+  const topItem = oldPlayers[effectiveIndex];
+
+  if (!topItem) return;
+
+  // Find where this item moved to in the new list
+  const newIndex = newVal.findIndex((p) => p.id === topItem.id);
+
+  if (newIndex !== -1) {
+    const newTotalHeight = newVal.length * cardHeight.value;
+
+    // Calculate candidate new position
+    // We want to keep the same loop iteration if possible
+    let newPos =
+      loopIteration * newTotalHeight + newIndex * cardHeight.value + offset;
+
+    currentScrollPos = newPos;
+  }
+});
 
 const startAutoScroll = () => {
   if (remainingPlayers.value.length === 0) return;
@@ -134,10 +203,27 @@ const stopAutoScroll = () => {
 
 onMounted(() => {
   window.addEventListener("resize", handleResize);
-  startAutoScroll();
+
+  // Wait for next tick to ensure DOM is rendered before measuring
+  setTimeout(() => {
+    updateCardHeight();
+    startAutoScroll();
+  }, 100);
 
   // Disable body scrolling
   document.body.style.overflow = "hidden";
+
+  // TEST: Randomly change scores every 3 seconds
+  setInterval(() => {
+    // Only change score of someone in the remainingPlayers list (ranks 4+)
+    // to avoid podium switching confusion for now
+    if (players.value.length > 5) {
+      const target = players.value[players.value.length - 1]; // modify last player
+      target.score += 1;
+      // trigger reactivity
+      players.value = [...players.value];
+    }
+  }, 3000);
 });
 
 onUnmounted(() => {
@@ -178,25 +264,32 @@ onUnmounted(() => {
     </div>
     <div class="c-display-leaderboard-view__players">
       <div
+        ref="scrollContainer"
         class="c-display-leaderboard-view__players-container"
-        :style="{ transform: `translateY(-${scrollPosition}px)` }"
       >
         <LeaderboardPlayerCard
           v-for="(player, index) in remainingPlayers"
-          :key="player.id + '-' + index"
+          :key="player.id"
           :position="index + 4"
           :playerName="player.spelersnaam"
           :maxValue="maxScore"
           :score="player.score"
         />
 
-        <!-- Gap between cycles -->
-        <div :style="{ height: gapHeight + 'px', flexShrink: 0 }"></div>
-
         <!-- Duplicate cards for seamless loop -->
         <LeaderboardPlayerCard
           v-for="(player, index) in remainingPlayers"
-          :key="'loop-' + player.id + '-' + index"
+          :key="'loop-' + player.id"
+          :position="index + 4"
+          :playerName="player.spelersnaam"
+          :maxValue="maxScore"
+          :score="player.score"
+        />
+
+        <!-- Second Duplicate set for safety on large screens -->
+        <LeaderboardPlayerCard
+          v-for="(player, index) in remainingPlayers"
+          :key="'loop2-' + player.id"
           :position="index + 4"
           :playerName="player.spelersnaam"
           :maxValue="maxScore"
