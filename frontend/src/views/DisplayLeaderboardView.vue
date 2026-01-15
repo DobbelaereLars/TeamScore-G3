@@ -25,7 +25,7 @@ const players = ref([
   {
     id: 6,
     spelersnaam: "Bob Johnson",
-    score: 85,
+    score: 55,
   },
   {
     id: 7,
@@ -150,45 +150,6 @@ const updateCardHeight = () => {
   }
 };
 
-// Watch for changes in the list to maintain scroll position (Anchor Scrolling)
-watch(remainingPlayers, (newVal, oldPlayers) => {
-  console.log(
-    "WATCHER DEBUG: Fired. Old:",
-    oldPlayers ? oldPlayers.length : "null",
-    "New:",
-    newVal ? newVal.length : "null"
-  );
-  if (!oldPlayers || oldPlayers.length === 0 || !cardHeight.value) {
-    console.log("WATCHER DEBUG: Skipped (initial/empty)");
-    return;
-  }
-
-  const listCount = oldPlayers.length;
-  // Calculate which item is visually at the top, handling the loop (duplicates)
-  const rawIndex = Math.floor(currentScrollPos / cardHeight.value);
-  const effectiveIndex = rawIndex % listCount;
-  const offset = currentScrollPos % cardHeight.value;
-  const loopIteration = Math.floor(rawIndex / listCount);
-
-  const topItem = oldPlayers[effectiveIndex];
-
-  if (!topItem) return;
-
-  // Find where this item moved to in the new list
-  const newIndex = newVal.findIndex((p) => p.id === topItem.id);
-
-  if (newIndex !== -1) {
-    const newTotalHeight = newVal.length * cardHeight.value;
-
-    // Calculate candidate new position
-    // We want to keep the same loop iteration if possible
-    let newPos =
-      loopIteration * newTotalHeight + newIndex * cardHeight.value + offset;
-
-    currentScrollPos = newPos;
-  }
-});
-
 const startAutoScroll = () => {
   if (remainingPlayers.value.length === 0) return;
   animateScroll();
@@ -212,18 +173,6 @@ onMounted(() => {
 
   // Disable body scrolling
   document.body.style.overflow = "hidden";
-
-  // TEST: Randomly change scores every 3 seconds
-  setInterval(() => {
-    // Only change score of someone in the remainingPlayers list (ranks 4+)
-    // to avoid podium switching confusion for now
-    if (players.value.length > 5) {
-      const target = players.value[players.value.length - 1]; // modify last player
-      target.score += 1;
-      // trigger reactivity
-      players.value = [...players.value];
-    }
-  }, 3000);
 });
 
 onUnmounted(() => {
