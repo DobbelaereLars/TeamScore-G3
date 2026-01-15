@@ -21,6 +21,7 @@ import PlayersSetting from '../components/PlayersSetting.vue';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 
 import SessionCard from '../components/SessionCard.vue';
+import Notice from '../components/Notice.vue';
 
 const radioItems = [
   {
@@ -218,6 +219,8 @@ const tabBarItems = [
       image-src="/podium_screens/podium_screen_ph.png"
       href="#"
     />
+
+    <Notice text="Dit is een aangepaste melding"></Notice>
   </div>
 </template>
 

@@ -4,6 +4,7 @@ import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
 import TabBar from '../components/TabBar.vue';
+import Notice from '../components/Notice.vue';
 import { ArrowLeft, Gamepad2, Settings2, Users } from 'lucide-vue-next';
 
 const gameSetupTabList = ref([
@@ -108,6 +109,10 @@ const participantModusTabList = ref([
                     name="test-tabbar"
                     :hideIcon="true"
                   ></TabBar>
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
                 </div>
               </div>
             </div>
