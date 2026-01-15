@@ -78,6 +78,7 @@ h6,
 
 html {
   overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 body {
@@ -89,6 +90,7 @@ body {
   font-size: var(--font-size-body);
   color: $color-secondary-grey-900;
   line-height: 22px;
+  overflow-x: hidden;
 }
 
 .meta {
