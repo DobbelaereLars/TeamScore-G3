@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
@@ -82,6 +82,12 @@ const participantModusTabList = ref([
     label: 'Teams met spelers',
   },
 ]);
+
+// Track active tab
+const activeTab = computed(() => {
+  const activeItem = gameSetupTabList.value.find((item) => item.checked);
+  return activeItem?.id ?? 'session';
+});
 </script>
 
 <template>
@@ -92,7 +98,7 @@ const participantModusTabList = ref([
 
     <div class="row">
       <div class="col-8 offset-2">
-        <div class="p-game-setup-view__settings">
+        <form class="p-game-setup-view__settings">
           <div class="p-game-setup-view__settings__head">
             <Button href="/tablet" :is-icon-button="true" variant="secondary">
               <template #c-btn_icon-left>
@@ -108,12 +114,16 @@ const participantModusTabList = ref([
 
           <div class="p-game-setup-view__settings__body">
             <TabList
-              :items="gameSetupTabList"
+              v-model:items="gameSetupTabList"
               name="game-setup-tablist"
               :hideIcon="false"
             ></TabList>
 
-            <div class="p-game-setup-view__settings__body__content">
+            <!-- Sessie Tab Content -->
+            <div
+              v-show="activeTab === 'session'"
+              class="p-game-setup-view__settings__body__content"
+            >
               <div class="p-game-setup-view__settings__body__content__session">
                 <h2 class="h6">Sessienaam</h2>
                 <InputField
@@ -167,6 +177,130 @@ const participantModusTabList = ref([
                 </div>
               </div>
             </div>
+
+            <!-- Spelregels Tab Content -->
+            <div
+              v-show="activeTab === 'rules'"
+              class="p-game-setup-view__settings__body__content"
+            >
+              <div class="p-game-setup-view__settings__body__content__session">
+                <h2 class="h6">Sessienaam</h2>
+                <InputField
+                  id="session-name-rules"
+                  name="sessionNameRules"
+                  :label="false"
+                  placeholder="Bv. Sportdag 05/01/2026"
+                />
+              </div>
+
+              <div
+                class="p-game-setup-view__settings__body__content__participantmodus"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__participantmodus__subtitle"
+                >
+                  <h2 class="h6">Deelnemersmodus</h2>
+                  <p>
+                    Kies of je met individuele spelers of in teams zal spelen.
+                  </p>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__participantmodus__content"
+                >
+                  <TabBar
+                    :items="participantModusTabList"
+                    name="participant-modus-rules"
+                    :hideIcon="true"
+                  ></TabBar>
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
+                </div>
+              </div>
+
+              <div
+                class="p-game-setup-view__settings__body__content__gamemodus"
+              >
+                <h2 class="h6">Spelmodus</h2>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__gamemodus__content"
+                >
+                  <InputRadioCards
+                    :items="gameModusTabBar"
+                    name="game-modus-rules"
+                  />
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deelnemers Tab Content -->
+            <div
+              v-show="activeTab === 'participants'"
+              class="p-game-setup-view__settings__body__content"
+            >
+              <div class="p-game-setup-view__settings__body__content__session">
+                <h2 class="h6">Sessienaam</h2>
+                <InputField
+                  id="session-name-participants"
+                  name="sessionNameParticipants"
+                  :label="false"
+                  placeholder="Bv. Sportdag 05/01/2026"
+                />
+              </div>
+
+              <div
+                class="p-game-setup-view__settings__body__content__participantmodus"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__participantmodus__subtitle"
+                >
+                  <h2 class="h6">Deelnemersmodus</h2>
+                  <p>
+                    Kies of je met individuele spelers of in teams zal spelen.
+                  </p>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__participantmodus__content"
+                >
+                  <TabBar
+                    :items="participantModusTabList"
+                    name="participant-modus-participants"
+                    :hideIcon="true"
+                  ></TabBar>
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
+                </div>
+              </div>
+
+              <div
+                class="p-game-setup-view__settings__body__content__gamemodus"
+              >
+                <h2 class="h6">Spelmodus</h2>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__gamemodus__content"
+                >
+                  <InputRadioCards
+                    :items="gameModusTabBar"
+                    name="game-modus-participants"
+                  />
+
+                  <Notice
+                    text="Dit kan later niet meer worden gewijzigd"
+                  ></Notice>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="p-game-setup-view__settings__footer">
@@ -176,13 +310,17 @@ const participantModusTabList = ref([
               </template>
             </Button>
 
-            <Button clickable="false" variant="primary" button-tekst="Volgende">
+            <Button
+              :clickable="false"
+              variant="primary"
+              button-tekst="Volgende"
+            >
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />
               </template>
             </Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>
