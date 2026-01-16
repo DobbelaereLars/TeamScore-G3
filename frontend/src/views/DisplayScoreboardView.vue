@@ -110,7 +110,9 @@ const calculatePlayersPerPage = () => {
     const containerWidth = playersContainer.value.offsetWidth;
     const cardWidth = 280; // 17.5rem = 280px
     const gap = 15; // 0.9375rem ≈ 15px
-    const columnsPerRow = Math.floor((containerWidth + gap) / (cardWidth + gap));
+    const columnsPerRow = Math.floor(
+      (containerWidth + gap) / (cardWidth + gap)
+    );
     playersPerPage.value = columnsPerRow * 2; // 2 rows
   }
 };
@@ -130,10 +132,10 @@ let pageInterval = null;
 
 onMounted(() => {
   calculatePlayersPerPage();
-  
+
   // Add resize listener to recalculate on window resize
-  window.addEventListener('resize', calculatePlayersPerPage);
-  
+  window.addEventListener("resize", calculatePlayersPerPage);
+
   // Only start auto-scroll if there are multiple pages
   if (totalPages.value > 1) {
     pageInterval = setInterval(() => {
@@ -143,12 +145,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', calculatePlayersPerPage);
+  window.removeEventListener("resize", calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
   }
 });
-
 </script>
 
 <template>
@@ -159,15 +160,14 @@ onUnmounted(() => {
       </div>
       <div class="v-display-scoreboard-info">
         <h2>{{ gameinfo.gamename }}</h2>
-        <p class="v-display-scoreboard-round">ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}</p>
+        <p class="v-display-scoreboard-round">
+          ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}
+        </p>
       </div>
     </div>
     <div class="v-display-scoreboard-players-wrapper" ref="playersContainer">
       <Transition name="slide">
-        <div 
-          :key="currentPage"
-          class="v-display-scoreboard-players-container"
-        >
+        <div :key="currentPage" class="v-display-scoreboard-players-container">
           <ScoreboardPlayercard
             v-for="player in paginatedPlayers"
             :key="player.id"
