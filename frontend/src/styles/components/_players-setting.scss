@@ -40,9 +40,25 @@
     padding: $spacing-3 $spacing-5;
     border-radius: $border-radius-10;
     transition: background-color 0.2s ease-in, color 0.2s ease-in;
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    &__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-secondary-grey-400;
+      padding: $spacing-2;
+    }
+
     &--active {
       background-color: $color-primary-blue-75;
       color: $color-primary-blue-500;
+
+      & .c-players-setting__tab__close {
+        color: $color-primary-blue-300;
+      }
     }
 
     &--add {
@@ -60,6 +76,7 @@
   &__tabs {
     display: flex;
     gap: $spacing-3;
+    flex-wrap: wrap;
   }
 
   &__list,
