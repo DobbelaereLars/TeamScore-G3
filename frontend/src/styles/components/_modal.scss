@@ -89,5 +89,10 @@
       color: darken($colors-vibrant-red, 10%);
       transform: scale(0.95);
     }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+    }
   }
 }
