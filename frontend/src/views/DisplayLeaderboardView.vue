@@ -1,65 +1,65 @@
 <script setup>
-import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
-import LeaderboardPlayerCard from "../components/LeaderboardPlayerCard.vue";
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 
-import logo from "../assets/logo.webp";
+import logo from '../assets/logo.webp';
 
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const players = ref([
   {
     id: 1,
-    spelersnaam: "John Doe",
+    spelersnaam: 'John Doe',
     score: 121,
   },
   {
     id: 2,
-    spelersnaam: "Jane Smith",
+    spelersnaam: 'Jane Smith',
     score: 72,
   },
   {
     id: 3,
-    spelersnaam: "Bob Johfdsdnson",
+    spelersnaam: 'Bob Johfdsdnson',
     score: 78,
   },
   {
     id: 6,
-    spelersnaam: "Bob Johnson",
+    spelersnaam: 'Bob Johnson',
     score: 55,
   },
   {
     id: 7,
-    spelersnaam: "Bob Johnson",
+    spelersnaam: 'Bob Johnson',
     score: 65,
   },
   {
     id: 8,
-    spelersnaam: "Bob Johnson",
+    spelersnaam: 'Bob Johnson',
     score: 65,
   },
   {
     id: 4,
-    spelersnaam: "Alice Williams",
+    spelersnaam: 'Alice Williams',
     score: 78,
   },
   {
     id: 5,
-    spelersnaam: "Charlie Brown",
+    spelersnaam: 'Charlie Brown',
     score: 84,
   },
   {
     id: 9,
-    spelersnaam: "Yarne Diopere",
+    spelersnaam: 'Yarne Diopere',
     score: 124,
   },
   {
     id: 10,
-    spelersnaam: "Lars Dobbelaere",
+    spelersnaam: 'Lars Dobbelaere',
     score: 114,
   },
   {
     id: 11,
-    spelersnaam: "Renz Deheegher",
+    spelersnaam: 'Renz Deheegher',
     score: 118,
   },
 ]);
@@ -134,11 +134,11 @@ const animateScroll = () => {
 // Measure accurate card height for seamless looping
 const updateCardHeight = () => {
   // Assuming LeaderboardPlayerCard's root element has the class 'c-leaderboard-playercard'
-  const card = document.querySelector(".c-leaderboard-playercard");
+  const card = document.querySelector('.c-leaderboard-playercard');
   if (card) {
     // Height + Gap (assuming 15px gap from SCSS)
     // We can also measure the gap by checking distance between two cards
-    const cards = document.querySelectorAll(".c-leaderboard-playercard");
+    const cards = document.querySelectorAll('.c-leaderboard-playercard');
     if (cards.length >= 2) {
       const first = cards[0].getBoundingClientRect();
       const second = cards[1].getBoundingClientRect();
@@ -163,7 +163,7 @@ const stopAutoScroll = () => {
 };
 
 onMounted(() => {
-  window.addEventListener("resize", handleResize);
+  window.addEventListener('resize', handleResize);
 
   // Wait for next tick to ensure DOM is rendered before measuring
   setTimeout(() => {
@@ -172,15 +172,15 @@ onMounted(() => {
   }, 100);
 
   // Disable body scrolling
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = 'hidden';
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
+  window.removeEventListener('resize', handleResize);
   stopAutoScroll();
 
   // Re-enable body scrolling
-  document.body.style.overflow = "";
+  document.body.style.overflow = '';
 });
 </script>
 
