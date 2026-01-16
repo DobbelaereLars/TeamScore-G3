@@ -238,7 +238,10 @@ const handleGameModeChange = (value) => {
   if (value === 'single-game' && games.value.length > 1) {
     games.value = [games.value[0]];
     activeGameIndex.value = 0;
-  } else if (value === 'parallel-games' && games.value.length < 2) {
+  } else if (
+    (value === 'parallel-games' || value === 'series-of-games') &&
+    games.value.length < 2
+  ) {
     addGame();
   }
 };
@@ -257,7 +260,12 @@ const handleGameTabChange = (gameId) => {
 };
 
 const handleGameTabClose = (gameId) => {
-  const minGames = selectedGameMode.value === 'parallel-games' ? 2 : 1;
+  const minGames =
+    selectedGameMode.value === 'parallel-games' ||
+    selectedGameMode.value === 'series-of-games'
+      ? 2
+      : 1;
+
   if (games.value.length <= minGames) {
     return;
   }
@@ -371,6 +379,7 @@ const goToPreviousTab = () => {
       ...item,
       checked: idx === prevIndex,
     }));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 
@@ -384,6 +393,7 @@ const goToNextTab = () => {
       ...item,
       checked: idx === nextIndex,
     }));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 </script>
@@ -519,7 +529,10 @@ const goToNextTab = () => {
                       class="c-tabbar--hug"
                       :closeable="
                         games.length >
-                        (selectedGameMode === 'parallel-games' ? 2 : 1)
+                        (selectedGameMode === 'parallel-games' ||
+                        selectedGameMode === 'series-of-games'
+                          ? 2
+                          : 1)
                       "
                       @change="handleGameTabChange"
                       @close="handleGameTabClose"
