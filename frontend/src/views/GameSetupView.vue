@@ -228,6 +228,8 @@ const handleGameModeChange = (value) => {
   if (value === 'single-game' && games.value.length > 1) {
     games.value = [games.value[0]];
     activeGameIndex.value = 0;
+  } else if (value === 'parallel-games' && games.value.length < 2) {
+    addGame();
   }
 };
 
@@ -245,7 +247,8 @@ const handleGameTabChange = (gameId) => {
 };
 
 const handleGameTabClose = (gameId) => {
-  if (games.value.length <= 1) {
+  const minGames = selectedGameMode.value === 'parallel-games' ? 2 : 1;
+  if (games.value.length <= minGames) {
     return;
   }
 
@@ -263,7 +266,7 @@ const handleTimeRankingChange = (value) => {
   }
 };
 
-const addGame = () => {
+function addGame() {
   const maxId = games.value.reduce((max, game) => {
     const match = game.id.match(/^game-(\d+)$/);
     if (match) {
@@ -290,7 +293,7 @@ const addGame = () => {
     useTimeBonusPoints: false,
     timeBonusPoints: 0,
   });
-};
+}
 
 const confirmDeleteGame = () => {
   if (!gameToDeleteId.value) return;
@@ -483,7 +486,10 @@ const goToNextTab = () => {
                       name="game-series-rules"
                       :hideIcon="true"
                       class="c-tabbar--hug"
-                      :closeable="games.length > 1"
+                      :closeable="
+                        games.length >
+                        (selectedGameMode === 'parallel-games' ? 2 : 1)
+                      "
                       @change="handleGameTabChange"
                       @close="handleGameTabClose"
                     ></TabBar>
