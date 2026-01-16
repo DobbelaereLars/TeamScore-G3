@@ -4,6 +4,11 @@
   gap: $spacing-3;
   flex-wrap: nowrap;
   align-items: stretch;
+  flex-wrap: wrap;
+
+  & .c-input-radio-cards__wrapper {
+    flex: 1 1 200px;
+  }
 
   &__wrapper {
     display: flex;
@@ -16,7 +21,8 @@
         border: 1px solid $color-primary-blue-300;
         background-color: $color-primary-blue-75;
 
-        & .c-input-radio-cards__label__icon, & .c-input-radio-cards__label__tekst p {
+        & .c-input-radio-cards__label__icon,
+        & .c-input-radio-cards__label__tekst p {
           color: $color-primary-blue-500;
         }
       }
