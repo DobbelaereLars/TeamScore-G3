@@ -390,23 +390,29 @@ const goToNextTab = () => {
 
 <template>
   <div class="container p-game-setup-view">
-    <div class="c-logo-header">
+    <!-- <div class="c-logo-header">
       <img class="c-logo-header__img" src="../assets/logo.webp" alt="Logo" />
-    </div>
+    </div> -->
 
     <div class="row">
-      <div class="col-8 offset-2">
+      <div class="col-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
         <form class="p-game-setup-view__settings" @submit.prevent>
           <div class="p-game-setup-view__settings__head">
-            <Button href="/tablet" :is-icon-button="true" variant="secondary">
-              <template #c-btn_icon-left>
-                <ArrowLeft :size="18" />
-              </template>
-            </Button>
+            <div class="p-game-setup-view__settings__head__subtitle">
+              <Button href="/tablet" :is-icon-button="true" variant="secondary">
+                <template #c-btn_icon-left>
+                  <ArrowLeft :size="18" />
+                </template>
+              </Button>
 
-            <div class="p-game-setup-view__settings__head__title">
-              <h1 class="h4">Spelinstellingen</h1>
-              <p>Verander hier de instellingen van jouw spel</p>
+              <div class="p-game-setup-view__settings__head__subtitle__title">
+                <h1 class="h4">Spelinstellingen</h1>
+                <p>Verander hier de instellingen van jouw spel</p>
+              </div>
+            </div>
+
+            <div class="p-game-setup-view__settings__head__logo">
+              <img src="../assets/logo.webp" alt="TeamScore Logo" />
             </div>
           </div>
 
