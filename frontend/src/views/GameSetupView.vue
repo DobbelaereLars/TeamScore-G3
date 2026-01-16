@@ -379,6 +379,7 @@ const goToPreviousTab = () => {
       ...item,
       checked: idx === prevIndex,
     }));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 
@@ -392,6 +393,7 @@ const goToNextTab = () => {
       ...item,
       checked: idx === nextIndex,
     }));
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 </script>
