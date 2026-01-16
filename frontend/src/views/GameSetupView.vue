@@ -10,6 +10,7 @@ import Notice from '../components/Notice.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 import PlayersSetting from '../components/PlayersSetting.vue';
+import Modal from '../components/Modal.vue';
 import {
   ArrowLeft,
   ArrowRight,
@@ -62,6 +63,8 @@ const games = ref([
 ]);
 
 const activeGameIndex = ref(0);
+const gameToDeleteId = ref(null);
+const deleteGameModalId = 'delete-game-modal';
 
 // Computed
 const activeGameId = computed(
@@ -241,6 +244,19 @@ const handleGameTabChange = (gameId) => {
   }
 };
 
+const handleGameTabClose = (gameId) => {
+  if (games.value.length <= 1) {
+    return;
+  }
+
+  gameToDeleteId.value = gameId;
+
+  const dialog = document.getElementById(deleteGameModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
 const handleTimeRankingChange = (value) => {
   if (activeGame.value) {
     activeGame.value.timeRanking = value;
@@ -248,10 +264,19 @@ const handleTimeRankingChange = (value) => {
 };
 
 const addGame = () => {
-  const newGameNumber = games.value.length + 1;
+  const maxId = games.value.reduce((max, game) => {
+    const match = game.id.match(/^game-(\d+)$/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      return Math.max(max, num);
+    }
+    return max;
+  }, 0);
+
+  const newGameNumber = maxId + 1;
   games.value.push({
     id: `game-${newGameNumber}`,
-    name: '',
+    name: `Spel ${newGameNumber}`,
     scoreModel: 'points',
     useRounds: false,
     roundsCount: 1,
@@ -265,6 +290,48 @@ const addGame = () => {
     useTimeBonusPoints: false,
     timeBonusPoints: 0,
   });
+};
+
+const confirmDeleteGame = () => {
+  if (!gameToDeleteId.value) return;
+
+  const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
+  if (index === -1) {
+    gameToDeleteId.value = null;
+    return;
+  }
+
+  games.value.splice(index, 1);
+
+  if (games.value.length === 0) {
+    games.value.push({
+      id: 'game-1',
+      name: '',
+      scoreModel: 'points',
+      useRounds: false,
+      roundsCount: 1,
+      useSets: false,
+      setsCount: 1,
+      pointsPerAction: 1,
+      useBonusPoints: false,
+      bonusPoints: 0,
+      timeNotation: 'mm:ss',
+      timeRanking: 'fastest-first',
+      useTimeBonusPoints: false,
+      timeBonusPoints: 0,
+    });
+    activeGameIndex.value = 0;
+  } else if (activeGameIndex.value >= games.value.length) {
+    activeGameIndex.value = games.value.length - 1;
+  } else if (index <= activeGameIndex.value && activeGameIndex.value > 0) {
+    activeGameIndex.value = activeGameIndex.value - 1;
+  }
+
+  gameToDeleteId.value = null;
+};
+
+const cancelDeleteGame = () => {
+  gameToDeleteId.value = null;
 };
 
 const goToPreviousTab = () => {
@@ -416,7 +483,9 @@ const goToNextTab = () => {
                       name="game-series-rules"
                       :hideIcon="true"
                       class="c-tabbar--hug"
+                      :closeable="games.length > 1"
                       @change="handleGameTabChange"
+                      @close="handleGameTabClose"
                     ></TabBar>
                   </div>
 
@@ -629,6 +698,16 @@ const goToNextTab = () => {
               </div>
             </div>
           </div>
+
+          <Modal
+            :modal-id="deleteGameModalId"
+            title="Game verwijderen?"
+            text="Weet je zeker dat je deze game wil verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+            cancel-btn-text="Annuleren"
+            accept-btn-text="Verwijderen"
+            @cancel="cancelDeleteGame"
+            @accept="confirmDeleteGame"
+          />
 
           <div class="p-game-setup-view__settings__footer">
             <Button
