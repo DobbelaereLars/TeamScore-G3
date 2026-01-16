@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
@@ -65,6 +65,16 @@ const games = ref([
 const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
 const deleteGameModalId = 'delete-game-modal';
+
+const deleteGameModalTitle = computed(() => {
+  const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
+  const game = games.value[index];
+
+  if (!game) return 'Game verwijderen?';
+
+  const displayName = game.name || `Spel ${index + 1}`;
+  return `${displayName} verwijderen?`;
+});
 
 // Computed
 const activeGameId = computed(
@@ -277,8 +287,10 @@ function addGame() {
   }, 0);
 
   const newGameNumber = maxId + 1;
+  const newGameId = `game-${newGameNumber}`;
+
   games.value.push({
-    id: `game-${newGameNumber}`,
+    id: newGameId,
     name: `Spel ${newGameNumber}`,
     scoreModel: 'points',
     useRounds: false,
@@ -292,6 +304,19 @@ function addGame() {
     timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
     timeBonusPoints: 0,
+  });
+
+  activeGameIndex.value = games.value.length - 1;
+
+  nextTick(() => {
+    const label = document.querySelector(`label[for="${newGameId}"]`);
+    if (label) {
+      label.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
   });
 }
 
@@ -365,23 +390,29 @@ const goToNextTab = () => {
 
 <template>
   <div class="container p-game-setup-view">
-    <div class="c-logo-header">
+    <!-- <div class="c-logo-header">
       <img class="c-logo-header__img" src="../assets/logo.webp" alt="Logo" />
-    </div>
+    </div> -->
 
     <div class="row">
-      <div class="col-8 offset-2">
+      <div class="col-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
         <form class="p-game-setup-view__settings" @submit.prevent>
           <div class="p-game-setup-view__settings__head">
-            <Button href="/tablet" :is-icon-button="true" variant="secondary">
-              <template #c-btn_icon-left>
-                <ArrowLeft :size="18" />
-              </template>
-            </Button>
+            <div class="p-game-setup-view__settings__head__subtitle">
+              <Button href="/tablet" :is-icon-button="true" variant="secondary">
+                <template #c-btn_icon-left>
+                  <ArrowLeft :size="18" />
+                </template>
+              </Button>
 
-            <div class="p-game-setup-view__settings__head__title">
-              <h1 class="h4">Spelinstellingen</h1>
-              <p>Verander hier de instellingen van jouw spel</p>
+              <div class="p-game-setup-view__settings__head__subtitle__title">
+                <h1 class="h4">Spelinstellingen</h1>
+                <p>Verander hier de instellingen van jouw spel</p>
+              </div>
+            </div>
+
+            <div class="p-game-setup-view__settings__head__logo">
+              <img src="../assets/logo.webp" alt="TeamScore Logo" />
             </div>
           </div>
 
@@ -707,7 +738,7 @@ const goToNextTab = () => {
 
           <Modal
             :modal-id="deleteGameModalId"
-            title="Game verwijderen?"
+            :title="deleteGameModalTitle"
             text="Weet je zeker dat je deze game wil verwijderen? Deze actie kan niet ongedaan worden gemaakt."
             cancel-btn-text="Annuleren"
             accept-btn-text="Verwijderen"

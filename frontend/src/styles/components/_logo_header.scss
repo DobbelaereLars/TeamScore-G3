@@ -4,8 +4,8 @@
   left: 0;
 
   &__img {
-    width: 8rem;
     height: auto;
     aspect-ratio: 1 / 1;
+    width: clamp(4rem, 8vw, 8rem);
   }
 }

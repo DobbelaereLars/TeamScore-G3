@@ -5,6 +5,7 @@ import Button from './Button.vue';
 import InputField from './InputField.vue';
 import TeamTabButton from './TeamTabButton.vue';
 import PlayersSettingParticipant from './PlayersSettingParticipant.vue';
+import Modal from './Modal.vue';
 
 const props = defineProps({
   playerMode: {
@@ -18,11 +19,18 @@ const props = defineProps({
 const participants = ref([]);
 const inputValue = ref('');
 const selectedTeamId = ref(null);
+const teamToDeleteId = ref(null);
+const deleteTeamModalId = 'delete-team-modal';
 let nextId = 1;
 
 const selectedTeam = computed(() =>
   participants.value.find((t) => t.id === selectedTeamId.value)
 );
+
+const deleteTeamModalTitle = computed(() => {
+  const team = participants.value.find((t) => t.id === teamToDeleteId.value);
+  return team ? `${team.name} verwijderen?` : 'Team verwijderen?';
+});
 
 const placeholder = computed(() => {
   if (props.playerMode === 'teams-with-players')
@@ -76,6 +84,44 @@ const deletePlayerFromTeam = (playerId) => {
   }
 };
 
+const requestDeleteTeam = (teamId) => {
+  teamToDeleteId.value = teamId;
+  const dialog = document.getElementById(deleteTeamModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const confirmDeleteTeam = () => {
+  if (!teamToDeleteId.value) return;
+
+  const index = participants.value.findIndex(
+    (t) => t.id === teamToDeleteId.value
+  );
+
+  if (index !== -1) {
+    // Remove team
+    participants.value.splice(index, 1);
+
+    // Update selectedTeamId if we removed the selected one
+    if (selectedTeamId.value === teamToDeleteId.value) {
+      if (participants.value.length > 0) {
+        // Select previous or first
+        const newIndex = Math.max(0, index - 1);
+        selectedTeamId.value = participants.value[newIndex].id;
+      } else {
+        selectedTeamId.value = null;
+      }
+    }
+  }
+
+  teamToDeleteId.value = null;
+};
+
+const cancelDeleteTeam = () => {
+  teamToDeleteId.value = null;
+};
+
 const TeamRadioButtons = [];
 </script>
 
@@ -126,7 +172,9 @@ const TeamRadioButtons = [];
             :label="team.name"
             :count="team.players?.length || 0"
             :is-active="selectedTeamId === team.id"
+            :closeable="true"
             @click="selectedTeamId = team.id"
+            @close="requestDeleteTeam(team.id)"
           />
           <button
             type="button"
@@ -206,6 +254,16 @@ const TeamRadioButtons = [];
         </div>
       </div>
     </div>
+
+    <Modal
+      :modal-id="deleteTeamModalId"
+      :title="deleteTeamModalTitle"
+      text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
+      cancel-btn-text="Annuleren"
+      accept-btn-text="Verwijderen"
+      @cancel="cancelDeleteTeam"
+      @accept="confirmDeleteTeam"
+    />
   </div>
 </template>
 
