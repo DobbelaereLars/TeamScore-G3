@@ -76,6 +76,7 @@ const handleAccept = (event) => {
         @click="handleAccept"
         :button-tekst="acceptBtnText"
         :href="acceptBtnLink"
+        :clickable="false"
         variant="primary"
       />
     </div>
