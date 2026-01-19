@@ -82,7 +82,7 @@ const deleteGameModalTitle = computed(() => {
 
   if (!game) return 'Game verwijderen?';
 
-  const displayName = game.name || `Spel ${index + 1}`;
+  const displayName = getDefaultGameName(game);
   return `${displayName} verwijderen?`;
 });
 
@@ -119,7 +119,7 @@ const gameSeriesTabBar = computed(() =>
   games.value.map((game, index) => ({
     id: game.id,
     value: game.id,
-    label: game.name || `Spel ${index + 1}`,
+    label: getDefaultGameName(game),
     checked: index === activeGameIndex.value,
   })),
 );
@@ -127,7 +127,7 @@ const gameSeriesTabBar = computed(() =>
 const gameOptions = computed(() =>
   games.value.map((game, index) => ({
     value: game.id,
-    label: game.name || `Spel ${index + 1}`,
+    label: getDefaultGameName(game),
   })),
 );
 
@@ -506,7 +506,7 @@ const openAssignmentModal = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index !== -1) {
     const game = games.value[index];
-    const gameName = game.name || `Spel ${index + 1}`;
+    const gameName = getDefaultGameName(game);
     assignmentModalTitle.value = `Deelnemers voor ${gameName}`;
   } else {
     assignmentModalTitle.value = 'Deelnemers toewijzen';
@@ -554,10 +554,23 @@ const getAssignedParticipants = (gameId) => {
   return participants.value.filter((p) => p.assignedGameId === gameId);
 };
 
+const getDefaultGameName = (game) => {
+  if (game.name) return game.name;
+  if (!game.id) return 'Spel ?';
+  // Try to use ID number if possible
+  const match = game.id.match(/^game-(\d+)$/);
+  if (match) return `Spel ${match[1]}`;
+
+  // Fallback to index if available via context, but here we don't have context easily.
+  // We can search for it in games list?
+  // But wait, ID should always be game-x.
+  return game.id;
+};
+
 const getGameName = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index === -1) return 'ander spel';
-  return games.value[index].name || `Spel ${index + 1}`;
+  return getDefaultGameName(games.value[index]);
 };
 
 const cancelSession = () => {
@@ -1022,7 +1035,7 @@ onUnmounted(() => {
                         <span
                           class="p-game-setup-view__settings__body__content__assignment__list__game-card__title h6"
                         >
-                          {{ game.name || `Spel ${index + 1}` }}
+                          {{ getDefaultGameName(game) }}
                         </span>
                         <Button
                           variant="secondary"
