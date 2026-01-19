@@ -932,8 +932,9 @@ const goToNextTab = () => {
                 >
                   <h2 class="h6">Indeling van spelers</h2>
                   <p>
-                    Wijs deelnemers toe aan een specifiek spel. Deelnemers die
-                    geen spel toegewezen krijgen, doen niet mee.
+                    Wijs deelnemers toe aan een specifiek spel. Je kunt pas naar
+                    de volgende stap gaan wanneer iedereen is ingedeeld en elk
+                    spel minstens één deelnemer heeft.
                   </p>
                 </div>
 
