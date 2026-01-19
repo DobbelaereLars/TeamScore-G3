@@ -581,6 +581,23 @@ const goToNextTab = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
+
+watch(
+  participants,
+  (newParticipants) => {
+    const displayList = newParticipants.map((p) => ({ playerName: p.name }));
+    socket.emit('display:update-participants', displayList);
+  },
+  { deep: true },
+);
+
+// Ensure we sync with server when connecting (e.g. after server restart)
+socket.on('connect', () => {
+  if (participants.value.length > 0) {
+    const displayList = participants.value.map((p) => ({ playerName: p.name }));
+    socket.emit('display:update-participants', displayList);
+  }
+});
 </script>
 
 <template>

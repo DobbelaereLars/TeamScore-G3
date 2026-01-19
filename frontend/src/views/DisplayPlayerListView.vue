@@ -9,13 +9,7 @@ const containerRef = ref(null);
 const scaleClass = ref('');
 const isScrollable = ref(false);
 
-const players = ref([
-  { playerName: 'Jhonny Depp' },
-  { playerName: 'Jhonny Depp' },
-  { playerName: 'Jhonny Depp' },
-  { playerName: 'Jhonny Depp' },
-  { playerName: 'Jhonny Depp' },
-]);
+const players = ref([]);
 
 // Scale levels from largest to smallest for smoother transitions
 const scaleLevels = [
@@ -95,6 +89,11 @@ const handleNavigate = (data) => {
   }
 };
 
+const handleUpdateParticipants = (data) => {
+  console.log('Received participants update:', data);
+  players.value = data;
+};
+
 watch(
   players,
   () => {
@@ -105,12 +104,18 @@ watch(
 
 onMounted(async () => {
   socket.on('display:navigate', handleNavigate);
+  socket.on('display:update-participants', handleUpdateParticipants);
+
+  // Ask server for latest data immediately on connect
+  socket.emit('display:request-participants');
+
   window.addEventListener('resize', checkOverflow);
   await checkOverflow();
 });
 
 onUnmounted(() => {
   socket.off('display:navigate', handleNavigate);
+  socket.off('display:update-participants', handleUpdateParticipants);
   window.removeEventListener('resize', checkOverflow);
 });
 </script>
