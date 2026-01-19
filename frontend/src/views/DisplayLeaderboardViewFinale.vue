@@ -86,9 +86,45 @@ const topThreePlayers = computed(() => {
   return sortedPlayers.value.slice(0, 3);
 });
 
-// Get remaining players (from position 4 onwards, max 8)
+// Get remaining players (from position 4 onwards)
 const remainingPlayers = computed(() => {
-  return sortedPlayers.value.slice(3, 8);
+  return sortedPlayers.value.slice(3); // All players from rank 4 down
+});
+
+const ITEMS_per_PAGE = ref(5);
+const currentPage = ref(0);
+
+const calculateItemsPerPage = () => {
+  // Estimate height usage:
+  // Podium section (~450px: 26rem height + margins)
+  // Header/Padding (~100px)
+  // Pagination Dots (~40px) + Margin (~20px) = 60px
+  const reservedHeight = 580; // Reverted to 520 as requested
+  const availableHeight = window.innerHeight - reservedHeight;
+
+  // Estimate player card height + gap (~80px + 20px = 100px)
+  const itemHeight = 100;
+
+  const count = Math.floor(availableHeight / itemHeight);
+
+  // Clamp between 1 and 8 (allowing fewer items on small screens)
+  ITEMS_per_PAGE.value = Math.max(1, Math.min(count, 8));
+};
+
+const totalPages = computed(() => {
+  return Math.ceil(remainingPlayers.value.length / ITEMS_per_PAGE.value);
+});
+
+// Reset page if we are out of bounds after resize
+watch(totalPages, (newTotal) => {
+  if (currentPage.value >= newTotal) {
+    currentPage.value = Math.max(0, newTotal - 1);
+  }
+});
+
+const displayedPlayers = computed(() => {
+  const start = currentPage.value * ITEMS_per_PAGE.value;
+  return remainingPlayers.value.slice(start, start + ITEMS_per_PAGE.value);
 });
 
 import confetti from "canvas-confetti";
@@ -102,6 +138,24 @@ const showLogo = ref(false); // Logo
 const isShaking = ref(false); // Screen shake effect
 const isDrumrolling = ref(false); // Drumroll vibration
 
+let autoScrollInterval = null;
+
+const startAutoScroll = () => {
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
+
+  autoScrollInterval = setInterval(() => {
+    if (showRunnerUps.value && totalPages.value > 1) {
+      currentPage.value = (currentPage.value + 1) % totalPages.value;
+    }
+  }, 30000); // 30 seconds interval
+};
+
+const goToPage = (pageIndex) => {
+  currentPage.value = pageIndex;
+  // Reset timer on manual interaction
+  startAutoScroll();
+};
+
 const startPodiumAnimation = () => {
   // Reset
   showRank1.value = false;
@@ -111,6 +165,7 @@ const startPodiumAnimation = () => {
   showLogo.value = false;
   isShaking.value = false;
   isDrumrolling.value = false;
+  currentPage.value = 0; // Reset page
 
   // Sequence: 3rd -> 2nd -> 1st -> Runner Ups -> Logo
   // 3rd Place appears quickly
@@ -126,7 +181,7 @@ const startPodiumAnimation = () => {
   // Start Drumroll (Building tension)
   setTimeout(() => {
     isDrumrolling.value = true;
-  }, 6000); // 1s delay added (was 5000 originally)
+  }, 6000);
 
   // 1st Place (Winner) appears last with more suspense
   setTimeout(() => {
@@ -148,22 +203,27 @@ const startPodiumAnimation = () => {
       origin: { y: 0.6 },
       colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
     });
-  }, 10000); // shifted by 1000ms
+  }, 10000);
 
   // Runner Ups appear after the winner
   setTimeout(() => {
     showRunnerUps.value = true;
-  }, 14000); // shifted by 1000ms
+    startAutoScroll(); // Start auto-scroll when runner ups appear
+  }, 14000);
 
   // Logo fades in last
   setTimeout(() => {
     showLogo.value = true;
-  }, 15500); // shifted by 1000ms
+  }, 15500);
 };
 
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = "hidden";
+
+  // Calculate initial items per page
+  calculateItemsPerPage();
+  window.addEventListener("resize", calculateItemsPerPage);
 
   // Start animation sequence
   startPodiumAnimation();
@@ -172,6 +232,8 @@ onMounted(() => {
 onUnmounted(() => {
   // Re-enable body scrolling
   document.body.style.overflow = "";
+  window.removeEventListener("resize", calculateItemsPerPage);
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
 });
 </script>
 
@@ -181,6 +243,7 @@ onUnmounted(() => {
     :class="{
       'screen-shake': isShaking,
       'drumroll-shake': isDrumrolling,
+      'is-centered': !showRunnerUps,
     }"
   >
     <div class="c-display-leaderboard-view-finale__header">
@@ -227,18 +290,35 @@ onUnmounted(() => {
     </div>
     <div class="c-display-leaderboard-view-finale__players">
       <div
-        class="c-display-leaderboard-view-finale__players-container runners-up-reveal"
-        v-if="remainingPlayers.length > 0"
+        class="c-display-leaderboard-view-finale__players-container runners-up-reveal margin-bottom"
+        v-if="displayedPlayers.length > 0"
         v-show="showRunnerUps"
       >
         <LeaderboardPlayerCard
-          v-for="(player, index) in remainingPlayers"
+          v-for="(player, index) in displayedPlayers"
           :key="player.id"
-          :position="index + 4"
+          :position="index + 4 + currentPage * ITEMS_per_PAGE"
           :playerName="player.spelersnaam"
           :maxValue="maxScore"
           :score="player.score"
         />
+      </div>
+
+      <!-- Pagination Dots -->
+      <div
+        class="c-leaderboard-pagination"
+        v-if="totalPages > 1 && showRunnerUps"
+      >
+        <div
+          v-for="pageIndex in totalPages"
+          :key="pageIndex"
+          class="c-leaderboard-pagination__dot"
+          :class="{
+            'c-leaderboard-pagination__dot--active':
+              currentPage === pageIndex - 1,
+          }"
+          @click="goToPage(pageIndex - 1)"
+        ></div>
       </div>
     </div>
   </div>

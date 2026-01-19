@@ -2,12 +2,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  // justify-content: center;
   height: 100vh;
   max-height: 100vh;
   position: relative;
-  overflow: hidden;
+  // overflow: hidden;
   padding: $spacing-5;
+
+  &.is-centered {
+    justify-content: center;
+  }
 
   .c-display-leaderboard-view-finale__header {
     display: flex;
@@ -96,17 +100,48 @@
     display: flex;
     width: 76.875rem;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; // Centered
     justify-content: flex-start;
     gap: $spacing-5;
     position: relative;
-    overflow: hidden;
+    // overflow: hidden;
 
     .c-display-leaderboard-view-finale__players-container {
       display: flex;
       flex-direction: column;
       gap: $spacing-5;
       width: 100%;
+
+      &.margin-bottom {
+        padding-bottom: $spacing-4;
+      }
+    }
+
+    .c-leaderboard-pagination {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: $spacing-3;
+      margin-top: $spacing-2;
+
+      .c-leaderboard-pagination__dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: rgb(222, 222, 222); // Light grey inactive
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &--active {
+          background-color: rgb(112, 112, 112); // Darker grey active
+          transform: scale(1.1);
+        }
+
+        &:hover {
+          background-color: rgb(180, 180, 180);
+        }
+      }
     }
   }
 

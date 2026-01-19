@@ -97,8 +97,9 @@
   }
   .c-leaderboard-podium-icon__rank {
     display: flex;
-    width: fit-content;
-    padding: 0.35rem 0.85rem;
+    width: 2.5rem; // Fixed width
+    height: 2.5rem; // Fixed height
+    // padding: 0.35rem 0.85rem; // Removed variable padding
     flex-direction: column;
     justify-content: center;
     align-items: center;
