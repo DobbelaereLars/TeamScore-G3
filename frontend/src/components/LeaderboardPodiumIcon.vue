@@ -1,6 +1,8 @@
 <script setup>
 import Crown from "../assets/crown.svg";
+import RollingNumber from "./RollingNumber.vue"; // Import the component
 import { computed } from "vue";
+// ... (rest is same)
 
 const props = defineProps({
   color: {
@@ -15,6 +17,14 @@ const props = defineProps({
   score: {
     type: Number,
     default: 0,
+  },
+  visible: {
+    type: Boolean,
+    default: true,
+  },
+  animated: {
+    type: Boolean,
+    default: true,
   },
 });
 
@@ -77,7 +87,14 @@ const profileInitials = computed(() => {
 
     <div class="c-leaderboard-podium-icon__details">
       <p class="h5">{{ spelersnaam }}</p>
-      <p class="h3">{{ score }}</p>
+      <p class="h3">
+        <RollingNumber
+          :value="score"
+          :duration="800"
+          :trigger="visible"
+          :disableInitialAnimation="!animated"
+        />
+      </p>
     </div>
   </div>
 </template>
