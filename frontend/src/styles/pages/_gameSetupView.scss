@@ -269,14 +269,10 @@
                 }
               }
             }
-
-            &__empty {
-              text-align: center;
-              padding: $spacing-6;
-              color: $color-secondary-grey-400;
-              background-color: $color-secondary-grey-100;
-              border-radius: $border-radius-5;
-            }
+          }
+          
+          &__empty {
+            color: $color-secondary-grey-400;
           }
         }
       }

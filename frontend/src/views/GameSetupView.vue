@@ -96,6 +96,15 @@ const showGameSeries = computed(
     selectedGameMode.value === 'parallel-games',
 );
 
+const hasValidParticipants = computed(() => {
+  if (selectedParticipantMode.value === 'teams-with-players') {
+    return participants.value.some(
+      (team) => team.players && team.players.length > 0,
+    );
+  }
+  return participants.value.length > 0;
+});
+
 const gameSeriesTabBar = computed(() =>
   games.value.map((game, index) => ({
     id: game.id,
@@ -427,7 +436,7 @@ const cancelDeleteGame = () => {
 
 const openAssignmentModal = (gameId) => {
   assignmentGameId.value = gameId;
-  
+
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index !== -1) {
     const game = games.value[index];
@@ -445,7 +454,7 @@ const openAssignmentModal = (gameId) => {
 
 const closeAssignmentModal = () => {
   // We breken assignmentGameId niet af, zodat de modal niet flikkert tijdens het sluiten
-  // assignmentGameId.value = null; 
+  // assignmentGameId.value = null;
 };
 
 const toggleParticipantAssignment = (participant, gameId) => {
@@ -861,48 +870,50 @@ const goToNextTab = () => {
                 <div
                   class="p-game-setup-view__settings__body__content__assignment__list"
                 >
-                  <div
-                    v-for="(game, index) in games"
-                    :key="game.id"
-                    class="p-game-setup-view__settings__body__content__assignment__list__game-card"
-                  >
+                  <template v-if="hasValidParticipants">
                     <div
-                      class="p-game-setup-view__settings__body__content__assignment__list__game-card__header"
+                      v-for="(game, index) in games"
+                      :key="game.id"
+                      class="p-game-setup-view__settings__body__content__assignment__list__game-card"
                     >
-                      <span
-                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__title h6"
+                      <div
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__header"
                       >
-                        {{ game.name || `Spel ${index + 1}` }}
-                      </span>
-                      <Button
-                        variant="secondary"
-                        button-tekst="Wijzig"
-                        :clickable="false"
-                        @click="openAssignmentModal(game.id)"
-                      />
-                    </div>
+                        <span
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__title h6"
+                        >
+                          {{ game.name || `Spel ${index + 1}` }}
+                        </span>
+                        <Button
+                          variant="secondary"
+                          button-tekst="Wijzig"
+                          :clickable="false"
+                          @click="openAssignmentModal(game.id)"
+                        />
+                      </div>
 
-                    <div
-                      class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants"
-                    >
-                      <span
-                        v-for="p in getAssignedParticipants(game.id)"
-                        :key="p.id"
-                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__tag"
+                      <div
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants"
                       >
-                        {{ p.name }}
-                      </span>
-                      <span
-                        v-if="getAssignedParticipants(game.id).length === 0"
-                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__empty"
-                      >
-                        Geen deelnemers
-                      </span>
+                        <span
+                          v-for="p in getAssignedParticipants(game.id)"
+                          :key="p.id"
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__tag"
+                        >
+                          {{ p.name }}
+                        </span>
+                        <span
+                          v-if="getAssignedParticipants(game.id).length === 0"
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__empty"
+                        >
+                          Geen deelnemers
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </template>
 
                   <div
-                    v-if="participants.length === 0"
+                    v-if="!hasValidParticipants"
                     class="p-game-setup-view__settings__body__content__assignment__empty"
                   >
                     <p>
