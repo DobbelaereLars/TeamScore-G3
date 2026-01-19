@@ -54,11 +54,11 @@ const games = ref([
     setsCount: 1,
     pointsPerAction: 1,
     useBonusPoints: false,
-    bonusPoints: 0,
+    bonusPoints: 1,
     timeNotation: 'mm:ss',
     timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
-    timeBonusPoints: 0,
+    timeBonusPoints: 1,
   },
 ]);
 
@@ -307,11 +307,11 @@ function addGame() {
     setsCount: 1,
     pointsPerAction: 1,
     useBonusPoints: false,
-    bonusPoints: 0,
+    bonusPoints: 1,
     timeNotation: 'mm:ss',
     timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
-    timeBonusPoints: 0,
+    timeBonusPoints: 1,
   });
 
   activeGameIndex.value = games.value.length - 1;
@@ -350,11 +350,11 @@ const confirmDeleteGame = () => {
       setsCount: 1,
       pointsPerAction: 1,
       useBonusPoints: false,
-      bonusPoints: 0,
+      bonusPoints: 1,
       timeNotation: 'mm:ss',
       timeRanking: 'fastest-first',
       useTimeBonusPoints: false,
-      timeBonusPoints: 0,
+      timeBonusPoints: 1,
     });
     activeGameIndex.value = 0;
   } else if (activeGameIndex.value >= games.value.length) {
@@ -587,7 +587,7 @@ const goToNextTab = () => {
                     :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
                     min="1"
-                    max="10"
+                    max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
                     :name="`rounds-${activeGameId}`"
@@ -600,7 +600,7 @@ const goToNextTab = () => {
                     :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
                     min="1"
-                    max="10"
+                    max="100"
                     label="Aantal sets per ronde/game"
                     :id="`sets-${activeGameId}`"
                     :name="`sets-${activeGameId}`"
@@ -661,7 +661,7 @@ const goToNextTab = () => {
                   <ToggleWithDropdown
                     :inputId="`points-bonus-toggle-${activeGameId}`"
                     labelTekst="Bonus punten per actie"
-                    min="0"
+                    min="1"
                     max="100"
                     label="Aantal bonus punten per actie"
                     :id="`points-bonus-${activeGameId}`"
@@ -710,7 +710,7 @@ const goToNextTab = () => {
                   <ToggleWithDropdown
                     :inputId="`time-bonus-toggle-${activeGameId}`"
                     labelTekst="Bonus punten per actie"
-                    min="0"
+                    min="1"
                     max="100"
                     label="Aantal bonus punten per actie"
                     :id="`time-bonus-${activeGameId}`"
