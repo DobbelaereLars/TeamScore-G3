@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Plus, Users } from 'lucide-vue-next';
 import Button from './Button.vue';
 import InputField from './InputField.vue';
@@ -29,7 +29,7 @@ const nextId = computed(() => {
 });
 
 const selectedTeam = computed(() =>
-  participants.value.find((t) => t.id === selectedTeamId.value)
+  participants.value.find((t) => t.id === selectedTeamId.value),
 );
 
 const deleteTeamModalTitle = computed(() => {
@@ -56,7 +56,7 @@ const addPlayer = () => {
     if (!selectedTeamId.value) return;
 
     const teamIndex = participants.value.findIndex(
-      (t) => t.id === selectedTeamId.value
+      (t) => t.id === selectedTeamId.value,
     );
 
     if (teamIndex !== -1) {
@@ -113,7 +113,7 @@ const deleteParticipant = (playerId) => {
 const deletePlayerFromTeam = (playerId) => {
   if (selectedTeamId.value) {
     const teamIndex = participants.value.findIndex(
-      (t) => t.id === selectedTeamId.value
+      (t) => t.id === selectedTeamId.value,
     );
     if (teamIndex !== -1) {
       const team = participants.value[teamIndex];
@@ -140,7 +140,7 @@ const confirmDeleteTeam = () => {
   if (!teamToDeleteId.value) return;
 
   const index = participants.value.findIndex(
-    (t) => t.id === teamToDeleteId.value
+    (t) => t.id === teamToDeleteId.value,
   );
 
   if (index !== -1) {
@@ -168,6 +168,19 @@ const confirmDeleteTeam = () => {
 const cancelDeleteTeam = () => {
   teamToDeleteId.value = null;
 };
+
+// Watch for mode changes to ensure a team is selected when switching to 'teams-with-players'
+watch(
+  () => props.playerMode,
+  (newMode) => {
+    if (newMode === 'teams-with-players') {
+      if (!selectedTeamId.value && participants.value.length > 0) {
+        selectedTeamId.value = participants.value[0].id;
+      }
+    }
+  },
+  { immediate: true },
+);
 
 const TeamRadioButtons = [];
 </script>
