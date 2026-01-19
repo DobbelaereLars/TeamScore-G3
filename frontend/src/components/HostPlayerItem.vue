@@ -16,7 +16,21 @@ const props = defineProps({
         type: Number,
         default: 99,
     },
+    perClick: {
+        type: Number,
+        default: 1,
+    },
 });
+
+const emit = defineEmits(['updatePoints']);
+
+const increasePoints = () => {
+    emit('updatePoints', props.points + props.perClick);
+};
+
+const decreasePoints = () => {
+    emit('updatePoints', props.points - props.perClick);
+};
 </script>
 
 <template>
@@ -35,12 +49,12 @@ const props = defineProps({
         </div>
 
         <div class="c-host-player-item__buttons">
-            <Button :is-icon-button="true" variant="primary">
+            <Button :is-icon-button="true" :clickable="false" variant="primary" @click="increasePoints">
                 <template #c-btn_icon-left>
                     <Plus :size="18" />
                 </template>
             </Button>
-            <Button :is-icon-button="true" variant="secondary">
+            <Button :is-icon-button="true" :clickable="false" variant="secondary" @click="decreasePoints">
                 <template #c-btn_icon-left>
                     <Minus :size="18" />
                 </template>

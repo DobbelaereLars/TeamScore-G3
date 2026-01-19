@@ -1,0 +1,23 @@
+.c-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-7;
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__title {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  &__players {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;
+    gap: $spacing-6;
+  }
+}

@@ -24,6 +24,8 @@ import SessionCard from '../components/SessionCard.vue';
 import Notice from '../components/Notice.vue';
 import Modal from '../components/Modal.vue';
 
+const playerPoints = ref(10);
+
 const radioItems = [
   {
     id: 'game',
@@ -166,7 +168,8 @@ const tabBarItems = [
 
     <TabBar :items="tabBarItems" name="test-tabbar" :hideIcon="true"></TabBar>
 
-    <HostPlayerItem name="Renz Deheegher" />
+    <HostPlayerItem name="Renz Deheegher" :per-click="2" :points="playerPoints"
+      @update-points="playerPoints = $event" />
     <LeaderboardPodiumIcon color="blue" />
     <LeaderboardPodiumIcon color="red" />
 
