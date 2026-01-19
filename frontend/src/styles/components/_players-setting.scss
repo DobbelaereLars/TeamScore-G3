@@ -177,18 +177,68 @@
     width: 100%;
 
     &-delete-x {
+      // Legacy class, now handled by -action--delete
       cursor: pointer;
-      transition:
-        transform 0.1s ease,
-        color 0.1s ease;
+    }
 
-      &:hover {
-        color: $colors-vibrant-red;
+    &-actions {
+      display: flex;
+      flex-direction: row;
+      gap: $spacing-4;
+    }
+
+    &-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: $color-secondary-grey-400;
+      transition: all 0.2s ease;
+
+      &--delete {
+        &:hover {
+          color: $colors-vibrant-red;
+        }
+
+        &:active {
+          transform: scale(0.9);
+        }
       }
+    }
 
-      &:active {
-        transform: scale(0.85);
-        color: $colors-vibrant-red;
+    &-content {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      margin: 0 $spacing-5;
+      min-width: 0; // Ensures truncation works without hiding box-shadow
+    }
+
+    &-name {
+      // Changed from cursor: text as click to edit is now via icon
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      text-align: center; // Default center alignment
+    }
+
+    &-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      box-shadow: 0 1px 0 0 currentColor;
+
+      &:focus {
+        color: $color-primary-blue-500;
       }
     }
   }

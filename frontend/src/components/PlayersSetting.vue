@@ -127,7 +127,9 @@ const deletePlayerFromTeam = (playerId) => {
 const requestDeleteTeam = (teamId) => {
   teamToDeleteId.value = teamId;
   const team = participants.value.find((t) => t.id === teamId);
-  deleteTeamModalTitle.value = team ? `${team.name} verwijderen?` : 'Team verwijderen?';
+  deleteTeamModalTitle.value = team
+    ? `${team.name} verwijderen?`
+    : 'Team verwijderen?';
 
   const dialog = document.getElementById(deleteTeamModalId);
   if (dialog && typeof dialog.showModal === 'function') {
@@ -175,6 +177,43 @@ const renameTeam = (teamId, newName) => {
     const newParticipants = [...participants.value];
     newParticipants[index] = updatedTeam;
     participants.value = newParticipants;
+  }
+};
+
+const renameParticipant = (id, newName) => {
+  // Same logic as renameTeam, applicable for Players or Teams mode
+  const index = participants.value.findIndex((p) => p.id === id);
+  if (index !== -1) {
+    const updated = { ...participants.value[index], name: newName };
+    const newParticipants = [...participants.value];
+    newParticipants[index] = updated;
+    participants.value = newParticipants;
+  }
+};
+
+const renamePlayerInTeam = (playerId, newName) => {
+  if (!selectedTeamId.value) return;
+
+  const teamIndex = participants.value.findIndex(
+    (t) => t.id === selectedTeamId.value,
+  );
+
+  if (teamIndex !== -1) {
+    const team = participants.value[teamIndex];
+    if (team.players) {
+      const playerIndex = team.players.findIndex((p) => p.id === playerId);
+      if (playerIndex !== -1) {
+        const updatedPlayers = [...team.players];
+        updatedPlayers[playerIndex] = {
+          ...updatedPlayers[playerIndex],
+          name: newName,
+        };
+        const updatedTeam = { ...team, players: updatedPlayers };
+        const newParticipants = [...participants.value];
+        newParticipants[teamIndex] = updatedTeam;
+        participants.value = newParticipants;
+      }
+    }
   }
 };
 
@@ -264,6 +303,7 @@ const TeamRadioButtons = [];
             :key="player.id"
             :name="player.name"
             @delete="deletePlayerFromTeam(player.id)"
+            @rename="(newName) => renamePlayerInTeam(player.id, newName)"
           />
           <div
             v-if="!selectedTeam?.players?.length"
@@ -286,6 +326,7 @@ const TeamRadioButtons = [];
           :key="player.id"
           :name="player.name"
           @delete="deleteParticipant(player.id)"
+          @rename="(newName) => renameParticipant(player.id, newName)"
         />
       </div>
 
@@ -299,6 +340,7 @@ const TeamRadioButtons = [];
           :key="team.id"
           :name="team.name"
           @delete="deleteParticipant(team.id)"
+          @rename="(newName) => renameParticipant(team.id, newName)"
         />
       </div>
 
