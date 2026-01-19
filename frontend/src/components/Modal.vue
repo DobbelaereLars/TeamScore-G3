@@ -1,5 +1,6 @@
 <script setup>
 import { X } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Button from './Button.vue';
 
 const props = defineProps({
@@ -31,6 +32,41 @@ const props = defineProps({
 
 const emit = defineEmits(['accept', 'cancel']);
 
+const dialogRef = ref(null);
+let observer = null;
+
+onMounted(() => {
+  const dialog = dialogRef.value;
+  if (dialog) {
+    observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'open'
+        ) {
+          if (dialog.hasAttribute('open')) {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+          } else {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+          }
+        }
+      });
+    });
+
+    observer.observe(dialog, { attributes: true });
+  }
+});
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect();
+  }
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+});
+
 const closeDialog = (event) => {
   const dialog = event?.target?.closest('dialog');
   if (dialog && typeof dialog.close === 'function') {
@@ -50,7 +86,7 @@ const handleAccept = (event) => {
 </script>
 
 <template>
-  <dialog :id="modalId" class="c-modal">
+  <dialog :id="modalId" class="c-modal" ref="dialogRef">
     <button
       class="c-modal__close-x"
       type="button"
