@@ -28,6 +28,12 @@ const props = defineProps({
         default: '#'
     }
 })
+
+const emit = defineEmits(['accept']);
+
+const handleAccept = (event) => {
+    emit('accept');
+};
 </script>
 
 <template>
@@ -45,7 +51,9 @@ const props = defineProps({
         <div class="c-modal__btncontainer">
             <Button @click="$el.closest('dialog').close()" :button-tekst="cancelBtnText" :clickable="false"
                 variant="secondary" />
-            <Button :button-tekst="acceptBtnText" :href="acceptBtnLink" variant="primary" />
+            <Button v-if="acceptBtnLink !== '#'" :button-tekst="acceptBtnText" :href="acceptBtnLink"
+                variant="primary" />
+            <Button v-else @click="handleAccept" :button-tekst="acceptBtnText" :clickable="false" variant="primary" />
         </div>
     </dialog>
 </template>

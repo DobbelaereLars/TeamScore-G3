@@ -20,6 +20,10 @@ const props = defineProps({
         type: Number,
         default: 1,
     },
+    sizeUp: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['updatePoints']);
@@ -35,9 +39,12 @@ const decreasePoints = () => {
 
 <template>
     <div class="c-host-player-item">
-        <span class="c-host-player-item__rank">#{{ rank }}</span>
+
         <div class="c-host-player-item__playercontainer">
-            <ProfileIcon variant="default" :size-up="true" :player-name="name" />
+            <div class="c-host-player-item__profile">
+                <ProfileIcon variant="default" :size-up="sizeUp" :player-name="name" />
+                <span class="c-host-player-item__rank">#{{ rank }}</span>
+            </div>
 
             <div class="c-host-player-item__playerinfo">
                 <p class="h5">{{ name }}</p>
