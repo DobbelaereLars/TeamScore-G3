@@ -87,6 +87,14 @@ const deleteGameModalTitle = computed(() => {
 });
 
 // Computed
+const sessionNamePlaceholder = computed(() => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  return `Bv. Sportdag ${day}/${month}/${year}`;
+});
+
 const activeGameId = computed(
   () => games.value[activeGameIndex.value]?.id ?? 'game-1',
 );
@@ -659,7 +667,7 @@ socket.on('connect', () => {
                   id="session-name"
                   name="sessionName"
                   :label="false"
-                  placeholder="Bv. Sportdag 05/01/2026"
+                  :placeholder="sessionNamePlaceholder"
                 />
               </div>
 
