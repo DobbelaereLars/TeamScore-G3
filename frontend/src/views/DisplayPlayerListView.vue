@@ -50,13 +50,11 @@ const checkOverflow = async () => {
       await nextTick();
 
       if (fits()) {
-        console.log(`Optimized: Shrunk to level "${scaleLevels[i]}"`);
         return;
       }
     }
 
     // Even smallest didn't fit
-    console.log('No fit found, enabling scroll at smallest level');
     isScrollable.value = true;
   } else {
     // Case: Fits -> We can try LARGER sizes (upwards) to fill space
@@ -71,7 +69,6 @@ const checkOverflow = async () => {
       if (!fits()) {
         // Too big! Revert to the previous size (i + 1) which worked.
         scaleClass.value = scaleLevels[i + 1];
-        console.log(`Optimized: Reverted to level "${scaleLevels[i + 1]}"`);
         return;
       }
     }
@@ -84,15 +81,12 @@ const totalPlayers = computed(() => {
 });
 
 const handleNavigate = (data) => {
-  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name });
   }
 };
 
 const handleUpdateParticipants = (data) => {
-  console.log('Received participants update:', data);
-
   // Check if data is array (old format) or object (new format)
   if (Array.isArray(data)) {
     players.value = data;
