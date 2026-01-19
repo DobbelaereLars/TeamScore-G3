@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps({
   progress: {
@@ -17,9 +17,9 @@ const props = defineProps({
   },
   variant: {
     type: String,
-    default: 'Px',
-    validator: (value) => [, 'P1', 'P2', 'P3', 'Px'].includes(value)
-  }
+    default: "Px",
+    validator: (value) => [, "P1", "P2", "P3", "Px"].includes(value),
+  },
 });
 
 const progressPercentage = computed(() => {
@@ -32,10 +32,12 @@ const progressPercentage = computed(() => {
 
 <template>
   <div class="c-progressbar">
-    <div class="c-progressbar__track"
-      :class="`c-progressbar__track--${props.variant}`">
-      <div 
-        class="c-progressbar__fill" 
+    <div
+      class="c-progressbar__track"
+      :class="`c-progressbar__track--${props.variant}`"
+    >
+      <div
+        class="c-progressbar__fill"
         :class="`c-progressbar__fill--${props.variant}`"
         :style="{ width: `${progressPercentage}%` }"
       ></div>

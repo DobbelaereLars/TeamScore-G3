@@ -129,4 +129,5 @@
   align-items: center;
   width: fit-content;
   gap: $spacing-3;
+  white-space: nowrap; // Prevent name from wrapping
 }
