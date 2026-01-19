@@ -814,7 +814,11 @@ socket.on('connect', () => {
                     labelTekst="Gebruik van sets"
                     min="1"
                     max="100"
-                    label="Aantal sets per ronde/game"
+                    :label="
+                      activeGame.useRounds
+                        ? 'Aantal sets per ronde'
+                        : 'Aantal sets per game'
+                    "
                     :id="`sets-${activeGameId}`"
                     :name="`sets-${activeGameId}`"
                     type="number"
