@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
@@ -263,7 +263,61 @@ const isLastTab = computed(
   () => activeTabIndex.value === gameSetupTabList.value.length - 1,
 );
 
-const nextButtonText = computed(() => (isLastTab.value ? 'Klaar' : 'Volgende'));
+const nextButtonText = computed(() => {
+  // If Parallel Games is selected and we are on participants tab,
+  // we always want 'Volgende' because 'Indeling' comes next (even if hidden/disabled)
+  if (
+    selectedGameMode.value === 'parallel-games' &&
+    activeTab.value === 'participants'
+  ) {
+    return 'Volgende';
+  }
+  return isLastTab.value ? 'Klaar' : 'Volgende';
+});
+
+const isNextButtonDisabled = computed(() => {
+  if (activeTab.value === 'participants') {
+    return !hasValidParticipants.value;
+  }
+  return false;
+});
+
+const updateAssignmentTabVisibility = () => {
+  const isParallel = selectedGameMode.value === 'parallel-games';
+  const isValid = hasValidParticipants.value;
+  const shouldHaveAssignment = isParallel && isValid;
+
+  const assignmentIndex = gameSetupTabList.value.findIndex(
+    (t) => t.id === 'assignment',
+  );
+
+  if (shouldHaveAssignment && assignmentIndex === -1) {
+    gameSetupTabList.value.push({
+      id: 'assignment',
+      value: 'assignment',
+      label: 'Indeling',
+      icon: LayoutList,
+    });
+  } else if (!shouldHaveAssignment && assignmentIndex !== -1) {
+    if (activeTab.value === 'assignment') {
+      const participantsIndex = gameSetupTabList.value.findIndex(
+        (t) => t.id === 'participants',
+      );
+      if (participantsIndex !== -1) {
+        gameSetupTabList.value.forEach(
+          (t, i) => (t.checked = i === participantsIndex),
+        );
+      }
+    }
+    gameSetupTabList.value = gameSetupTabList.value.filter(
+      (t) => t.id !== 'assignment',
+    );
+  }
+};
+
+watch([selectedGameMode, hasValidParticipants], () => {
+  updateAssignmentTabVisibility();
+});
 
 // Methods
 const handleParticipantModeChange = (value) => {
@@ -273,22 +327,7 @@ const handleParticipantModeChange = (value) => {
 const handleGameModeChange = (value) => {
   selectedGameMode.value = value;
 
-  // Update tabs
-  const hasAssignment = gameSetupTabList.value.some(
-    (t) => t.id === 'assignment',
-  );
-  if (value === 'parallel-games' && !hasAssignment) {
-    gameSetupTabList.value.push({
-      id: 'assignment',
-      value: 'assignment',
-      label: 'Indeling',
-      icon: LayoutList,
-    });
-  } else if (value !== 'parallel-games' && hasAssignment) {
-    gameSetupTabList.value = gameSetupTabList.value.filter(
-      (t) => t.id !== 'assignment',
-    );
-  }
+  // Tabs update handled by watcher
 
   // Reset to single game if switching to single-game mode
   if (value === 'single-game' && games.value.length > 1) {
@@ -1001,6 +1040,7 @@ const goToNextTab = () => {
               :button-tekst="nextButtonText"
               @click="goToNextTab"
               :clickable="false"
+              :is-disabled="isNextButtonDisabled"
             >
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />
