@@ -357,6 +357,8 @@ const handleGameModeChange = (value) => {
     games.value.length < 2
   ) {
     addGame();
+    // Default to first game when switching mode, instead of the newly added one
+    activeGameIndex.value = 0;
   }
 };
 
@@ -419,7 +421,7 @@ function addGame() {
 
   games.value.push({
     id: newGameId,
-    name: `Spel ${newGameNumber}`,
+    name: '',
     scoreModel: 'points',
     useRounds: false,
     roundsCount: 1,
