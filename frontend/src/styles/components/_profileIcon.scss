@@ -26,6 +26,12 @@
     font-size: var(--font-size-h5);
   }
 
+  &--extra-large {
+    width: 6.75rem;
+    height: 6.75rem;
+    font-size: var(--font-size-h4);
+  }
+
   &--scoreboard-P1 {
     aspect-ratio: 74.93/74.93;
 

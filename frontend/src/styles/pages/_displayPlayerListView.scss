@@ -1,0 +1,54 @@
+.c-displayPlayerList {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.c-displayPlayerList__header {
+  display: flex;
+  gap: $spacing-9;
+  padding: 3rem;
+
+  .c-displayPlayerList__header__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: $spacing-3;
+  }
+}
+
+.c-displayPlayerList__players {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  padding: $spacing-6;
+  gap: $spacing-7;
+
+  .c-displayPlayerList__players__player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    gap: $spacing-6;
+
+    $player-colors: $colors-vibrant-blue, $colors-vibrant-green,
+      $colors-vibrant-red, $colors-vibrant-yellow, $colors-vibrant-orange;
+
+    @for $i from 1 through length($player-colors) {
+      &:nth-child(#{length($player-colors)}n + #{$i}) {
+        .c-profile__icon {
+          color: nth($player-colors, $i);
+        }
+      }
+    }
+  }
+}
+
+.c-displayPlayerList__footer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: $spacing-9;
+}
