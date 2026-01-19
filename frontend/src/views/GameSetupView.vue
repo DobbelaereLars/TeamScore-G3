@@ -523,7 +523,17 @@ const saveAssignmentChanges = () => {
 const toggleParticipantAssignment = (participantId, gameId) => {
   const currentAssigned = tempAssignments.value[participantId];
   if (currentAssigned === gameId) {
-    tempAssignments.value[participantId] = null;
+    // Check if the participant had an original assignment to revert to
+    const originalParticipant = participants.value.find(
+      (p) => p.id === participantId,
+    );
+    const originalAssignment = originalParticipant?.assignedGameId;
+
+    if (originalAssignment && originalAssignment !== gameId) {
+      tempAssignments.value[participantId] = originalAssignment;
+    } else {
+      tempAssignments.value[participantId] = null;
+    }
   } else {
     tempAssignments.value[participantId] = gameId;
   }
@@ -932,8 +942,9 @@ const goToNextTab = () => {
                 >
                   <h2 class="h6">Indeling van spelers</h2>
                   <p>
-                    Wijs deelnemers toe aan een specifiek spel. Deelnemers die
-                    geen spel toegewezen krijgen, doen niet mee.
+                    Wijs deelnemers toe aan een specifiek spel. Je kunt pas naar
+                    de volgende stap gaan wanneer iedereen is ingedeeld en elk
+                    spel minstens één deelnemer heeft.
                   </p>
                 </div>
 
