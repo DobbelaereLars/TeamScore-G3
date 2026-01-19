@@ -151,10 +151,11 @@ const confirmDeleteTeam = () => {
 
     // Update selectedTeamId if we removed the selected one
     if (selectedTeamId.value === teamToDeleteId.value) {
-      if (participants.value.length > 0) {
+      if (newParticipants.length > 0) {
         // Select previous or first
         const newIndex = Math.max(0, index - 1);
-        selectedTeamId.value = participants.value[newIndex].id;
+        const safeIndex = Math.min(newIndex, newParticipants.length - 1);
+        selectedTeamId.value = newParticipants[safeIndex].id;
       } else {
         selectedTeamId.value = null;
       }
