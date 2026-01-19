@@ -73,6 +73,7 @@ const deleteGameModalId = 'delete-game-modal';
 const assignmentGameId = ref(null);
 const assignmentModalId = 'assignment-modal';
 const assignmentModalTitle = ref('');
+const tempAssignments = ref({}); // Stores temporary state while modal is open { participantId: gameId | null }
 
 const deleteGameModalTitle = computed(() => {
   const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
@@ -476,6 +477,12 @@ const cancelDeleteGame = () => {
 const openAssignmentModal = (gameId) => {
   assignmentGameId.value = gameId;
 
+  // Initialize temp assignments
+  tempAssignments.value = {};
+  participants.value.forEach((p) => {
+    tempAssignments.value[p.id] = p.assignedGameId;
+  });
+
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index !== -1) {
     const game = games.value[index];
@@ -492,20 +499,35 @@ const openAssignmentModal = (gameId) => {
 };
 
 const closeAssignmentModal = () => {
-  // We breken assignmentGameId niet af, zodat de modal niet flikkert tijdens het sluiten
-  // assignmentGameId.value = null;
+  // Just close, discard changes
 };
 
-const toggleParticipantAssignment = (participant, gameId) => {
-  if (participant.assignedGameId === gameId) {
-    participant.assignedGameId = null;
+const saveAssignmentChanges = () => {
+  participants.value.forEach((p) => {
+    if (tempAssignments.value.hasOwnProperty(p.id)) {
+      p.assignedGameId = tempAssignments.value[p.id];
+    }
+  });
+  // Close is handled by modal emit
+};
+
+const toggleParticipantAssignment = (participantId, gameId) => {
+  const currentAssigned = tempAssignments.value[participantId];
+  if (currentAssigned === gameId) {
+    tempAssignments.value[participantId] = null;
   } else {
-    participant.assignedGameId = gameId;
+    tempAssignments.value[participantId] = gameId;
   }
 };
 
 const getAssignedParticipants = (gameId) => {
   return participants.value.filter((p) => p.assignedGameId === gameId);
+};
+
+const getGameName = (gameId) => {
+  const index = games.value.findIndex((g) => g.id === gameId);
+  if (index === -1) return 'ander spel';
+  return games.value[index].name || `Spel ${index + 1}`;
 };
 
 const goToPreviousTab = () => {
@@ -978,10 +1000,10 @@ const goToNextTab = () => {
           <Modal
             :modal-id="assignmentModalId"
             :title="assignmentModalTitle"
-            cancel-btn-text="Sluiten"
+            cancel-btn-text="Annuleren"
             accept-btn-text="Opslaan"
             @cancel="closeAssignmentModal"
-            @accept="closeAssignmentModal"
+            @accept="saveAssignmentChanges"
           >
             <p class="c-modal__text">
               Selecteer de deelnemers die meedoen aan dit spel. Deelnemers die
@@ -995,14 +1017,19 @@ const goToNextTab = () => {
                 class="c-assignment-modal-list__item"
                 :class="{
                   'c-assignment-modal-list__item--active':
-                    participant.assignedGameId === assignmentGameId,
+                    tempAssignments[participant.id] === assignmentGameId,
                 }"
               >
                 <input
                   type="checkbox"
-                  :checked="participant.assignedGameId === assignmentGameId"
+                  :checked="
+                    tempAssignments[participant.id] === assignmentGameId
+                  "
                   @change="
-                    toggleParticipantAssignment(participant, assignmentGameId)
+                    toggleParticipantAssignment(
+                      participant.id,
+                      assignmentGameId,
+                    )
                   "
                 />
                 <span class="c-assignment-modal-list__item__name">{{
@@ -1010,16 +1037,12 @@ const goToNextTab = () => {
                 }}</span>
                 <span
                   v-if="
-                    participant.assignedGameId &&
-                    participant.assignedGameId !== assignmentGameId
+                    tempAssignments[participant.id] &&
+                    tempAssignments[participant.id] !== assignmentGameId
                   "
                   class="c-assignment-modal-list__item__badge"
                 >
-                  In
-                  {{
-                    games.find((g) => g.id === participant.assignedGameId)
-                      ?.name || 'ander spel'
-                  }}
+                  In {{ getGameName(tempAssignments[participant.id]) }}
                 </span>
               </label>
             </div>
