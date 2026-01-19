@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue';
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
@@ -602,8 +602,7 @@ watch(
   { deep: true },
 );
 
-// Ensure we sync with server when connecting (e.g. after server restart)
-socket.on('connect', () => {
+const handleSocketConnect = () => {
   if (participants.value.length > 0) {
     const displayList = participants.value.map((p) => ({ playerName: p.name }));
     socket.emit('display:update-participants', {
@@ -611,6 +610,18 @@ socket.on('connect', () => {
       mode: selectedParticipantMode.value,
     });
   }
+};
+
+onMounted(() => {
+  socket.on('connect', handleSocketConnect);
+  // Also check immediately if already connected
+  if (socket.connected) {
+    handleSocketConnect();
+  }
+});
+
+onUnmounted(() => {
+  socket.off('connect', handleSocketConnect);
 });
 </script>
 
