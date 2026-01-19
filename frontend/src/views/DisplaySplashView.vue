@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import socket from '../utils/socket';
 
+const router = useRouter();
 const showPopup = ref(false);
 const popupMessage = ref('');
 
@@ -16,12 +18,21 @@ const handleShowPopup = (data) => {
   }, 3000);
 };
 
+const handleNavigate = (data) => {
+  console.log('Received navigate event:', data);
+  if (data.name) {
+    router.push({ name: data.name });
+  }
+};
+
 onMounted(() => {
   socket.on('show-popup', handleShowPopup);
+  socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
   socket.off('show-popup', handleShowPopup);
+  socket.off('display:navigate', handleNavigate);
 });
 </script>
 

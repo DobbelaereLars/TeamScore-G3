@@ -27,6 +27,7 @@ import {
   LayoutList,
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
+import socket from '../utils/socket';
 
 const router = useRouter();
 
@@ -549,9 +550,14 @@ const getGameName = (gameId) => {
   return games.value[index].name || `Spel ${index + 1}`;
 };
 
+const cancelSession = () => {
+  socket.emit('session-cancel');
+  router.push('/tablet');
+};
+
 const goToPreviousTab = () => {
   if (isFirstTab.value) {
-    router.push('/tablet');
+    cancelSession();
   } else {
     const prevIndex = activeTabIndex.value - 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -588,7 +594,12 @@ const goToNextTab = () => {
         <form class="p-game-setup-view__settings" @submit.prevent>
           <div class="p-game-setup-view__settings__head">
             <div class="p-game-setup-view__settings__head__subtitle">
-              <Button href="/tablet" :is-icon-button="true" variant="secondary">
+              <Button
+                @click="cancelSession"
+                :clickable="false"
+                :is-icon-button="true"
+                variant="secondary"
+              >
                 <template #c-btn_icon-left>
                   <ArrowLeft :size="18" />
                 </template>

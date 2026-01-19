@@ -1,22 +1,41 @@
 <script setup>
-import ProfileIcon from "../components/ProfileIcon.vue";
-import { ref, computed } from "vue";
+import ProfileIcon from '../components/ProfileIcon.vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import socket from '../utils/socket';
+
+const router = useRouter();
 
 const players = ref([
-  { playerName: "Jhonny Depp" },
-  { playerName: "Will Smith" },
-  { playerName: "Tom Cruise" },
-  { playerName: "Brad Pitt" },
-  { playerName: "Leonardo DiCaprio" },
-  { playerName: "Robert Downey Jr." },
-  { playerName: "Scarlett Johansson" },
-  { playerName: "Jennifer Lawrence" },
-  { playerName: "Chris Evans" },
-  { playerName: "Yarne Diopere" },
+  { playerName: 'Jhonny Depp' },
+  { playerName: 'Will Smith' },
+  { playerName: 'Tom Cruise' },
+  { playerName: 'Brad Pitt' },
+  { playerName: 'Leonardo DiCaprio' },
+  { playerName: 'Robert Downey Jr.' },
+  { playerName: 'Scarlett Johansson' },
+  { playerName: 'Jennifer Lawrence' },
+  { playerName: 'Chris Evans' },
+  { playerName: 'Yarne Diopere' },
 ]);
 
 const totalPlayers = computed(() => {
   return players.value.length;
+});
+
+const handleNavigate = (data) => {
+  console.log('Received navigate event:', data);
+  if (data.name) {
+    router.push({ name: data.name });
+  }
+};
+
+onMounted(() => {
+  socket.on('display:navigate', handleNavigate);
+});
+
+onUnmounted(() => {
+  socket.off('display:navigate', handleNavigate);
 });
 </script>
 

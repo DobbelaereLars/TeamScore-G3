@@ -20,6 +20,20 @@ function setupSockets(server) {
       });
     });
 
+    socket.on('session-init', () => {
+      console.log('Session init event received');
+      io.emit('display:navigate', {
+        name: 'display-player-list',
+      });
+    });
+
+    socket.on('session-cancel', () => {
+      console.log('Session cancel event received');
+      io.emit('display:navigate', {
+        name: 'display-splash',
+      });
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });
