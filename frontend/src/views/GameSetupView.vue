@@ -340,8 +340,33 @@ const handleGameModeChange = (value) => {
   // Tabs update handled by watcher
 
   // Reset to single game if switching to single-game mode
-  if (value === 'single-game' && games.value.length > 1) {
-    games.value = [games.value[0]];
+  if (value === 'single-game') {
+    if (games.value.length > 0) {
+      // Keep only the first game and reset its ID to game-1
+      const firstGame = { ...games.value[0], id: 'game-1' };
+      // If the name was Default (empty), it will now show "Spel 1" due to ID change.
+      // If it had a custom name, it keeps it.
+      games.value = [firstGame];
+    } else {
+      // Should not happen, but safe fallback
+      games.value = [{
+        id: 'game-1', 
+        name: '',
+        scoreModel: 'points',
+        useRounds: false,
+        roundsCount: 1,
+        useSets: false,
+        setsCount: 1,
+        pointsPerAction: 1,
+        pointsRanking: 'highest-first',
+        useBonusPoints: false,
+        bonusPoints: 1,
+        timeNotation: 'mm:ss',
+        timeRanking: 'fastest-first',
+        useTimeBonusPoints: false,
+        timeBonusPoints: 1,
+      }];
+    }
     activeGameIndex.value = 0;
   } else if (
     (value === 'parallel-games' || value === 'series-of-games') &&
