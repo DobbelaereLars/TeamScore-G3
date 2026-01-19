@@ -53,6 +53,7 @@ const games = ref([
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
     bonusPoints: 1,
     timeNotation: 'mm:ss',
@@ -109,6 +110,21 @@ const timerankingTabBar = computed(() => [
     value: 'slowest-first',
     label: 'Langzaamste tijd wint',
     checked: activeGame.value?.timeRanking === 'slowest-first',
+  },
+]);
+
+const pointsRankingTabBar = computed(() => [
+  {
+    id: 'highest-first',
+    value: 'highest-first',
+    label: 'Hoogste score wint',
+    checked: activeGame.value?.pointsRanking === 'highest-first',
+  },
+  {
+    id: 'lowest-first',
+    value: 'lowest-first',
+    label: 'Laagste score wint',
+    checked: activeGame.value?.pointsRanking === 'lowest-first',
   },
 ]);
 
@@ -284,6 +300,12 @@ const handleTimeRankingChange = (value) => {
   }
 };
 
+const handlePointsRankingChange = (value) => {
+  if (activeGame.value) {
+    activeGame.value.pointsRanking = value;
+  }
+};
+
 function addGame() {
   const maxId = games.value.reduce((max, game) => {
     const match = game.id.match(/^game-(\d+)$/);
@@ -306,6 +328,7 @@ function addGame() {
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
     bonusPoints: 1,
     timeNotation: 'mm:ss',
@@ -343,6 +366,7 @@ const confirmDeleteGame = () => {
     games.value.push({
       id: 'game-1',
       name: '',
+      pointsRanking: 'highest-first',
       scoreModel: 'points',
       useRounds: false,
       roundsCount: 1,
@@ -652,6 +676,18 @@ const goToNextTab = () => {
                     max="100"
                     v-model="activeGame.pointsPerAction"
                   />
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
+                  <h2 class="h6">Rangorde</h2>
+                  <TabBar
+                    :items="pointsRankingTabBar"
+                    :name="`points-ranking-${activeGameId}`"
+                    :hideIcon="true"
+                    @change="handlePointsRankingChange"
+                  ></TabBar>
                 </div>
 
                 <div
