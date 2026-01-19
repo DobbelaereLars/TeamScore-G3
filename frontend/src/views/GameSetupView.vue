@@ -983,6 +983,11 @@ const goToNextTab = () => {
             @cancel="closeAssignmentModal"
             @accept="closeAssignmentModal"
           >
+            <p class="c-modal__text">
+              Selecteer de deelnemers die meedoen aan dit spel. Deelnemers die
+              al zijn toegewezen aan een ander spel, worden daar verwijderd als
+              je ze hier selecteert.
+            </p>
             <div class="c-assignment-modal-list">
               <label
                 v-for="participant in participants"
