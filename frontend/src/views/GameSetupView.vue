@@ -850,7 +850,7 @@ const goToNextTab = () => {
                   class="p-game-setup-view__settings__body__content__assignment__list"
                 >
                   <div
-                    v-for="game in games"
+                    v-for="(game, index) in games"
                     :key="game.id"
                     class="p-game-setup-view__settings__body__content__assignment__list__game-card"
                   >
@@ -860,7 +860,7 @@ const goToNextTab = () => {
                       <span
                         class="p-game-setup-view__settings__body__content__assignment__list__game-card__title"
                       >
-                        {{ game.name || 'Naamloos spel' }}
+                        {{ game.name || `Spel ${index + 1}` }}
                       </span>
                       <Button
                         variant="secondary"
