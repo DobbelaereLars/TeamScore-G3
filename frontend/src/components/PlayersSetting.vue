@@ -21,6 +21,7 @@ const inputValue = ref('');
 const selectedTeamId = ref(null);
 const teamToDeleteId = ref(null);
 const deleteTeamModalId = 'delete-team-modal';
+const deleteTeamModalTitle = ref('Team verwijderen?');
 
 const nextId = computed(() => {
   if (participants.value.length === 0) return 1;
@@ -31,11 +32,6 @@ const nextId = computed(() => {
 const selectedTeam = computed(() =>
   participants.value.find((t) => t.id === selectedTeamId.value),
 );
-
-const deleteTeamModalTitle = computed(() => {
-  const team = participants.value.find((t) => t.id === teamToDeleteId.value);
-  return team ? `${team.name} verwijderen?` : 'Team verwijderen?';
-});
 
 const placeholder = computed(() => {
   if (props.playerMode === 'teams-with-players')
@@ -130,6 +126,9 @@ const deletePlayerFromTeam = (playerId) => {
 
 const requestDeleteTeam = (teamId) => {
   teamToDeleteId.value = teamId;
+  const team = participants.value.find((t) => t.id === teamId);
+  deleteTeamModalTitle.value = team ? `${team.name} verwijderen?` : 'Team verwijderen?';
+
   const dialog = document.getElementById(deleteTeamModalId);
   if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();

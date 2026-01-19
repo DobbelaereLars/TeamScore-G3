@@ -69,22 +69,13 @@ const games = ref([
 const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
 const deleteGameModalId = 'delete-game-modal';
+const deleteGameModalTitle = ref('Game verwijderen?');
 
 // Assignment
 const assignmentGameId = ref(null);
 const assignmentModalId = 'assignment-modal';
 const assignmentModalTitle = ref('');
 const tempAssignments = ref({}); // Stores temporary state while modal is open { participantId: gameId | null }
-
-const deleteGameModalTitle = computed(() => {
-  const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
-  const game = games.value[index];
-
-  if (!game) return 'Game verwijderen?';
-
-  const displayName = getDefaultGameName(game);
-  return `${displayName} verwijderen?`;
-});
 
 // Computed
 const sessionNamePlaceholder = computed(() => {
@@ -387,6 +378,9 @@ const handleGameTabClose = (gameId) => {
   }
 
   gameToDeleteId.value = gameId;
+  const game = games.value.find((g) => g.id === gameId);
+  const displayName = game ? getDefaultGameName(game) : 'Game';
+  deleteGameModalTitle.value = `${displayName} verwijderen?`;
 
   const dialog = document.getElementById(deleteGameModalId);
   if (dialog && typeof dialog.showModal === 'function') {
@@ -487,11 +481,12 @@ const confirmDeleteGame = () => {
     activeGameIndex.value = activeGameIndex.value - 1;
   }
 
-  gameToDeleteId.value = null;
+  // ID reset handled after delay or next modal open to prevent flicker
+  // gameToDeleteId.value = null;
 };
 
 const cancelDeleteGame = () => {
-  gameToDeleteId.value = null;
+  // gameToDeleteId.value = null;
 };
 
 const openAssignmentModal = (gameId) => {
