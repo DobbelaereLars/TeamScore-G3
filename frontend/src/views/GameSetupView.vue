@@ -523,7 +523,17 @@ const saveAssignmentChanges = () => {
 const toggleParticipantAssignment = (participantId, gameId) => {
   const currentAssigned = tempAssignments.value[participantId];
   if (currentAssigned === gameId) {
-    tempAssignments.value[participantId] = null;
+    // Check if the participant had an original assignment to revert to
+    const originalParticipant = participants.value.find(
+      (p) => p.id === participantId,
+    );
+    const originalAssignment = originalParticipant?.assignedGameId;
+
+    if (originalAssignment && originalAssignment !== gameId) {
+      tempAssignments.value[participantId] = originalAssignment;
+    } else {
+      tempAssignments.value[participantId] = null;
+    }
   } else {
     tempAssignments.value[participantId] = gameId;
   }
