@@ -1,14 +1,23 @@
 <script setup>
+import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import SessionCard from '../components/SessionCard.vue';
 import { Gamepad2, History } from 'lucide-vue-next';
 import socket from '../utils/socket';
+
+const router = useRouter();
 
 const handleSocketTest = () => {
   console.log('Sending test-popup event...');
   socket.emit('test-popup', {
     message: 'Dit is een test popup vanuit Tablet Home View!',
   });
+};
+
+const createNewSession = () => {
+  // Inform display to go to player list (lobby)
+  socket.emit('session-init');
+  router.push('/tablet/setup');
 };
 </script>
 
@@ -23,7 +32,7 @@ const handleSocketTest = () => {
         ronde meteen zichtbaar.
       </p>
 
-      <Button href="/tablet/setup" button-tekst="Maak een spel">
+      <Button @click.prevent="createNewSession" button-tekst="Maak een spel">
         <template #c-btn_icon-left>
           <Gamepad2 :size="18" />
         </template>

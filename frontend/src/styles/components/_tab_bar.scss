@@ -56,6 +56,10 @@
     min-width: 0;
     cursor: pointer;
 
+    &__tekst {
+      text-align: center;
+    }
+
     &__close {
       background-color: transparent;
       border: none;

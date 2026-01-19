@@ -29,8 +29,18 @@
     width: 100%;
     height: fit-content;
     display: flex;
+    flex-wrap: wrap;
     gap: $spacing-5;
     align-items: center;
+
+    .c-input-field {
+      width: auto;
+      flex: 1 1 150px;
+    }
+
+    .c-btn {
+      flex: 0 0 auto;
+    }
   }
 
   &__tab {
@@ -39,7 +49,9 @@
     color: $color-secondary-grey-400;
     padding: $spacing-3 $spacing-5;
     border-radius: $border-radius-10;
-    transition: background-color 0.2s ease-in, color 0.2s ease-in;
+    transition:
+      background-color 0.2s ease-in,
+      color 0.2s ease-in;
     display: flex;
     align-items: center;
     gap: $spacing-3;
@@ -63,6 +75,41 @@
 
     &--add {
       color: $color-primary-blue-500;
+    }
+
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: $spacing-2;
+    }
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: $spacing-2;
+      cursor: pointer;
+    }
+
+    &__edit-wrapper {
+      flex-grow: 1;
+      min-width: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    &__edit-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      box-shadow: 0 1px 0 0 currentColor;
     }
   }
 
@@ -131,7 +178,9 @@
 
     &-delete-x {
       cursor: pointer;
-      transition: transform 0.1s ease, color 0.1s ease;
+      transition:
+        transform 0.1s ease,
+        color 0.1s ease;
 
       &:hover {
         color: $colors-vibrant-red;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
@@ -24,8 +24,10 @@ import {
   Target,
   Clock7,
   SquareCheck,
+  LayoutList,
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
+import socket from '../utils/socket';
 
 const router = useRouter();
 
@@ -33,6 +35,7 @@ const router = useRouter();
 const sessionName = ref('');
 const selectedParticipantMode = ref('players');
 const selectedGameMode = ref('single-game');
+const participants = ref([]);
 
 // Time notation options
 const timeNotationOptions = [
@@ -53,18 +56,25 @@ const games = ref([
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
-    bonusPoints: 0,
+    bonusPoints: 1,
     timeNotation: 'mm:ss',
     timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
-    timeBonusPoints: 0,
+    timeBonusPoints: 1,
   },
 ]);
 
 const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
 const deleteGameModalId = 'delete-game-modal';
+
+// Assignment
+const assignmentGameId = ref(null);
+const assignmentModalId = 'assignment-modal';
+const assignmentModalTitle = ref('');
+const tempAssignments = ref({}); // Stores temporary state while modal is open { participantId: gameId | null }
 
 const deleteGameModalTitle = computed(() => {
   const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
@@ -77,16 +87,33 @@ const deleteGameModalTitle = computed(() => {
 });
 
 // Computed
+const sessionNamePlaceholder = computed(() => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  return `Bv. Sportdag ${day}/${month}/${year}`;
+});
+
 const activeGameId = computed(
-  () => games.value[activeGameIndex.value]?.id ?? 'game-1'
+  () => games.value[activeGameIndex.value]?.id ?? 'game-1',
 );
 const activeGame = computed(() => games.value[activeGameIndex.value]);
 
 const showGameSeries = computed(
   () =>
     selectedGameMode.value === 'series-of-games' ||
-    selectedGameMode.value === 'parallel-games'
+    selectedGameMode.value === 'parallel-games',
 );
+
+const hasValidParticipants = computed(() => {
+  if (selectedParticipantMode.value === 'teams-with-players') {
+    return participants.value.some(
+      (team) => team.players && team.players.length > 0,
+    );
+  }
+  return participants.value.length > 0;
+});
 
 const gameSeriesTabBar = computed(() =>
   games.value.map((game, index) => ({
@@ -94,7 +121,14 @@ const gameSeriesTabBar = computed(() =>
     value: game.id,
     label: game.name || `Spel ${index + 1}`,
     checked: index === activeGameIndex.value,
-  }))
+  })),
+);
+
+const gameOptions = computed(() =>
+  games.value.map((game, index) => ({
+    value: game.id,
+    label: game.name || `Spel ${index + 1}`,
+  })),
 );
 
 const timerankingTabBar = computed(() => [
@@ -109,6 +143,21 @@ const timerankingTabBar = computed(() => [
     value: 'slowest-first',
     label: 'Langzaamste tijd wint',
     checked: activeGame.value?.timeRanking === 'slowest-first',
+  },
+]);
+
+const pointsRankingTabBar = computed(() => [
+  {
+    id: 'highest-first',
+    value: 'highest-first',
+    label: 'Hoogste score wint',
+    checked: activeGame.value?.pointsRanking === 'highest-first',
+  },
+  {
+    id: 'lowest-first',
+    value: 'lowest-first',
+    label: 'Laagste score wint',
+    checked: activeGame.value?.pointsRanking === 'lowest-first',
   },
 ]);
 
@@ -216,15 +265,78 @@ const activeTab = computed(() => {
 });
 
 const activeTabIndex = computed(() =>
-  gameSetupTabList.value.findIndex((item) => item.checked)
+  gameSetupTabList.value.findIndex((item) => item.checked),
 );
 
 const isFirstTab = computed(() => activeTabIndex.value === 0);
 const isLastTab = computed(
-  () => activeTabIndex.value === gameSetupTabList.value.length - 1
+  () => activeTabIndex.value === gameSetupTabList.value.length - 1,
 );
 
-const nextButtonText = computed(() => (isLastTab.value ? 'Klaar' : 'Volgende'));
+const nextButtonText = computed(() => {
+  // If Parallel Games is selected and we are on participants tab,
+  // we always want 'Volgende' because 'Indeling' comes next (even if hidden/disabled)
+  if (
+    selectedGameMode.value === 'parallel-games' &&
+    activeTab.value === 'participants'
+  ) {
+    return 'Volgende';
+  }
+  return isLastTab.value ? 'Klaar' : 'Volgende';
+});
+
+const isNextButtonDisabled = computed(() => {
+  if (activeTab.value === 'participants') {
+    return !hasValidParticipants.value;
+  }
+  if (activeTab.value === 'assignment') {
+    const allParticipantsAssigned = participants.value.every(
+      (p) => p.assignedGameId,
+    );
+    const allGamesHaveParticipants = games.value.every((g) =>
+      participants.value.some((p) => p.assignedGameId === g.id),
+    );
+    return !allParticipantsAssigned || !allGamesHaveParticipants;
+  }
+  return false;
+});
+
+const updateAssignmentTabVisibility = () => {
+  const isParallel = selectedGameMode.value === 'parallel-games';
+  const isValid = hasValidParticipants.value;
+  const shouldHaveAssignment = isParallel && isValid;
+
+  const assignmentIndex = gameSetupTabList.value.findIndex(
+    (t) => t.id === 'assignment',
+  );
+
+  if (shouldHaveAssignment && assignmentIndex === -1) {
+    gameSetupTabList.value.push({
+      id: 'assignment',
+      value: 'assignment',
+      label: 'Indeling',
+      icon: LayoutList,
+    });
+  } else if (!shouldHaveAssignment && assignmentIndex !== -1) {
+    if (activeTab.value === 'assignment') {
+      const participantsIndex = gameSetupTabList.value.findIndex(
+        (t) => t.id === 'participants',
+      );
+      if (participantsIndex !== -1) {
+        gameSetupTabList.value.forEach(
+          (t, i) => (t.checked = i === participantsIndex),
+        );
+      }
+    }
+    gameSetupTabList.value = gameSetupTabList.value.filter(
+      (t) => t.id !== 'assignment',
+    );
+  }
+};
+
+watch([selectedGameMode, hasValidParticipants], () => {
+  updateAssignmentTabVisibility();
+});
 
 // Methods
 const handleParticipantModeChange = (value) => {
@@ -233,6 +345,8 @@ const handleParticipantModeChange = (value) => {
 
 const handleGameModeChange = (value) => {
   selectedGameMode.value = value;
+
+  // Tabs update handled by watcher
 
   // Reset to single game if switching to single-game mode
   if (value === 'single-game' && games.value.length > 1) {
@@ -284,6 +398,12 @@ const handleTimeRankingChange = (value) => {
   }
 };
 
+const handlePointsRankingChange = (value) => {
+  if (activeGame.value) {
+    activeGame.value.pointsRanking = value;
+  }
+};
+
 function addGame() {
   const maxId = games.value.reduce((max, game) => {
     const match = game.id.match(/^game-(\d+)$/);
@@ -306,12 +426,13 @@ function addGame() {
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
-    bonusPoints: 0,
+    bonusPoints: 1,
     timeNotation: 'mm:ss',
     timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
-    timeBonusPoints: 0,
+    timeBonusPoints: 1,
   });
 
   activeGameIndex.value = games.value.length - 1;
@@ -343,6 +464,7 @@ const confirmDeleteGame = () => {
     games.value.push({
       id: 'game-1',
       name: '',
+      pointsRanking: 'highest-first',
       scoreModel: 'points',
       useRounds: false,
       roundsCount: 1,
@@ -350,11 +472,11 @@ const confirmDeleteGame = () => {
       setsCount: 1,
       pointsPerAction: 1,
       useBonusPoints: false,
-      bonusPoints: 0,
+      bonusPoints: 1,
       timeNotation: 'mm:ss',
       timeRanking: 'fastest-first',
       useTimeBonusPoints: false,
-      timeBonusPoints: 0,
+      timeBonusPoints: 1,
     });
     activeGameIndex.value = 0;
   } else if (activeGameIndex.value >= games.value.length) {
@@ -370,9 +492,80 @@ const cancelDeleteGame = () => {
   gameToDeleteId.value = null;
 };
 
+const openAssignmentModal = (gameId) => {
+  assignmentGameId.value = gameId;
+
+  // Initialize temp assignments
+  tempAssignments.value = {};
+  participants.value.forEach((p) => {
+    tempAssignments.value[p.id] = p.assignedGameId;
+  });
+
+  const index = games.value.findIndex((g) => g.id === gameId);
+  if (index !== -1) {
+    const game = games.value[index];
+    const gameName = game.name || `Spel ${index + 1}`;
+    assignmentModalTitle.value = `Deelnemers voor ${gameName}`;
+  } else {
+    assignmentModalTitle.value = 'Deelnemers toewijzen';
+  }
+
+  const dialog = document.getElementById(assignmentModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const closeAssignmentModal = () => {
+  // Just close, discard changes
+};
+
+const saveAssignmentChanges = () => {
+  participants.value.forEach((p) => {
+    if (tempAssignments.value.hasOwnProperty(p.id)) {
+      p.assignedGameId = tempAssignments.value[p.id];
+    }
+  });
+  // Close is handled by modal emit
+};
+
+const toggleParticipantAssignment = (participantId, gameId) => {
+  const currentAssigned = tempAssignments.value[participantId];
+  if (currentAssigned === gameId) {
+    // Check if the participant had an original assignment to revert to
+    const originalParticipant = participants.value.find(
+      (p) => p.id === participantId,
+    );
+    const originalAssignment = originalParticipant?.assignedGameId;
+
+    if (originalAssignment && originalAssignment !== gameId) {
+      tempAssignments.value[participantId] = originalAssignment;
+    } else {
+      tempAssignments.value[participantId] = null;
+    }
+  } else {
+    tempAssignments.value[participantId] = gameId;
+  }
+};
+
+const getAssignedParticipants = (gameId) => {
+  return participants.value.filter((p) => p.assignedGameId === gameId);
+};
+
+const getGameName = (gameId) => {
+  const index = games.value.findIndex((g) => g.id === gameId);
+  if (index === -1) return 'ander spel';
+  return games.value[index].name || `Spel ${index + 1}`;
+};
+
+const cancelSession = () => {
+  socket.emit('session-cancel');
+  router.push('/tablet');
+};
+
 const goToPreviousTab = () => {
   if (isFirstTab.value) {
-    router.push('/tablet');
+    cancelSession();
   } else {
     const prevIndex = activeTabIndex.value - 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -396,6 +589,40 @@ const goToNextTab = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
+
+watch(
+  [participants, selectedParticipantMode],
+  ([newParticipants, newMode]) => {
+    const displayList = newParticipants.map((p) => ({ playerName: p.name }));
+    socket.emit('display:update-participants', {
+      list: displayList,
+      mode: newMode,
+    });
+  },
+  { deep: true },
+);
+
+const handleSocketConnect = () => {
+  if (participants.value.length > 0) {
+    const displayList = participants.value.map((p) => ({ playerName: p.name }));
+    socket.emit('display:update-participants', {
+      list: displayList,
+      mode: selectedParticipantMode.value,
+    });
+  }
+};
+
+onMounted(() => {
+  socket.on('connect', handleSocketConnect);
+  // Also check immediately if already connected
+  if (socket.connected) {
+    handleSocketConnect();
+  }
+});
+
+onUnmounted(() => {
+  socket.off('connect', handleSocketConnect);
+});
 </script>
 
 <template>
@@ -409,7 +636,12 @@ const goToNextTab = () => {
         <form class="p-game-setup-view__settings" @submit.prevent>
           <div class="p-game-setup-view__settings__head">
             <div class="p-game-setup-view__settings__head__subtitle">
-              <Button href="/tablet" :is-icon-button="true" variant="secondary">
+              <Button
+                @click="cancelSession"
+                :clickable="false"
+                :is-icon-button="true"
+                variant="secondary"
+              >
                 <template #c-btn_icon-left>
                   <ArrowLeft :size="18" />
                 </template>
@@ -446,7 +678,7 @@ const goToNextTab = () => {
                   id="session-name"
                   name="sessionName"
                   :label="false"
-                  placeholder="Bv. Sportdag 05/01/2026"
+                  :placeholder="sessionNamePlaceholder"
                 />
               </div>
 
@@ -587,7 +819,7 @@ const goToNextTab = () => {
                     :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
                     min="1"
-                    max="10"
+                    max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
                     :name="`rounds-${activeGameId}`"
@@ -600,8 +832,12 @@ const goToNextTab = () => {
                     :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
                     min="1"
-                    max="10"
-                    label="Aantal sets per ronde/game"
+                    max="100"
+                    :label="
+                      activeGame.useRounds
+                        ? 'Aantal sets per ronde'
+                        : 'Aantal sets per game'
+                    "
                     :id="`sets-${activeGameId}`"
                     :name="`sets-${activeGameId}`"
                     type="number"
@@ -657,11 +893,23 @@ const goToNextTab = () => {
                 <div
                   class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
                 >
+                  <h2 class="h6">Rangorde</h2>
+                  <TabBar
+                    :items="pointsRankingTabBar"
+                    :name="`points-ranking-${activeGameId}`"
+                    :hideIcon="true"
+                    @change="handlePointsRankingChange"
+                  ></TabBar>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
+                >
                   <h2 class="h6">Bonuspunten</h2>
                   <ToggleWithDropdown
                     :inputId="`points-bonus-toggle-${activeGameId}`"
                     labelTekst="Bonus punten per actie"
-                    min="0"
+                    min="1"
                     max="100"
                     label="Aantal bonus punten per actie"
                     :id="`points-bonus-${activeGameId}`"
@@ -710,7 +958,7 @@ const goToNextTab = () => {
                   <ToggleWithDropdown
                     :inputId="`time-bonus-toggle-${activeGameId}`"
                     labelTekst="Bonus punten per actie"
-                    min="0"
+                    min="1"
                     max="100"
                     label="Aantal bonus punten per actie"
                     :id="`time-bonus-${activeGameId}`"
@@ -721,19 +969,6 @@ const goToNextTab = () => {
                   ></ToggleWithDropdown>
                 </div>
               </div>
-
-              <!-- Voltooid instellingen -->
-              <!-- <div
-                v-show="activeGame?.scoreModel === 'completed'"
-                class="p-game-setup-view__settings__body__content__scoremodel__settings"
-              >
-                <div
-                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
-                >
-                  <h2 class="h6">Voltooid instellingen</h2>
-                  <p>Deze modus vereist geen extra instellingen.</p>
-                </div>
-              </div> -->
             </div>
 
             <!-- Deelnemers Tab Content -->
@@ -744,7 +979,87 @@ const goToNextTab = () => {
               <div
                 class="p-game-setup-view__settings__body__content__participants"
               >
-                <PlayersSetting :player-mode="selectedParticipantMode" />
+                <PlayersSetting
+                  v-model:participants="participants"
+                  :player-mode="selectedParticipantMode"
+                />
+              </div>
+            </div>
+
+            <!-- Indeling Tab Content -->
+            <div
+              v-show="activeTab === 'assignment'"
+              class="p-game-setup-view__settings__body__content"
+            >
+              <div
+                class="p-game-setup-view__settings__body__content__assignment"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__assignment__subtitle"
+                >
+                  <h2 class="h6">Indeling van spelers</h2>
+                  <p>
+                    Wijs deelnemers toe aan een specifiek spel. Je kunt pas naar
+                    de volgende stap gaan wanneer iedereen is ingedeeld en elk
+                    spel minstens één deelnemer heeft.
+                  </p>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__assignment__list"
+                >
+                  <template v-if="hasValidParticipants">
+                    <div
+                      v-for="(game, index) in games"
+                      :key="game.id"
+                      class="p-game-setup-view__settings__body__content__assignment__list__game-card"
+                    >
+                      <div
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__header"
+                      >
+                        <span
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__title h6"
+                        >
+                          {{ game.name || `Spel ${index + 1}` }}
+                        </span>
+                        <Button
+                          variant="secondary"
+                          button-tekst="Wijzig"
+                          :clickable="false"
+                          @click="openAssignmentModal(game.id)"
+                        />
+                      </div>
+
+                      <div
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants"
+                      >
+                        <span
+                          v-for="p in getAssignedParticipants(game.id)"
+                          :key="p.id"
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__tag"
+                        >
+                          {{ p.name }}
+                        </span>
+                        <span
+                          v-if="getAssignedParticipants(game.id).length === 0"
+                          class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__empty"
+                        >
+                          Geen deelnemers
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+
+                  <div
+                    v-if="!hasValidParticipants"
+                    class="p-game-setup-view__settings__body__content__assignment__empty"
+                  >
+                    <p>
+                      Er zijn nog geen deelnemers toegevoegd. Ga terug naar de
+                      vorige stap.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -758,6 +1073,60 @@ const goToNextTab = () => {
             @cancel="cancelDeleteGame"
             @accept="confirmDeleteGame"
           />
+
+          <Modal
+            :modal-id="assignmentModalId"
+            :title="assignmentModalTitle"
+            cancel-btn-text="Annuleren"
+            accept-btn-text="Opslaan"
+            @cancel="closeAssignmentModal"
+            @accept="saveAssignmentChanges"
+          >
+            <p class="c-modal__text">
+              Selecteer de deelnemers die meedoen aan dit spel. Deelnemers die
+              al zijn toegewezen aan een ander spel, worden daar verwijderd als
+              je ze hier selecteert.
+            </p>
+            <div class="c-assignment-modal-list">
+              <label
+                v-for="participant in participants"
+                :key="participant.id"
+                class="c-assignment-modal-list__item"
+                :class="{
+                  'c-assignment-modal-list__item--active':
+                    tempAssignments[participant.id] === assignmentGameId,
+                }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="
+                    tempAssignments[participant.id] === assignmentGameId
+                  "
+                  @change="
+                    toggleParticipantAssignment(
+                      participant.id,
+                      assignmentGameId,
+                    )
+                  "
+                />
+                <span class="c-assignment-modal-list__item__name">{{
+                  participant.name
+                }}</span>
+                <span
+                  v-if="
+                    tempAssignments[participant.id] &&
+                    tempAssignments[participant.id] !== assignmentGameId
+                  "
+                  class="c-assignment-modal-list__item__badge"
+                >
+                  In {{ getGameName(tempAssignments[participant.id]) }}
+                </span>
+              </label>
+            </div>
+            <div v-if="participants.length === 0">
+              <p>Geen deelnemers gevonden.</p>
+            </div>
+          </Modal>
 
           <div class="p-game-setup-view__settings__footer">
             <Button
@@ -776,6 +1145,7 @@ const goToNextTab = () => {
               :button-tekst="nextButtonText"
               @click="goToNextTab"
               :clickable="false"
+              :is-disabled="isNextButtonDisabled"
             >
               <template #c-btn_icon-right>
                 <ArrowRight :size="18" />
