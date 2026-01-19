@@ -280,6 +280,15 @@ const isNextButtonDisabled = computed(() => {
   if (activeTab.value === 'participants') {
     return !hasValidParticipants.value;
   }
+  if (activeTab.value === 'assignment') {
+    const allParticipantsAssigned = participants.value.every(
+      (p) => p.assignedGameId,
+    );
+    const allGamesHaveParticipants = games.value.every((g) =>
+      participants.value.some((p) => p.assignedGameId === g.id),
+    );
+    return !allParticipantsAssigned || !allGamesHaveParticipants;
+  }
   return false;
 });
 
