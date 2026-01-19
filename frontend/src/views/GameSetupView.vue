@@ -583,10 +583,13 @@ const goToNextTab = () => {
 };
 
 watch(
-  participants,
-  (newParticipants) => {
+  [participants, selectedParticipantMode],
+  ([newParticipants, newMode]) => {
     const displayList = newParticipants.map((p) => ({ playerName: p.name }));
-    socket.emit('display:update-participants', displayList);
+    socket.emit('display:update-participants', {
+      list: displayList,
+      mode: newMode,
+    });
   },
   { deep: true },
 );
@@ -595,7 +598,10 @@ watch(
 socket.on('connect', () => {
   if (participants.value.length > 0) {
     const displayList = participants.value.map((p) => ({ playerName: p.name }));
-    socket.emit('display:update-participants', displayList);
+    socket.emit('display:update-participants', {
+      list: displayList,
+      mode: selectedParticipantMode.value,
+    });
   }
 });
 </script>

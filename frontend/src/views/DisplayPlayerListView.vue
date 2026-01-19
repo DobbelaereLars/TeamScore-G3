@@ -8,6 +8,7 @@ const router = useRouter();
 const containerRef = ref(null);
 const scaleClass = ref('');
 const isScrollable = ref(false);
+const participantMode = ref('players');
 
 const players = ref([]);
 
@@ -91,8 +92,34 @@ const handleNavigate = (data) => {
 
 const handleUpdateParticipants = (data) => {
   console.log('Received participants update:', data);
-  players.value = data;
+
+  // Check if data is array (old format) or object (new format)
+  if (Array.isArray(data)) {
+    players.value = data;
+  } else if (data && typeof data === 'object') {
+    players.value = data.list || [];
+    if (data.mode) {
+      participantMode.value = data.mode;
+    }
+  }
 };
+
+const statusText = computed(() => {
+  if (participantMode.value === 'players') {
+    return 'Spelers worden nog toegevoegd';
+  } else {
+    return 'Teams worden nog toegevoegd';
+  }
+});
+
+const counterText = computed(() => {
+  const count = totalPlayers.value;
+  if (participantMode.value === 'players') {
+    return `${count} speler${count === 1 ? '' : 's'} ...`;
+  } else {
+    return `${count} team${count === 1 ? '' : 's'} ...`;
+  }
+});
 
 watch(
   players,
@@ -130,7 +157,7 @@ onUnmounted(() => {
       />
       <div class="c-displayPlayerList__header__text">
         <h1 class="h4">Wachten tot het spel start</h1>
-        <p class="h6">Spelers worden nog toegevoegd</p>
+        <p class="h6">{{ statusText }}</p>
       </div>
     </div>
     <div
@@ -152,7 +179,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="c-displayPlayerList__footer">
-      <p class="h5">{{ totalPlayers }} spelers ...</p>
+      <p class="h5">{{ counterText }}</p>
     </div>
   </div>
 </template>
