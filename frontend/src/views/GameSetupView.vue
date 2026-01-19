@@ -72,6 +72,7 @@ const deleteGameModalId = 'delete-game-modal';
 // Assignment
 const assignmentGameId = ref(null);
 const assignmentModalId = 'assignment-modal';
+const assignmentModalTitle = ref('');
 
 const deleteGameModalTitle = computed(() => {
   const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
@@ -426,6 +427,16 @@ const cancelDeleteGame = () => {
 
 const openAssignmentModal = (gameId) => {
   assignmentGameId.value = gameId;
+  
+  const index = games.value.findIndex((g) => g.id === gameId);
+  if (index !== -1) {
+    const game = games.value[index];
+    const gameName = game.name || `Spel ${index + 1}`;
+    assignmentModalTitle.value = `Deelnemers voor ${gameName}`;
+  } else {
+    assignmentModalTitle.value = 'Deelnemers toewijzen';
+  }
+
   const dialog = document.getElementById(assignmentModalId);
   if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
@@ -433,7 +444,8 @@ const openAssignmentModal = (gameId) => {
 };
 
 const closeAssignmentModal = () => {
-  assignmentGameId.value = null;
+  // We breken assignmentGameId niet af, zodat de modal niet flikkert tijdens het sluiten
+  // assignmentGameId.value = null; 
 };
 
 const toggleParticipantAssignment = (participant, gameId) => {
@@ -915,9 +927,7 @@ const goToNextTab = () => {
 
           <Modal
             :modal-id="assignmentModalId"
-            :title="`Deelnemers voor ${
-              games.find((g) => g.id === assignmentGameId)?.name || 'dit spel'
-            }`"
+            :title="assignmentModalTitle"
             cancel-btn-text="Sluiten"
             accept-btn-text="Opslaan"
             @cancel="closeAssignmentModal"
