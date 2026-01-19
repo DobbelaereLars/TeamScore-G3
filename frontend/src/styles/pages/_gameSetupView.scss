@@ -118,6 +118,7 @@
             flex-direction: row;
             gap: $spacing-5;
             align-items: center;
+            flex-wrap: wrap;
 
             &__tabbar {
               flex-grow: 1;
