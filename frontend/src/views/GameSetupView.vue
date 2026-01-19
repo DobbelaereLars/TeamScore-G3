@@ -24,6 +24,7 @@ import {
   Target,
   Clock7,
   SquareCheck,
+  LayoutList,
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
 
@@ -33,6 +34,7 @@ const router = useRouter();
 const sessionName = ref('');
 const selectedParticipantMode = ref('players');
 const selectedGameMode = ref('single-game');
+const participants = ref([]);
 
 // Time notation options
 const timeNotationOptions = [
@@ -67,6 +69,10 @@ const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
 const deleteGameModalId = 'delete-game-modal';
 
+// Assignment
+const assignmentGameId = ref(null);
+const assignmentModalId = 'assignment-modal';
+
 const deleteGameModalTitle = computed(() => {
   const index = games.value.findIndex((g) => g.id === gameToDeleteId.value);
   const game = games.value[index];
@@ -79,14 +85,14 @@ const deleteGameModalTitle = computed(() => {
 
 // Computed
 const activeGameId = computed(
-  () => games.value[activeGameIndex.value]?.id ?? 'game-1'
+  () => games.value[activeGameIndex.value]?.id ?? 'game-1',
 );
 const activeGame = computed(() => games.value[activeGameIndex.value]);
 
 const showGameSeries = computed(
   () =>
     selectedGameMode.value === 'series-of-games' ||
-    selectedGameMode.value === 'parallel-games'
+    selectedGameMode.value === 'parallel-games',
 );
 
 const gameSeriesTabBar = computed(() =>
@@ -95,7 +101,14 @@ const gameSeriesTabBar = computed(() =>
     value: game.id,
     label: game.name || `Spel ${index + 1}`,
     checked: index === activeGameIndex.value,
-  }))
+  })),
+);
+
+const gameOptions = computed(() =>
+  games.value.map((game, index) => ({
+    value: game.id,
+    label: game.name || `Spel ${index + 1}`,
+  })),
 );
 
 const timerankingTabBar = computed(() => [
@@ -232,12 +245,12 @@ const activeTab = computed(() => {
 });
 
 const activeTabIndex = computed(() =>
-  gameSetupTabList.value.findIndex((item) => item.checked)
+  gameSetupTabList.value.findIndex((item) => item.checked),
 );
 
 const isFirstTab = computed(() => activeTabIndex.value === 0);
 const isLastTab = computed(
-  () => activeTabIndex.value === gameSetupTabList.value.length - 1
+  () => activeTabIndex.value === gameSetupTabList.value.length - 1,
 );
 
 const nextButtonText = computed(() => (isLastTab.value ? 'Klaar' : 'Volgende'));
@@ -249,6 +262,23 @@ const handleParticipantModeChange = (value) => {
 
 const handleGameModeChange = (value) => {
   selectedGameMode.value = value;
+
+  // Update tabs
+  const hasAssignment = gameSetupTabList.value.some(
+    (t) => t.id === 'assignment',
+  );
+  if (value === 'parallel-games' && !hasAssignment) {
+    gameSetupTabList.value.push({
+      id: 'assignment',
+      value: 'assignment',
+      label: 'Indeling',
+      icon: LayoutList,
+    });
+  } else if (value !== 'parallel-games' && hasAssignment) {
+    gameSetupTabList.value = gameSetupTabList.value.filter(
+      (t) => t.id !== 'assignment',
+    );
+  }
 
   // Reset to single game if switching to single-game mode
   if (value === 'single-game' && games.value.length > 1) {
@@ -392,6 +422,30 @@ const confirmDeleteGame = () => {
 
 const cancelDeleteGame = () => {
   gameToDeleteId.value = null;
+};
+
+const openAssignmentModal = (gameId) => {
+  assignmentGameId.value = gameId;
+  const dialog = document.getElementById(assignmentModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const closeAssignmentModal = () => {
+  assignmentGameId.value = null;
+};
+
+const toggleParticipantAssignment = (participant, gameId) => {
+  if (participant.assignedGameId === gameId) {
+    participant.assignedGameId = null;
+  } else {
+    participant.assignedGameId = gameId;
+  }
+};
+
+const getAssignedParticipants = (gameId) => {
+  return participants.value.filter((p) => p.assignedGameId === gameId);
 };
 
 const goToPreviousTab = () => {
@@ -757,19 +811,6 @@ const goToNextTab = () => {
                   ></ToggleWithDropdown>
                 </div>
               </div>
-
-              <!-- Voltooid instellingen -->
-              <!-- <div
-                v-show="activeGame?.scoreModel === 'completed'"
-                class="p-game-setup-view__settings__body__content__scoremodel__settings"
-              >
-                <div
-                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
-                >
-                  <h2 class="h6">Voltooid instellingen</h2>
-                  <p>Deze modus vereist geen extra instellingen.</p>
-                </div>
-              </div> -->
             </div>
 
             <!-- Deelnemers Tab Content -->
@@ -780,7 +821,84 @@ const goToNextTab = () => {
               <div
                 class="p-game-setup-view__settings__body__content__participants"
               >
-                <PlayersSetting :player-mode="selectedParticipantMode" />
+                <PlayersSetting
+                  v-model:participants="participants"
+                  :player-mode="selectedParticipantMode"
+                />
+              </div>
+            </div>
+
+            <!-- Indeling Tab Content -->
+            <div
+              v-show="activeTab === 'assignment'"
+              class="p-game-setup-view__settings__body__content"
+            >
+              <div
+                class="p-game-setup-view__settings__body__content__assignment"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__assignment__subtitle"
+                >
+                  <h2 class="h6">Indeling van spelers</h2>
+                  <p>
+                    Wijs deelnemers toe aan een specifiek spel. Deelnemers die
+                    geen spel toegewezen krijgen, doen niet mee.
+                  </p>
+                </div>
+
+                <div
+                  class="p-game-setup-view__settings__body__content__assignment__list"
+                >
+                  <div
+                    v-for="game in games"
+                    :key="game.id"
+                    class="p-game-setup-view__settings__body__content__assignment__list__game-card"
+                  >
+                    <div
+                      class="p-game-setup-view__settings__body__content__assignment__list__game-card__header"
+                    >
+                      <span
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__title"
+                      >
+                        {{ game.name || 'Naamloos spel' }}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        button-tekst="Wijzig"
+                        :clickable="false"
+                        @click="openAssignmentModal(game.id)"
+                      />
+                    </div>
+
+                    <div
+                      class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants"
+                    >
+                      <span
+                        v-for="p in getAssignedParticipants(game.id)"
+                        :key="p.id"
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__tag"
+                      >
+                        {{ p.name }}
+                      </span>
+                      <span
+                        v-if="getAssignedParticipants(game.id).length === 0"
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__participants__empty"
+                      >
+                        Geen deelnemers
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="participants.length === 0"
+                    class="p-game-setup-view__settings__body__content__assignment__empty"
+                  >
+                    <p>
+                      Er zijn nog geen deelnemers toegevoegd. Ga terug naar de
+                      vorige stap.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -794,6 +912,56 @@ const goToNextTab = () => {
             @cancel="cancelDeleteGame"
             @accept="confirmDeleteGame"
           />
+
+          <Modal
+            :modal-id="assignmentModalId"
+            :title="`Deelnemers voor ${
+              games.find((g) => g.id === assignmentGameId)?.name || 'dit spel'
+            }`"
+            cancel-btn-text="Sluiten"
+            accept-btn-text="Opslaan"
+            @cancel="closeAssignmentModal"
+            @accept="closeAssignmentModal"
+          >
+            <div class="c-assignment-modal-list">
+              <label
+                v-for="participant in participants"
+                :key="participant.id"
+                class="c-assignment-modal-list__item"
+                :class="{
+                  'c-assignment-modal-list__item--active':
+                    participant.assignedGameId === assignmentGameId,
+                }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="participant.assignedGameId === assignmentGameId"
+                  @change="
+                    toggleParticipantAssignment(participant, assignmentGameId)
+                  "
+                />
+                <span class="c-assignment-modal-list__item__name">{{
+                  participant.name
+                }}</span>
+                <span
+                  v-if="
+                    participant.assignedGameId &&
+                    participant.assignedGameId !== assignmentGameId
+                  "
+                  class="c-assignment-modal-list__item__badge"
+                >
+                  In
+                  {{
+                    games.find((g) => g.id === participant.assignedGameId)
+                      ?.name || 'ander spel'
+                  }}
+                </span>
+              </label>
+            </div>
+            <div v-if="participants.length === 0">
+              <p>Geen deelnemers gevonden.</p>
+            </div>
+          </Modal>
 
           <div class="p-game-setup-view__settings__footer">
             <Button

@@ -16,12 +16,17 @@ const props = defineProps({
   },
 });
 
-const participants = ref([]);
+const participants = defineModel('participants', { default: [] });
 const inputValue = ref('');
 const selectedTeamId = ref(null);
 const teamToDeleteId = ref(null);
 const deleteTeamModalId = 'delete-team-modal';
-let nextId = 1;
+
+const nextId = computed(() => {
+  if (participants.value.length === 0) return 1;
+  const maxId = Math.max(...participants.value.map((p) => p.id));
+  return maxId + 1;
+});
 
 const selectedTeam = computed(() =>
   participants.value.find((t) => t.id === selectedTeamId.value)
@@ -48,14 +53,43 @@ const addPlayer = () => {
   if (!inputValue.value.trim()) return;
 
   if (props.playerMode === 'teams-with-players') {
-    if (!selectedTeamId.value) return; // Kan niet zonder geselecteerd team
-    const team = selectedTeam.value;
-    if (team) {
-      if (!team.players) team.players = [];
-      team.players.push({ id: nextId++, name: inputValue.value.trim() });
+    if (!selectedTeamId.value) return;
+
+    const teamIndex = participants.value.findIndex(
+      (t) => t.id === selectedTeamId.value
+    );
+
+    if (teamIndex !== -1) {
+      const team = participants.value[teamIndex];
+      const currentPlayers = team.players || [];
+      const newPlayerId =
+        currentPlayers.length > 0
+          ? Math.max(...currentPlayers.map((p) => p.id)) + 1
+          : 1;
+
+      const updatedTeam = {
+        ...team,
+        players: [
+          ...currentPlayers,
+          {
+            id: newPlayerId,
+            name: inputValue.value.trim(),
+          },
+        ],
+      };
+
+      const newParticipants = [...participants.value];
+      newParticipants[teamIndex] = updatedTeam;
+      participants.value = newParticipants;
     }
   } else {
-    participants.value.push({ id: nextId++, name: inputValue.value.trim() });
+    participants.value = [
+      ...participants.value,
+      {
+        id: nextId.value,
+        name: inputValue.value.trim(),
+      },
+    ];
   }
 
   inputValue.value = '';
@@ -64,11 +98,11 @@ const addPlayer = () => {
 const addTeam = () => {
   const teamNumber = participants.value.length + 1;
   const newTeam = {
-    id: nextId++,
+    id: nextId.value,
     name: `Team ${teamNumber}`,
     players: [],
   };
-  participants.value.push(newTeam);
+  participants.value = [...participants.value, newTeam];
   selectedTeamId.value = newTeam.id;
 };
 
@@ -77,10 +111,20 @@ const deleteParticipant = (playerId) => {
 };
 
 const deletePlayerFromTeam = (playerId) => {
-  if (selectedTeam.value) {
-    selectedTeam.value.players = selectedTeam.value.players.filter(
-      (p) => p.id !== playerId
+  if (selectedTeamId.value) {
+    const teamIndex = participants.value.findIndex(
+      (t) => t.id === selectedTeamId.value
     );
+    if (teamIndex !== -1) {
+      const team = participants.value[teamIndex];
+      if (team.players) {
+        const updatedPlayers = team.players.filter((p) => p.id !== playerId);
+        const updatedTeam = { ...team, players: updatedPlayers };
+        const newParticipants = [...participants.value];
+        newParticipants[teamIndex] = updatedTeam;
+        participants.value = newParticipants;
+      }
+    }
   }
 };
 
@@ -101,7 +145,9 @@ const confirmDeleteTeam = () => {
 
   if (index !== -1) {
     // Remove team
-    participants.value.splice(index, 1);
+    const newParticipants = [...participants.value];
+    newParticipants.splice(index, 1);
+    participants.value = newParticipants;
 
     // Update selectedTeamId if we removed the selected one
     if (selectedTeamId.value === teamToDeleteId.value) {

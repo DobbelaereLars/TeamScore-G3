@@ -62,7 +62,9 @@ const handleAccept = (event) => {
 
     <div class="c-modal__textcontainer">
       <p class="h6">{{ title }}</p>
-      <p class="c-modal__text">{{ text }}</p>
+      <slot>
+        <p class="c-modal__text">{{ text }}</p>
+      </slot>
     </div>
 
     <div class="c-modal__btncontainer">
