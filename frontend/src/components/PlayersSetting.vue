@@ -169,6 +169,16 @@ const cancelDeleteTeam = () => {
   teamToDeleteId.value = null;
 };
 
+const renameTeam = (teamId, newName) => {
+  const index = participants.value.findIndex((t) => t.id === teamId);
+  if (index !== -1) {
+    const updatedTeam = { ...participants.value[index], name: newName };
+    const newParticipants = [...participants.value];
+    newParticipants[index] = updatedTeam;
+    participants.value = newParticipants;
+  }
+};
+
 // Watch for mode changes to ensure a team is selected when switching to 'teams-with-players'
 watch(
   () => props.playerMode,
@@ -233,8 +243,10 @@ const TeamRadioButtons = [];
             :count="team.players?.length || 0"
             :is-active="selectedTeamId === team.id"
             :closeable="true"
+            :editable="playerMode === 'teams-with-players'"
             @click="selectedTeamId = team.id"
             @close="requestDeleteTeam(team.id)"
+            @rename="(newName) => renameTeam(team.id, newName)"
           />
           <button
             type="button"
