@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
+import Button from '../components/Button.vue';
+import LogoHeader from '../components/Logo.vue';
 
 const players = ref([
   { id: 1, name: 'Alice', points: 10, rank: 1 },
@@ -25,7 +27,13 @@ const updatePlayerPointsInArray = (playerId, newPoints) => {
     <div class="row">
       <div class="c-player-list">
         <div class="c-player-list__header">
-
+          <LogoHeader />
+          <select name="game-select" id="game-select" class="h2">
+            <option value="game1">Game 1</option>
+            <option value="game2">Game 2</option>
+            <option value="game3">Game 3</option>
+          </select>
+          <Button button-tekst="Spelinstellingen" variant="secondary" :href="'/tablet/game/ingame-settings'" />
         </div>
         <div class="c-player-list__title">
           <p class="h4">Deelnemers</p>
