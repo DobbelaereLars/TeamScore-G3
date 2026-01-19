@@ -858,7 +858,7 @@ const goToNextTab = () => {
                       class="p-game-setup-view__settings__body__content__assignment__list__game-card__header"
                     >
                       <span
-                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__title"
+                        class="p-game-setup-view__settings__body__content__assignment__list__game-card__title h6"
                       >
                         {{ game.name || `Spel ${index + 1}` }}
                       </span>
