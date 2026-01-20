@@ -1,12 +1,17 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { sessionRepository } from '../services/api';
+import { useRouter } from 'vue-router';
+import { sessionRepository, scoreRepository } from '../services/api';
+import socket from '../utils/socket';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
 import LogoHeader from '../components/Logo.vue';
 import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
 import { Cog } from 'lucide-vue-next';
+
+const router = useRouter();
+const currentSessionId = ref(1);
 
 // Games from DB (Session 1)
 const games = ref([]);
@@ -26,7 +31,7 @@ onMounted(async () => {
 
   // TODO: Later via Socket.IO
   try {
-    const response = await sessionRepository.getGames(2);
+    const response = await sessionRepository.getGames(currentSessionId.value);
     games.value = response.data;
     if (games.value.length > 0) {
       selectedGameId.value = games.value[0].id;
@@ -73,12 +78,44 @@ const hasNextRound = computed(() => {
   return currentGame.value.currentRound < currentGame.value.rounds;
 });
 
-const updatePlayerPointsInArray = (playerId, newPoints) => {
+const updatePlayerPointsInArray = async (participantId, newPoints) => {
   if (!currentGame.value) return;
 
-  const player = currentGame.value.players.find(p => p.id === playerId);
+  // Optimistische update in UI
+  const player = currentGame.value.players.find(p => p.participantId === participantId);
+
   if (player) {
+    const oldPoints = player.points;
     player.points = newPoints;
+
+    // Stuur naar backend
+    try {
+      await scoreRepository.updatePoints(currentGame.value.id, participantId, newPoints);
+      console.log(`Updated points for participant ${participantId} to ${newPoints}`);
+    } catch (error) {
+      console.error('Failed to update points:', error);
+      // Rollback bij error
+      player.points = oldPoints;
+    }
+  }
+};
+
+const endGame = () => {
+  // Navigate display
+  socket.emit('display:navigate', {
+    name: 'display-scoreboard',
+    params: { sessionId: currentSessionId.value }
+  });
+
+  // Navigate local
+  router.push({
+    name: 'endgame-summary',
+    query: { sessionId: currentSessionId.value }
+  });
+
+  const modal = document.getElementById('endgame');
+  if (modal) {
+    modal.close();
   }
 };
 
@@ -121,16 +158,17 @@ const goToNextRound = () => {
           </div>
 
           <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players">
-            <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.id}`" :name="player.name"
-              :points="player.points" :size-up="isMdOrLarger" :rank="player.rank" :perClick="currentGame?.perClick || 1"
-              @updatePoints="(newPoints) => updatePlayerPointsInArray(player.id, newPoints)" />
+            <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
+              :name="player.name" :points="player.points" :size-up="isMdOrLarger" :rank="player.rank"
+              :perClick="currentGame?.perClick || 1"
+              @updatePoints="(newPoints) => updatePlayerPointsInArray(player.participantId, newPoints)" />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
             <Button onclick="endgame.showModal()" button-tekst="Beëindig spel" variant="secondary" :clickable="false" />
             <Modal modal-id="endgame" title="Het spel beëindigen?"
               text="Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. Je gaat direct door naar de einduitslag, waar je de resultaten kunt bekijken en exporteren."
-              cancel-btn-text="Terug" accept-btn-text="Beëindig spel" />
+              cancel-btn-text="Terug" accept-btn-text="Beëindig spel" @accept="endGame" />
             <Button v-if="hasNextRound" onclick="nextround.showModal()" button-tekst="Volgende ronde" variant="primary"
               :clickable="false" />
             <Modal modal-id="nextround" title="Naar de volgende ronde?"

@@ -51,6 +51,9 @@ app.use('/api/sessions', sessionsRouter);
 const gamesRouter = require("./routes/games");
 app.use("/api/games", gamesRouter);
 
+const scoresRouter = require("./routes/scores");
+app.use("/api/scores", scoresRouter);
+
 // Frontend dist serveren
 const distPath = path.join(__dirname, "..", "..", "frontend", "dist");
 

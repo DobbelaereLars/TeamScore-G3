@@ -82,7 +82,7 @@ const totalPlayers = computed(() => {
 
 const handleNavigate = (data) => {
   if (data.name) {
-    router.push({ name: data.name });
+    router.push({ name: data.name, query: data.params });
   }
 };
 
@@ -144,31 +144,17 @@ onUnmounted(() => {
 <template>
   <div class="container c-displayPlayerList">
     <div class="c-displayPlayerList__header">
-      <img
-        class="c-displayPlayerList__header__img"
-        src="@/assets/logo.webp"
-        alt="Logo"
-      />
+      <img class="c-displayPlayerList__header__img" src="@/assets/logo.webp" alt="Logo" />
       <div class="c-displayPlayerList__header__text">
         <h1 class="h4">Wachten tot het spel start</h1>
         <p class="h6">{{ statusText }}</p>
       </div>
     </div>
-    <div
-      class="c-displayPlayerList__players"
-      :class="[scaleClass, { 'allow-scroll': isScrollable }]"
-      ref="containerRef"
-    >
-      <div
-        class="c-displayPlayerList__players__player"
-        v-for="(player, index) in players"
-        :key="`${player.playerName}-${index}`"
-      >
-        <ProfileIcon
-          :playerName="player.playerName"
-          variant="default"
-          size="extra-large"
-        />
+    <div class="c-displayPlayerList__players" :class="[scaleClass, { 'allow-scroll': isScrollable }]"
+      ref="containerRef">
+      <div class="c-displayPlayerList__players__player" v-for="(player, index) in players"
+        :key="`${player.playerName}-${index}`">
+        <ProfileIcon :playerName="player.playerName" variant="default" size="extra-large" />
         <p class="h6">{{ player.playerName }}</p>
       </div>
     </div>

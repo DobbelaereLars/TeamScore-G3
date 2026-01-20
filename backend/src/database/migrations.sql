@@ -48,6 +48,8 @@ IF NOT EXISTS Game
     is_finished INTEGER DEFAULT 0 CHECK
 (is_finished IN
 (0, 1)),
+    points_per_click REAL,
+    bonus_points REAL,
     FOREIGN KEY
 (session_id) REFERENCES Session
 (id) ON
@@ -97,7 +99,7 @@ CREATE TABLE
 IF NOT EXISTS Participant
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER NOT NULL,
+    game_id INTEGER NOT NULL,
     type TEXT NOT NULL CHECK
 (type IN
 ('player', 'team')),
@@ -118,7 +120,7 @@ IF NOT EXISTS Participant
       )
     ),
     FOREIGN KEY
-(session_id) REFERENCES Session
+(game_id) REFERENCES Game
 (id) ON
 DELETE CASCADE,
     FOREIGN KEY (player_id)
