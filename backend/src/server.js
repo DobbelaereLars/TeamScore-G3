@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -8,6 +9,12 @@ const { initDatabase } = require('./database/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enable CORS for development
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+  credentials: true
+}));
 
 // Initialize database
 initDatabase()
@@ -27,6 +34,11 @@ const CERT_PATH = path.join(CERT_DIR, 'cert.pem');
 
 // JSON API (voorbeeld)
 app.use(express.json());
+
+// API Routes
+const playersRouter = require('./routes/players');
+app.use('/api/players', playersRouter);
+
 // TODO: je routes/sockets hier importeren:
 // const sessionsRouter = require('./routes/sessions');
 // app.use('/api/sessions', sessionsRouter);

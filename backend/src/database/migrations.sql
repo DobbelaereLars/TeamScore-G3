@@ -1,268 +1,174 @@
-PRAGMA foreign_keys
-= ON;
-
--- =========================
--- Types (vaste keuzes UI)
--- =========================
+-- Session table
 CREATE TABLE
-IF NOT EXISTS game_mode
+IF NOT EXISTS Session
 (
-  id    INTEGER PRIMARY KEY,
-  code  TEXT NOT NULL UNIQUE,      -- 'SINGLE','SERIES','PARALLEL'
-  name  TEXT NOT NULL
-);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    participant_mode TEXT NOT NULL CHECK
+(
+      participant_mode IN
+('players', 'teams', 'teams_with_players')
+    ),
+    game_mode TEXT NOT NULL CHECK
+(game_mode IN
+('single', 'series', 'parallel')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 
+-- ScoreModel table
 CREATE TABLE
-IF NOT EXISTS score_model
+IF NOT EXISTS ScoreModel
 (
-  id    INTEGER PRIMARY KEY,
-  code  TEXT NOT NULL UNIQUE,      -- 'POINTS','TIME','COMPLETED'
-  name  TEXT NOT NULL
-);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL CHECK
+(type IN
+('points', 'time', 'boolean')),
+    has_bonus INTEGER DEFAULT 0 CHECK
+(has_bonus IN
+(0, 1)),
+    ranking_rule TEXT NOT NULL CHECK
+(ranking_rule IN
+('highest_wins', 'lowest_wins')),
+    config_json TEXT
+  );
 
+-- Game table
 CREATE TABLE
-IF NOT EXISTS ranking_rule
+IF NOT EXISTS Game
 (
-  id    INTEGER PRIMARY KEY,
-  code  TEXT NOT NULL UNIQUE,      -- 'FASTEST_WINS','SLOWEST_WINS'
-  name  TEXT NOT NULL
-);
-
--- =========================
--- Core entities
--- =========================
-CREATE TABLE
-IF NOT EXISTS player
-(
-  id           TEXT PRIMARY KEY,   -- UUID
-  created_at   TEXT NOT NULL,      -- ISO8601
-  display_name TEXT NOT NULL
-);
-
-CREATE TABLE
-IF NOT EXISTS team
-(
-  id          TEXT PRIMARY KEY,    -- UUID
-  created_at  TEXT NOT NULL,
-  name        TEXT NOT NULL
-);
-
-CREATE TABLE
-IF NOT EXISTS team_member
-(
-  team_id    TEXT NOT NULL REFERENCES team
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    rounds INTEGER,
+    sets INTEGER,
+    score_model_id INTEGER NOT NULL,
+    is_finished INTEGER DEFAULT 0 CHECK
+(is_finished IN
+(0, 1)),
+    FOREIGN KEY
+(session_id) REFERENCES Session
 (id) ON
 DELETE CASCADE,
-  player_id  TEXT
-NOT NULL REFERENCES player
-(id) ON
-DELETE CASCADE,
-  PRIMARY KEY (team_id, player_id)
-);
-
--- =========================
--- Session (één "aangemaakte game")
--- =========================
-CREATE TABLE
-IF NOT EXISTS session
-(
-  id              TEXT PRIMARY KEY,     -- UUID
-  created_at      TEXT NOT NULL,
-  name            TEXT,                 -- bv. "Sporting 05/01/2026"
-
-  game_mode_id    INTEGER NOT NULL REFERENCES game_mode
-(id),
-
-  -- spelstructuur (rondes/sets zoals screenshot)
-  use_rounds      INTEGER NOT NULL DEFAULT 0 CHECK
-(use_rounds IN
-(0,1)),
-  rounds_count    INTEGER NOT NULL DEFAULT 1 CHECK
-(rounds_count >= 1),
-
-  use_sets        INTEGER NOT NULL DEFAULT 0 CHECK
-(use_sets IN
-(0,1)),
-  sets_per_round  INTEGER NOT NULL DEFAULT 1 CHECK
-(sets_per_round >= 1),
-
-  -- default scoremodel (voor SINGLE, en als startwaarde bij SERIES/PARALLEL)
-  default_score_model_id INTEGER NOT NULL REFERENCES score_model
+    FOREIGN KEY (score_model_id)
+REFERENCES ScoreModel
 (id)
-);
+  );
 
--- In SINGLE: typisch 1 rij; in SERIES/PARALLEL: meerdere games in de reeks
+-- Player table
 CREATE TABLE
-IF NOT EXISTS session_game
+IF NOT EXISTS Player
 (
-  id             TEXT PRIMARY KEY,  -- UUID
-  session_id     TEXT NOT NULL REFERENCES session
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+  );
+
+-- Team table
+CREATE TABLE
+IF NOT EXISTS Team
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+  );
+
+-- TeamPlayer table
+CREATE TABLE
+IF NOT EXISTS TeamPlayer
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
+    player_id INTEGER NOT NULL,
+    UNIQUE
+(team_id, player_id),
+    FOREIGN KEY
+(team_id) REFERENCES Team
 (id) ON
 DELETE CASCADE,
-  sort_order     INTEGER
-NOT NULL,  -- 1..n (tabs Spel 1/2/3)
-  name           TEXT,              -- optioneel label
+    FOREIGN KEY (player_id)
+REFERENCES Player
+(id) ON
+DELETE CASCADE
+  );
 
-  score_model_id INTEGER NOT NULL REFERENCES score_model
+-- Participant table
+CREATE TABLE
+IF NOT EXISTS Participant
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK
+(type IN
+('player', 'team')),
+    player_id INTEGER,
+    team_id INTEGER,
+    CHECK
+(
+      (
+        type = 'player'
+        AND player_id IS NOT NULL
+        AND team_id IS NULL
+      )
+      OR
+(
+        type = 'team'
+        AND team_id IS NOT NULL
+        AND player_id IS NULL
+      )
+    ),
+    FOREIGN KEY
+(session_id) REFERENCES Session
+(id) ON
+DELETE CASCADE,
+    FOREIGN KEY (player_id)
+REFERENCES Player
 (id),
+    FOREIGN KEY
+(team_id) REFERENCES Team
+(id)
+  );
 
-  UNIQUE
-(session_id, sort_order)
-);
-
--- =========================
--- Participants in a session
--- (speler of team, polymorf)
--- =========================
+-- Score table
 CREATE TABLE
-IF NOT EXISTS session_participant
+IF NOT EXISTS Score
 (
-  id               TEXT PRIMARY KEY,   -- UUID
-  session_id        TEXT NOT NULL REFERENCES session
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL,
+    participant_id INTEGER NOT NULL,
+    value_number REAL,
+    value_time REAL,
+    value_bool INTEGER,
+    bonus REAL DEFAULT 0,
+    rank INTEGER,
+    UNIQUE
+(game_id, participant_id),
+    FOREIGN KEY
+(game_id) REFERENCES Game
 (id) ON
 DELETE CASCADE,
-  participant_type  TEXT
-NOT NULL CHECK
-(participant_type IN
-('PLAYER','TEAM')),
-  participant_id    TEXT NOT NULL,      -- player.id of team.id
-  display_name      TEXT,               -- snapshot (optioneel)
-  UNIQUE
-(session_id, participant_type, participant_id)
-);
+    FOREIGN KEY (participant_id)
+REFERENCES Participant
+(id) ON
+DELETE CASCADE
+  );
 
--- =========================
--- Rounds & sets (concrete historiek)
--- =========================
+-- FinalScore table
 CREATE TABLE
-IF NOT EXISTS session_round
+IF NOT EXISTS FinalScore
 (
-  id              TEXT PRIMARY KEY,  -- UUID
-  session_game_id  TEXT NOT NULL REFERENCES session_game
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    participant_id INTEGER NOT NULL,
+    total_points REAL,
+    total_time REAL,
+    final_rank INTEGER,
+    calculated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE
+(session_id, participant_id),
+    FOREIGN KEY
+(session_id) REFERENCES Session
 (id) ON
 DELETE CASCADE,
-  round_index      INTEGER
-NOT NULL CHECK
-(round_index >= 1),
-  UNIQUE
-(session_game_id, round_index)
-);
-
-CREATE TABLE
-IF NOT EXISTS session_set
-(
-  id               TEXT PRIMARY KEY, -- UUID
-  session_round_id  TEXT NOT NULL REFERENCES session_round
+    FOREIGN KEY (participant_id)
+REFERENCES Participant
 (id) ON
-DELETE CASCADE,
-  set_index         INTEGER
-NOT NULL CHECK
-(set_index >= 1),
-  UNIQUE
-(session_round_id, set_index)
-);
-
--- =========================
--- Score entries (per game OR per round/set)
--- Voor POINTS: points_value
--- Voor TIME:   time_ms_value
--- Voor COMPLETED: completed_value
--- =========================
-CREATE TABLE
-IF NOT EXISTS score_entry
-(
-  id                    TEXT PRIMARY KEY, -- UUID
-  session_game_id        TEXT NOT NULL REFERENCES session_game
-(id) ON
-DELETE CASCADE,
-  session_participant_id TEXT
-NOT NULL REFERENCES session_participant
-(id) ON
-DELETE CASCADE,
-
-  -- Target (exact 1): game-level OR set-level
-  session_round_id       TEXT
-REFERENCES session_round
-(id) ON
-DELETE CASCADE,
-  session_set_id         TEXT
-REFERENCES session_set
-(id)   ON
-DELETE CASCADE,
-
-  points_value           INTEGER,
-  time_ms_value          INTEGER
-CHECK
-(time_ms_value IS NULL OR time_ms_value >= 0),
-  completed_value        INTEGER CHECK
-(completed_value IS NULL OR completed_value IN
-(0,1)),
-
-  created_at             TEXT NOT NULL,
-
-  CHECK
-(
-    (session_round_id IS NULL AND session_set_id IS NULL) OR
-(session_round_id IS NOT NULL AND session_set_id IS NULL) OR
-(session_round_id IS NULL AND session_set_id IS NOT NULL)
-  )
-);
-
--- =========================
--- Scoremodel settings (per SESSION of per SESSION_GAME)
--- Voltooid/niet voltooid: geen settings tabel/rijen.
--- =========================
-CREATE TABLE
-IF NOT EXISTS points_settings
-(
-  scope_type              TEXT NOT NULL CHECK
-(scope_type IN
-('SESSION','SESSION_GAME')),
-  scope_id                TEXT NOT NULL,  -- session.id of session_game.id
-  points_per_action       INTEGER NOT NULL DEFAULT 1 CHECK
-(points_per_action >= 0),
-  use_bonus_points        INTEGER NOT NULL DEFAULT 0 CHECK
-(use_bonus_points IN
-(0,1)),
-  bonus_points_per_action INTEGER NOT NULL DEFAULT 1 CHECK
-(bonus_points_per_action >= 0),
-  PRIMARY KEY
-(scope_type, scope_id)
-);
-
-CREATE TABLE
-IF NOT EXISTS time_settings
-(
-  scope_type        TEXT NOT NULL CHECK
-(scope_type IN
-('SESSION','SESSION_GAME')),
-  scope_id          TEXT NOT NULL,
-  ranking_rule_id   INTEGER NOT NULL REFERENCES ranking_rule
-(id), -- snelste/traagste
-  time_notation     TEXT NOT NULL, -- bv 'mm:ss' of 'mm:ss.SS'
-  PRIMARY KEY
-(scope_type, scope_id)
-);
-
--- =========================
--- Seed data (3 spelmodussen, 3 scoremodellen)
--- =========================
-INSERT OR
-IGNORE INTO game_mode (id, code, name)
-VALUES
-    (1, 'SINGLE', 'Scoreboard voor één game'),
-    (2, 'SERIES', 'Serie van games'),
-    (3, 'PARALLEL', 'Parallelle games');
-
-INSERT OR
-IGNORE INTO score_model (id, code, name)
-VALUES
-    (1, 'POINTS', 'Puntenscore'),
-    (2, 'TIME', 'Tijdscore'),
-    (3, 'COMPLETED', 'Voltooid / niet voltooid');
-
-INSERT OR
-IGNORE INTO ranking_rule (id, code, name)
-VALUES
-    (1, 'FASTEST_WINS', 'Snelste tijd wint'),
-    (2, 'SLOWEST_WINS', 'Traagste tijd wint');
+DELETE CASCADE
+  );
