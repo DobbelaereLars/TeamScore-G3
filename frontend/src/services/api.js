@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// Gebruik localhost in development (Vite), maar relatieve paden in productie (zodat Tablet naar Pi wijst, niet naar zichzelf)
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:3000/api' : '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 // ============================================
@@ -21,7 +22,7 @@ export const sessionRepository = {
   delete: (id) => api.delete(`/sessions/${id}`),
   getParticipants: (id) => api.get(`/sessions/${id}/participants`),
   getGames: (id) => api.get(`/sessions/${id}/games`),
-  getFinalScores: (id) => api.get(`/sessions/${id}/final-scores`)
+  getFinalScores: (id) => api.get(`/sessions/${id}/final-scores`),
 };
 
 // ============================================
@@ -34,7 +35,7 @@ export const gameRepository = {
   update: (id, data) => api.put(`/games/${id}`, data),
   delete: (id) => api.delete(`/games/${id}`),
   finish: (id) => api.patch(`/games/${id}/finish`),
-  getScores: (id) => api.get(`/games/${id}/scores`)
+  getScores: (id) => api.get(`/games/${id}/scores`),
 };
 
 // ============================================
@@ -45,7 +46,7 @@ export const playerRepository = {
   getById: (id) => api.get(`/players/${id}`),
   create: (data) => api.post('/players', data),
   update: (id, data) => api.put(`/players/${id}`, data),
-  delete: (id) => api.delete(`/players/${id}`)
+  delete: (id) => api.delete(`/players/${id}`),
 };
 
 // ============================================
@@ -58,8 +59,10 @@ export const teamRepository = {
   update: (id, data) => api.put(`/teams/${id}`, data),
   delete: (id) => api.delete(`/teams/${id}`),
   getPlayers: (id) => api.get(`/teams/${id}/players`),
-  addPlayer: (teamId, playerId) => api.post(`/teams/${teamId}/players/${playerId}`),
-  removePlayer: (teamId, playerId) => api.delete(`/teams/${teamId}/players/${playerId}`)
+  addPlayer: (teamId, playerId) =>
+    api.post(`/teams/${teamId}/players/${playerId}`),
+  removePlayer: (teamId, playerId) =>
+    api.delete(`/teams/${teamId}/players/${playerId}`),
 };
 
 // ============================================
@@ -69,7 +72,7 @@ export const participantRepository = {
   getAll: () => api.get('/participants'),
   getById: (id) => api.get(`/participants/${id}`),
   create: (data) => api.post('/participants', data),
-  delete: (id) => api.delete(`/participants/${id}`)
+  delete: (id) => api.delete(`/participants/${id}`),
 };
 
 // ============================================
@@ -79,10 +82,13 @@ export const scoreRepository = {
   getAll: () => api.get('/scores'),
   getById: (id) => api.get(`/scores/${id}`),
   create: (data) => api.post('/scores', data),
-  updatePoints: (gameId, participantId, points) => api.put(`/scores/${gameId}/participant/${participantId}/points`, { points }),
+  updatePoints: (gameId, participantId, points) =>
+    api.put(`/scores/${gameId}/participant/${participantId}/points`, {
+      points,
+    }),
   update: (id, data) => api.put(`/scores/${id}`, data),
   delete: (id) => api.delete(`/scores/${id}`),
-  bulkUpdate: (scores) => api.post('/scores/bulk', scores)
+  bulkUpdate: (scores) => api.post('/scores/bulk', scores),
 };
 
 // ============================================
@@ -93,7 +99,7 @@ export const scoreModelRepository = {
   getById: (id) => api.get(`/score-models/${id}`),
   create: (data) => api.post('/score-models', data),
   update: (id, data) => api.put(`/score-models/${id}`, data),
-  delete: (id) => api.delete(`/score-models/${id}`)
+  delete: (id) => api.delete(`/score-models/${id}`),
 };
 
 // ============================================
@@ -102,7 +108,7 @@ export const scoreModelRepository = {
 export const finalScoreRepository = {
   getAll: () => api.get('/final-scores'),
   getBySession: (sessionId) => api.get(`/final-scores/session/${sessionId}`),
-  calculate: (sessionId) => api.post(`/final-scores/calculate/${sessionId}`)
+  calculate: (sessionId) => api.post(`/final-scores/calculate/${sessionId}`),
 };
 
 // Export axios instance voor custom requests
