@@ -67,6 +67,15 @@ async function performSchemaUpdates(database) {
     'INTEGER DEFAULT 0 CHECK (is_finished IN (0, 1))',
   );
 
+  // Update voor Game.points_per_click (toegevoegd voor specifieke puntentelling)
+  await ensureColumnExists(database, 'Game', 'points_per_click', 'REAL');
+
+  // Update voor Game.bonus_points (toegevoegd voor bonuspunten)
+  await ensureColumnExists(database, 'Game', 'bonus_points', 'REAL');
+
+  // Update voor ScoreModel.config_json (toegevoegd voor flexibele configuratie)
+  await ensureColumnExists(database, 'ScoreModel', 'config_json', 'TEXT');
+
   // Update voor Participant.type constraints en velden kunnen complexer zijn,
   // maar ALTER TABLE ondersteunt geen constraint modificaties makkelijk in SQLite.
   // We focussen op nieuwe kolommen.
