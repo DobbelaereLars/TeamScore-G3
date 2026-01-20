@@ -28,6 +28,7 @@ import {
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
 import socket from '../utils/socket';
+import { sessionRepository } from '../services/api';
 
 const router = useRouter();
 
@@ -349,23 +350,25 @@ const handleGameModeChange = (value) => {
       games.value = [firstGame];
     } else {
       // Should not happen, but safe fallback
-      games.value = [{
-        id: 'game-1', 
-        name: '',
-        scoreModel: 'points',
-        useRounds: false,
-        roundsCount: 1,
-        useSets: false,
-        setsCount: 1,
-        pointsPerAction: 1,
-        pointsRanking: 'highest-first',
-        useBonusPoints: false,
-        bonusPoints: 1,
-        timeNotation: 'mm:ss',
-        timeRanking: 'fastest-first',
-        useTimeBonusPoints: false,
-        timeBonusPoints: 1,
-      }];
+      games.value = [
+        {
+          id: 'game-1',
+          name: '',
+          scoreModel: 'points',
+          useRounds: false,
+          roundsCount: 1,
+          useSets: false,
+          setsCount: 1,
+          pointsPerAction: 1,
+          pointsRanking: 'highest-first',
+          useBonusPoints: false,
+          bonusPoints: 1,
+          timeNotation: 'mm:ss',
+          timeRanking: 'fastest-first',
+          useTimeBonusPoints: false,
+          timeBonusPoints: 1,
+        },
+      ];
     }
     activeGameIndex.value = 0;
   } else if (
@@ -593,14 +596,84 @@ const getGameName = (gameId) => {
   return getDefaultGameName(games.value[index]);
 };
 
-const cancelSession = () => {
+const cancelSessionModalId = 'cancel-session-modal';
+
+const handleCancelSession = () => {
+  const dialog = document.getElementById(cancelSessionModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const confirmCancelSession = () => {
   socket.emit('session-cancel');
   router.push('/tablet');
 };
 
+const saveSessionModalId = 'save-session-modal';
+
+const handleFinishSetup = () => {
+  const dialog = document.getElementById(saveSessionModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const saveSessionToDb = async (status = 'created') => {
+  try {
+    const payload = {
+      sessionName: sessionName.value,
+      participantMode: selectedParticipantMode.value,
+      gameMode: selectedGameMode.value,
+      games: games.value,
+      participants: participants.value,
+      status: status,
+    };
+
+    const response = await sessionRepository.create(payload);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to save session:', error);
+    alert('Er is een fout opgetreden bij het opslaan van de sessie.');
+    throw error;
+  }
+};
+
+const saveSessionOnly = async () => {
+  // Save session (not starting yet)
+  try {
+    await saveSessionToDb('created');
+
+    // Reset display to splash screen
+    socket.emit('display:navigate', { name: 'display-splash' });
+
+    // Clear participants on display/server
+    socket.emit('display:update-participants', []);
+    
+    router.push('/tablet');
+  } catch (e) {
+    // Error handled in saveSessionToDb
+  }
+};
+
+const saveAndStartSession = async () => {
+  // Save session and start
+  try {
+    const data = await saveSessionToDb('in_progress');
+
+    // Emit navigation event for display
+    socket.emit('display:navigate', { name: 'display-scoreboard' });
+
+    // Navigate tablet to player list (game interface)
+    router.push('/tablet/game/players');
+  } catch (e) {
+    // Error handled in saveSessionToDb
+  }
+};
+
 const goToPreviousTab = () => {
   if (isFirstTab.value) {
-    cancelSession();
+    handleCancelSession();
   } else {
     const prevIndex = activeTabIndex.value - 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -613,8 +686,7 @@ const goToPreviousTab = () => {
 
 const goToNextTab = () => {
   if (isLastTab.value) {
-    // TODO: Submit form
-    console.log('Form klaar!');
+    handleFinishSetup();
   } else {
     const nextIndex = activeTabIndex.value + 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -672,7 +744,7 @@ onUnmounted(() => {
           <div class="p-game-setup-view__settings__head">
             <div class="p-game-setup-view__settings__head__subtitle">
               <Button
-                @click="cancelSession"
+                @click="handleCancelSession"
                 :clickable="false"
                 :is-icon-button="true"
                 variant="secondary"
@@ -1162,6 +1234,26 @@ onUnmounted(() => {
               <p>Geen deelnemers gevonden.</p>
             </div>
           </Modal>
+
+          <Modal
+            :modal-id="cancelSessionModalId"
+            title="Sessie annuleren?"
+            text="Je staat op het punt de sessie te annuleren. De ingevoerde gegevens worden niet opgeslagen."
+            cancel-btn-text="Terug"
+            accept-btn-text="Afsluiten"
+            @cancel="() => {}"
+            @accept="confirmCancelSession"
+          />
+
+          <Modal
+            :modal-id="saveSessionModalId"
+            title="Sessie starten?"
+            text="Wil je de sessie opslaan en direct starten, of enkel opslaan om later te spelen?"
+            cancel-btn-text="Opslaan"
+            accept-btn-text="Opslaan & Starten"
+            @cancel="saveSessionOnly"
+            @accept="saveAndStartSession"
+          />
 
           <div class="p-game-setup-view__settings__footer">
             <Button
