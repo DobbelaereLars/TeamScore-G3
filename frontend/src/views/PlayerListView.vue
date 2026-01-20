@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { sessionRepository, scoreRepository } from '../services/api';
 import socket from '../utils/socket';
@@ -17,6 +17,16 @@ const currentSessionId = ref(1);
 const games = ref([]);
 
 const selectedGameId = ref(null);
+
+watch(selectedGameId, (newId) => {
+  if (newId) {
+    console.log('Sending selected game to display:', newId);
+    socket.emit('display:selected-game', {
+      gameId: newId,
+      sessionId: currentSessionId.value
+    });
+  }
+});
 
 // Responsive breakpoint voor sizeUp
 const windowWidth = ref(window.innerWidth);
