@@ -1,11 +1,15 @@
 <script setup>
 import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import Button from '../components/Button.vue';
 import SessionCard from '../components/SessionCard.vue';
 import { Gamepad2, History } from 'lucide-vue-next';
 import socket from '../utils/socket';
+import { sessionRepository } from '../services/api';
 
 const router = useRouter();
+const sessions = ref([]);
+const loading = ref(true);
 
 const handleSocketTest = () => {
   console.log('Sending test-popup event...');
@@ -19,6 +23,37 @@ const createNewSession = () => {
   socket.emit('session-init');
   router.push('/tablet/setup');
 };
+
+const fetchSessions = async () => {
+  try {
+    const response = await sessionRepository.getAll();
+    sessions.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch sessions:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('nl-BE', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const getSubtitle = (session) => {
+  const count = session.participant_count || 0;
+  const label = session.participant_mode === 'players' ? 'spelers' : 'teams';
+  return `${count} ${label}`;
+};
+
+onMounted(() => {
+  fetchSessions();
+});
 </script>
 
 <template>
@@ -56,10 +91,33 @@ const createNewSession = () => {
         </div>
 
         <div class="p-tablet-home-view__history__cards">
-          <!-- <p class="p-tablet-home-view__history__cards__text">
+          <p
+            v-if="sessions.length === 0 && !loading"
+            class="p-tablet-home-view__history__cards__text"
+          >
             Nog geen sessies gestart
-          </p> -->
+          </p>
 
+          <div v-else class="row g-4">
+            <div
+              v-for="session in sessions"
+              :key="session.id"
+              class="col-7 col-sm-6 col-md-4 col-lg-3"
+            >
+              <SessionCard
+                :title="`${session.name} - ${formatDate(session.created_at)}`"
+                :subtitle="getSubtitle(session)"
+                image-src="/podium_screens/podium_screen_ph.png"
+                :href="`/tablet/sessions/${session.id}`"
+              >
+                <!-- Optional: Label for status could act as a slot or overlay if SessionCard supported it -->
+                <!-- For now, we rely on standard card -->
+              </SessionCard>
+            </div>
+          </div>
+
+          <!-- STATIC CARDS (Commented out) -->
+          <!-- 
           <div class="row g-4">
             <div class="col-7 col-sm-6 col-md-4 col-lg-3">
               <SessionCard
@@ -69,43 +127,9 @@ const createNewSession = () => {
                 href="#"
               />
             </div>
-
-            <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard
-                title="Battle Royale - 10/01/2026"
-                subtitle="4 teams"
-                image-src="/podium_screens/podium_screen_ph.png"
-                href="#"
-              />
-            </div>
-
-            <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard
-                title="Toernooi - 12/01/2026"
-                subtitle="8 teams"
-                image-src="/podium_screens/podium_screen_ph.png"
-                href="#"
-              />
-            </div>
-
-            <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard
-                title="Sprint Challenge"
-                subtitle="3 teams"
-                image-src="/podium_screens/podium_screen_ph.png"
-                href="#"
-              />
-            </div>
-
-            <div class="col-7 col-sm-6 col-md-4 col-lg-3">
-              <SessionCard
-                title="Finaleavond"
-                subtitle="5 teams"
-                image-src="/podium_screens/podium_screen_ph.png"
-                href="#"
-              />
-            </div>
+            ...
           </div>
+          -->
         </div>
       </div>
     </div>

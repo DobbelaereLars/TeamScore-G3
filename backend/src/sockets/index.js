@@ -56,6 +56,11 @@ function setupSockets(server) {
       socket.emit('display:update-participants', currentParticipants);
     });
 
+    socket.on('display:navigate', (data) => {
+      console.log('Display navigate event received:', data);
+      io.emit('display:navigate', data);
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });

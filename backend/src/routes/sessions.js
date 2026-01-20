@@ -21,10 +21,43 @@ const get = (db, sql, params = []) => {
   });
 };
 
+const all = (db, sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+router.get('/', async (req, res) => {
+  const db = getDatabase();
+  try {
+    const query = `
+      SELECT 
+        Session.*, 
+        (SELECT COUNT(*) FROM Participant WHERE session_id = Session.id AND type = CASE WHEN Session.participant_mode = 'players' THEN 'player' ELSE 'team' END) as participant_count
+      FROM Session 
+      ORDER BY created_at DESC
+    `;
+    const sessions = await all(db, query);
+    res.json(sessions);
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   const db = getDatabase();
-  const { sessionName, participantMode, gameMode, games, participants } =
-    req.body;
+  const {
+    sessionName,
+    participantMode,
+    gameMode,
+    games,
+    participants,
+    status,
+  } = req.body;
 
   try {
     // Start transaction
@@ -46,10 +79,18 @@ router.post('/', async (req, res) => {
           ? 'series'
           : 'parallel';
 
+    // Default status is 'created' via DB default, but can be overridden
+    const sessionStatus = status || 'created';
+
     const sessionResult = await run(
       db,
-      `INSERT INTO Session (name, participant_mode, game_mode) VALUES (?, ?, ?)`,
-      [sessionName || 'Nieuwe sessie', dbParticipantMode, dbGameMode],
+      `INSERT INTO Session (name, participant_mode, game_mode, status) VALUES (?, ?, ?, ?)`,
+      [
+        sessionName || 'Nieuwe sessie',
+        dbParticipantMode,
+        dbGameMode,
+        sessionStatus,
+      ],
     );
     const sessionId = sessionResult.lastID;
 

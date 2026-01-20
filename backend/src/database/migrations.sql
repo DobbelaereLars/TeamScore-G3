@@ -12,6 +12,9 @@ IF NOT EXISTS Session
     game_mode TEXT NOT NULL CHECK
 (game_mode IN
 ('single', 'series', 'parallel')),
+    status TEXT DEFAULT 'created' CHECK
+(status IN
+('created', 'in_progress', 'finished')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 

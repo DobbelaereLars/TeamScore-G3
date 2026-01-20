@@ -619,7 +619,7 @@ const handleFinishSetup = () => {
   }
 };
 
-const saveSessionToDb = async () => {
+const saveSessionToDb = async (status = 'created') => {
   try {
     const payload = {
       sessionName: sessionName.value,
@@ -627,6 +627,7 @@ const saveSessionToDb = async () => {
       gameMode: selectedGameMode.value,
       games: games.value,
       participants: participants.value,
+      status: status,
     };
 
     const response = await sessionRepository.create(payload);
@@ -641,7 +642,14 @@ const saveSessionToDb = async () => {
 const saveSessionOnly = async () => {
   // Save session (not starting yet)
   try {
-    await saveSessionToDb();
+    await saveSessionToDb('created');
+
+    // Reset display to splash screen
+    socket.emit('display:navigate', { name: 'display-splash' });
+
+    // Clear participants on display/server
+    socket.emit('display:update-participants', []);
+    
     router.push('/tablet');
   } catch (e) {
     // Error handled in saveSessionToDb
@@ -651,15 +659,13 @@ const saveSessionOnly = async () => {
 const saveAndStartSession = async () => {
   // Save session and start
   try {
-    const data = await saveSessionToDb();
-    // Assuming we want to load this session to play
-    // Navigate to in-game settings or wherever the game control is
-    // passing the sessionId if needed, or setting it in store
+    const data = await saveSessionToDb('in_progress');
 
-    // For now, just navigate to in-game settings
-    // Potentially store session ID in a store
-    console.log('Session saved with ID:', data.sessionId);
-    router.push({ name: 'ingame-settings' });
+    // Emit navigation event for display
+    socket.emit('display:navigate', { name: 'display-scoreboard' });
+
+    // Navigate tablet to player list (game interface)
+    router.push('/tablet/game/players');
   } catch (e) {
     // Error handled in saveSessionToDb
   }
