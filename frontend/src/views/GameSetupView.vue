@@ -609,6 +609,25 @@ const confirmCancelSession = () => {
   router.push('/tablet');
 };
 
+const saveSessionModalId = 'save-session-modal';
+
+const handleFinishSetup = () => {
+  const dialog = document.getElementById(saveSessionModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const saveSessionOnly = () => {
+  console.log('Sessie opslaan (niet starten)');
+  // TODO: Add logic to save session
+};
+
+const saveAndStartSession = () => {
+  console.log('Sessie opslaan en starten');
+  // TODO: Add logic to save session and start game
+};
+
 const goToPreviousTab = () => {
   if (isFirstTab.value) {
     handleCancelSession();
@@ -624,8 +643,7 @@ const goToPreviousTab = () => {
 
 const goToNextTab = () => {
   if (isLastTab.value) {
-    // TODO: Submit form
-    console.log('Form klaar!');
+    handleFinishSetup();
   } else {
     const nextIndex = activeTabIndex.value + 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -1182,6 +1200,16 @@ onUnmounted(() => {
             accept-btn-text="Afsluiten"
             @cancel="() => {}"
             @accept="confirmCancelSession"
+          />
+
+          <Modal
+            :modal-id="saveSessionModalId"
+            title="Sessie starten?"
+            text="Wil je de sessie opslaan en direct starten, of enkel opslaan om later te spelen?"
+            cancel-btn-text="Opslaan"
+            accept-btn-text="Opslaan & Starten"
+            @cancel="saveSessionOnly"
+            @accept="saveAndStartSession"
           />
 
           <div class="p-game-setup-view__settings__footer">
