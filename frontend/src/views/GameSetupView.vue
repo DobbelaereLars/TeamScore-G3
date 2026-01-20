@@ -649,7 +649,7 @@ const saveSessionOnly = async () => {
 
     // Clear participants on display/server
     socket.emit('display:update-participants', []);
-    
+
     router.push('/tablet');
   } catch (e) {
     // Error handled in saveSessionToDb
@@ -786,6 +786,7 @@ onUnmounted(() => {
                   name="sessionName"
                   :label="false"
                   :placeholder="sessionNamePlaceholder"
+                  v-model="sessionName"
                 />
               </div>
 
