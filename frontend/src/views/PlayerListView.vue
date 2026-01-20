@@ -52,9 +52,12 @@ const games = ref([
 
 const selectedGameId = ref(1);
 
-// Responsive breakpoint voor sizeUp
+// Responsive breakpoint voor size
 const windowWidth = ref(window.innerWidth);
-const isMdOrLarger = computed(() => windowWidth.value >= 768);
+const playerItemSize = computed(() => {
+  if (windowWidth.value >= 768) return 'large';
+  return 'default';
+});
 
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
@@ -150,7 +153,7 @@ const goToNextRound = () => {
 
           <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players">
             <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.id}`" :name="player.name"
-              :points="player.points" :size-up="isMdOrLarger" :rank="player.rank" :perClick="currentGame?.perClick || 1"
+              :points="player.points" :size="playerItemSize" :rank="player.rank" :perClick="currentGame?.perClick || 1"
               @updatePoints="(newPoints) => updatePlayerPointsInArray(player.id, newPoints)" />
           </TransitionGroup>
 
