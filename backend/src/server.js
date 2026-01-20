@@ -43,11 +43,12 @@ app.use(express.json());
 
 // API Routes
 const playersRouter = require("./routes/players");
-app.use("/api/players", playersRouter);
+const sessionsRouter = require('./routes/sessions');
+const gamesRouter = require('./routes/games');
 
-// TODO: je routes/sockets hier importeren:
-// const sessionsRouter = require('./routes/sessions');
-// app.use('/api/sessions', sessionsRouter);
+app.use('/api/players', playersRouter);
+app.use('/api/sessions', sessionsRouter);
+app.use('/api/games', gamesRouter);
 
 const gamesRouter = require("./routes/games");
 app.use("/api/games", gamesRouter);
