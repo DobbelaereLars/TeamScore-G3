@@ -12,6 +12,9 @@ IF NOT EXISTS Session
     game_mode TEXT NOT NULL CHECK
 (game_mode IN
 ('single', 'series', 'parallel')),
+    status TEXT DEFAULT 'created' CHECK
+(status IN
+('created', 'in_progress', 'finished')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -105,7 +108,7 @@ IF NOT EXISTS Participant
       (
         type = 'player'
         AND player_id IS NOT NULL
-        AND team_id IS NULL
+        -- team_id mag NULL zijn (individueel) of ingevuld (onderdeel van team)
       )
       OR
 (

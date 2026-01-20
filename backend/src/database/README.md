@@ -1,11 +1,15 @@
 # 1. Voer migrations uit (maakt lege database)
 
-node backend/src/database/db.js
+npm run db:migrate
 
 # 2. Voeg testdata toe (optioneel)
 
-node backend/src/database/seed.js
+npm run db:seed
 
-# 3. Start de server
+# 3. Clear database
+
+npm run db:clear
+
+# 4. Start de server
 
 npm run dev
