@@ -15,6 +15,7 @@ const api = axios.create({
 export const sessionRepository = {
   getAll: () => api.get('/sessions'),
   getById: (id) => api.get(`/sessions/${id}`),
+  getGames: (id) => api.get(`/sessions/${id}/games`),
   create: (data) => api.post('/sessions', data),
   update: (id, data) => api.put(`/sessions/${id}`, data),
   delete: (id) => api.delete(`/sessions/${id}`),

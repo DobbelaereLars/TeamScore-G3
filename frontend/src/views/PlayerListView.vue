@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { sessionRepository } from '../services/api';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
 import LogoHeader from '../components/Logo.vue';
@@ -7,50 +8,10 @@ import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
 import { Cog } from 'lucide-vue-next';
 
-// Simulatie van meerdere games (later vanuit database)
-const games = ref([
-  {
-    id: 1,
-    name: 'Game 1',
-    perClick: 2,
-    rounds: 5,
-    currentRound: 1,
-    players: [
-      { id: 1, name: 'Alice', points: 10 },
-      { id: 2, name: 'Bob', points: 8 },
-      { id: 3, name: 'Charlie', points: 6 },
-      { id: 4, name: 'David', points: 4 },
-      { id: 5, name: 'Eve', points: 2 }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Volleybal Toernooi 2026',
-    perClick: 5,
-    rounds: 3,
-    currentRound: 1,
-    players: [
-      { id: 6, name: 'Frank', points: 25 },
-      { id: 7, name: 'Grace', points: 20 },
-      { id: 2, name: 'Bob', points: 15 },
-      { id: 8, name: 'Henry', points: 10 }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Game 3',
-    perClick: 1,
-    rounds: 10,
-    currentRound: 1,
-    players: [
-      { id: 1, name: 'Alice', points: 7 },
-      { id: 9, name: 'Ivy', points: 5 },
-      { id: 10, name: 'Jack', points: 3 }
-    ]
-  }
-]);
+// Games from DB (Session 1)
+const games = ref([]);
 
-const selectedGameId = ref(1);
+const selectedGameId = ref(null);
 
 // Responsive breakpoint voor sizeUp
 const windowWidth = ref(window.innerWidth);
@@ -60,8 +21,19 @@ const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize);
+
+  // TODO: Later via Socket.IO
+  try {
+    const response = await sessionRepository.getGames(2);
+    games.value = response.data;
+    if (games.value.length > 0) {
+      selectedGameId.value = games.value[0].id;
+    }
+  } catch (error) {
+    console.error('Failed to fetch games for session 1:', error);
+  }
 });
 
 onUnmounted(() => {
