@@ -145,29 +145,29 @@ VALUES
 
 -- Games for Session 1
 INSERT OR
-IGNORE INTO Game (session_id, name, rounds, sets, score_model_id, is_finished)
+IGNORE INTO Game (session_id, name, rounds, current_round, sets, score_model_id, is_finished)
 VALUES
-    (1, 'Trivia Round', 3, 1, 1, 1);
+    (1, 'Trivia Round', 3, 3, 1, 1, 1);
 
 -- Games for Session 2
 INSERT OR
-IGNORE INTO Game (session_id, name, rounds, sets, score_model_id, is_finished)
+IGNORE INTO Game (session_id, name, rounds, current_round, sets, score_model_id, is_finished)
 VALUES
-    (2, 'Sprint Race', 1, 5, 2, 1);
+    (2, 'Sprint Race', 1, 1, 5, 2, 1);
 INSERT OR
-IGNORE INTO Game (session_id, name, rounds, sets, score_model_id, is_finished)
+IGNORE INTO Game (session_id, name, rounds, current_round, sets, score_model_id, is_finished)
 VALUES
-    (2, 'Obstacle Course', 1, 3, 1, 0);
+    (2, 'Obstacle Course', 1, 1, 3, 1, 0);
 
 -- Games for Session 3
 INSERT OR
-IGNORE INTO Game (session_id, name, rounds, sets, score_model_id, is_finished)
+IGNORE INTO Game (session_id, name, rounds, current_round, sets, score_model_id, is_finished)
 VALUES
-    (3, 'Puzzle Challenge', 2, 1, 3, 1);
+    (3, 'Puzzle Challenge', 2, 2, 1, 3, 1);
 INSERT OR
-IGNORE INTO Game (session_id, name, rounds, sets, score_model_id, is_finished)
+IGNORE INTO Game (session_id, name, rounds, current_round, sets, score_model_id, is_finished)
 VALUES
-    (3, 'Memory Game', 3, 1, 1, 0);
+    (3, 'Memory Game', 3, 1, 1, 1, 0);
 
 -- Scores for Game 1 (Session 1, finished)
 INSERT OR

@@ -40,6 +40,7 @@ IF NOT EXISTS Game
     session_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     rounds INTEGER,
+    current_round INTEGER DEFAULT 1,
     sets INTEGER,
     score_model_id INTEGER NOT NULL,
     is_finished INTEGER DEFAULT 0 CHECK

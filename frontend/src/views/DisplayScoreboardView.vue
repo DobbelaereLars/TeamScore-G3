@@ -1,69 +1,59 @@
 <script setup>
 import ScoreboardPlayercard from "../components/ScoreboardPlayercard.vue";
+import { gameRepository } from "../services/api"; // Import repository
 import logo from "../assets/logo.webp";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 
-// Mock data - later connect to database
+// Initial state can be empty or mock, we'll overwrite it when loadGameData is called
+const players = ref([]);
+
+// Function to load game data (to be called via SocketIO event later)
+const loadGameData = async (gameId) => {
+  try {
+    console.log(`Loading game data for gameId: ${gameId}`);
+    const response = await gameRepository.getScores(gameId);
+    console.log("Scores fetched:", response.data);
+
+    // Map backend data to frontend structure
+    players.value = response.data.map((p) => ({
+      id: p.id,
+      spelersnaam: p.spelersnaam,
+      score: p.score,
+      rank: p.rank,
+    }));
+
+    // Optional: Fetch game details to update header
+    const gameResponse = await gameRepository.getById(gameId);
+    if (gameResponse.data) {
+      console.log("Game details fetched:", gameResponse.data);
+      gameinfo.value.gamename = gameResponse.data.name;
+      gameinfo.value.totalRounds = gameResponse.data.rounds;
+      gameinfo.value.currentRound = gameResponse.data.current_round;
+    }
+  } catch (error) {
+    console.error("Failed to load game data:", error);
+  }
+};
+
+// Expose the function so it can be called externally (e.g. by socket listener)
+defineExpose({
+  loadGameData,
+});
+
+// Mock data removed in favor of dynamic loading, but keeping structure ready
+/* 
 const players = ref([
   {
     id: 1,
     spelersnaam: "John Doe",
     score: 85,
   },
-  {
-    id: 2,
-    spelersnaam: "Jane Smith",
-    score: 72,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 4,
-    spelersnaam: "Alice Williams",
-    score: 58,
-  },
-  {
-    id: 5,
-    spelersnaam: "Charlie Brown",
-    score: 84,
-  },
-  {
-    id: 5,
-    spelersnaam: "Yarne Diopere",
-    score: 124,
-  },
-  {
-    id: 5,
-    spelersnaam: "Lars Dobbelaere",
-    score: 114,
-  },
-  {
-    id: 5,
-    spelersnaam: "Renz Deheegher",
-    score: 118,
-  },
+  ...
 ]);
+*/
 
 const gameinfo = ref({
-  currentRound: 2,
+  currentRound: 1,
   totalRounds: 5,
   gamename: "Game 1",
 });
@@ -111,7 +101,7 @@ const calculatePlayersPerPage = () => {
     const cardWidth = 280; // 17.5rem = 280px
     const gap = 15; // 0.9375rem ≈ 15px
     const columnsPerRow = Math.floor(
-      (containerWidth + gap) / (cardWidth + gap)
+      (containerWidth + gap) / (cardWidth + gap),
     );
     playersPerPage.value = columnsPerRow * 2; // 2 rows
   }
@@ -131,6 +121,9 @@ const totalPages = computed(() => {
 let pageInterval = null;
 
 onMounted(() => {
+  // TEST: Load game 2 (Time based, Teams) automatically
+  loadGameData(1);
+
   calculatePlayersPerPage();
 
   // Add resize listener to recalculate on window resize

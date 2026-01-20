@@ -30,14 +30,16 @@ router.get("/:id/scores", (req, res) => {
   // We nemen value_number als standaards core
   const query = `
     SELECT 
-      p.id as id,
-      p.name as spelersnaam,
-      s.value_number as score
+      part.id as id,
+      COALESCE(pl.name, tm.name) as spelersnaam,
+      COALESCE(s.value_number, s.value_time, s.value_bool) as score,
+      s.rank
     FROM Score s
     JOIN Participant part ON s.participant_id = part.id
-    JOIN Player p ON part.player_id = p.id
+    LEFT JOIN Player pl ON part.player_id = pl.id
+    LEFT JOIN Team tm ON part.team_id = tm.id
     WHERE s.game_id = ?
-    ORDER BY s.value_number DESC
+    ORDER BY s.rank ASC
   `;
 
   db.all(query, [id], (err, rows) => {
