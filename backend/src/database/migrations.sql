@@ -105,7 +105,7 @@ IF NOT EXISTS Participant
       (
         type = 'player'
         AND player_id IS NOT NULL
-        AND team_id IS NULL
+        -- team_id mag NULL zijn (individueel) of ingevuld (onderdeel van team)
       )
       OR
 (

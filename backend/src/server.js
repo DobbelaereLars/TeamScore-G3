@@ -11,10 +11,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS for development
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+    ],
+    credentials: true,
+  }),
+);
 
 // Initialize database
 initDatabase()
@@ -39,9 +45,8 @@ app.use(express.json());
 const playersRouter = require('./routes/players');
 app.use('/api/players', playersRouter);
 
-// TODO: je routes/sockets hier importeren:
-// const sessionsRouter = require('./routes/sessions');
-// app.use('/api/sessions', sessionsRouter);
+const sessionsRouter = require('./routes/sessions');
+app.use('/api/sessions', sessionsRouter);
 
 // Frontend dist serveren
 const distPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
@@ -74,7 +79,7 @@ if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
   server = http.createServer(app);
   server.listen(PORT, () => {
     console.warn(
-      '⚠️  HTTPS certificaten niet gevonden (backend/certs/key.pem & cert.pem). Server draait nu op HTTP.'
+      '⚠️  HTTPS certificaten niet gevonden (backend/certs/key.pem & cert.pem). Server draait nu op HTTP.',
     );
     console.log(`HTTP server running on port ${PORT}`);
   });

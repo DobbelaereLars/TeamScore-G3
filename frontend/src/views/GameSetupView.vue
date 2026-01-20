@@ -28,6 +28,7 @@ import {
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
 import socket from '../utils/socket';
+import { sessionRepository } from '../services/api';
 
 const router = useRouter();
 
@@ -618,14 +619,50 @@ const handleFinishSetup = () => {
   }
 };
 
-const saveSessionOnly = () => {
-  console.log('Sessie opslaan (niet starten)');
-  // TODO: Add logic to save session
+const saveSessionToDb = async () => {
+  try {
+    const payload = {
+      sessionName: sessionName.value,
+      participantMode: selectedParticipantMode.value,
+      gameMode: selectedGameMode.value,
+      games: games.value,
+      participants: participants.value,
+    };
+
+    const response = await sessionRepository.create(payload);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to save session:', error);
+    alert('Er is een fout opgetreden bij het opslaan van de sessie.');
+    throw error;
+  }
 };
 
-const saveAndStartSession = () => {
-  console.log('Sessie opslaan en starten');
-  // TODO: Add logic to save session and start game
+const saveSessionOnly = async () => {
+  // Save session (not starting yet)
+  try {
+    await saveSessionToDb();
+    router.push('/tablet');
+  } catch (e) {
+    // Error handled in saveSessionToDb
+  }
+};
+
+const saveAndStartSession = async () => {
+  // Save session and start
+  try {
+    const data = await saveSessionToDb();
+    // Assuming we want to load this session to play
+    // Navigate to in-game settings or wherever the game control is
+    // passing the sessionId if needed, or setting it in store
+
+    // For now, just navigate to in-game settings
+    // Potentially store session ID in a store
+    console.log('Session saved with ID:', data.sessionId);
+    router.push({ name: 'ingame-settings' });
+  } catch (e) {
+    // Error handled in saveSessionToDb
+  }
 };
 
 const goToPreviousTab = () => {
