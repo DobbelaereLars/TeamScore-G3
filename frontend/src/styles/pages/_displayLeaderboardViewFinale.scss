@@ -99,6 +99,7 @@
   .c-display-leaderboard-view-finale__players {
     display: flex;
     width: 76.875rem;
+    max-width: 90%; // Responsive width
     flex-direction: column;
     align-items: center; // Centered
     justify-content: flex-start;

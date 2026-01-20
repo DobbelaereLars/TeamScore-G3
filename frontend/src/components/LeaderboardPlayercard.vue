@@ -29,7 +29,7 @@ const props = defineProps({
       <p class="h4 c-leaderboard-playercard__rank-and-icon__rank">
         #{{ props.position }}
       </p>
-      <ProfileIcon :sizeUp="true" :playerName="props.playerName" />
+      <ProfileIcon size="large" :playerName="props.playerName" />
     </div>
     <div class="c-leaderboard-playercard__name-and-progress">
       <p class="h5">{{ props.playerName }}</p>

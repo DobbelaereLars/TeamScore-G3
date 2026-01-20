@@ -21,7 +21,7 @@ const handleShowPopup = (data) => {
 const handleNavigate = (data) => {
   console.log('Received navigate event:', data);
   if (data.name) {
-    router.push({ name: data.name });
+    router.push({ name: data.name, query: data.params });
   }
 };
 
@@ -38,11 +38,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container p-display-splash-view">
-    <img
-      class="p-display-splash-view__logo"
-      src="../assets/logo.webp"
-      alt="Logo"
-    />
+    <img class="p-display-splash-view__logo" src="../assets/logo.webp" alt="Logo" />
     <h1 class="p-display-splash-view__title h3">Wachten op een sessie...</h1>
 
     <!-- Socket.io test popup -->

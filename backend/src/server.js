@@ -14,16 +14,6 @@ const PORT = process.env.PORT || 3000;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-    ],
-    credentials: true,
-  }),
-);
-app.use(
-  cors({
-    origin: [
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
@@ -59,6 +49,9 @@ const gamesRouter = require("./routes/games");
 app.use("/api/players", playersRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/games", gamesRouter);
+
+const scoresRouter = require("./routes/scores");
+app.use("/api/scores", scoresRouter);
 
 // Frontend dist serveren
 const distPath = path.join(__dirname, "..", "..", "frontend", "dist");

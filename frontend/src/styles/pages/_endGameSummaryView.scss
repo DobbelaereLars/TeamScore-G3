@@ -1,0 +1,16 @@
+.c-display-end-game-summary-view__footer {
+  display: inline-flex;
+  // height: 4.625rem; // Let content define height
+  padding: $spacing-5;
+  align-items: center;
+  gap: $spacing-5;
+
+  position: absolute;
+  bottom: $spacing-5;
+  right: $spacing-5;
+  z-index: 100;
+
+  border-radius: 0.3125rem;
+  background: var(--Primary-blue-50, #f9f8ff);
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+}

@@ -61,6 +61,11 @@ function setupSockets(server) {
       io.emit('display:navigate', data);
     });
 
+    socket.on('display:selected-game', (data) => {
+      console.log('Display selected game event received:', data);
+      io.emit('display:selected-game', data);
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });
