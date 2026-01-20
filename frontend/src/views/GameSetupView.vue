@@ -349,23 +349,25 @@ const handleGameModeChange = (value) => {
       games.value = [firstGame];
     } else {
       // Should not happen, but safe fallback
-      games.value = [{
-        id: 'game-1', 
-        name: '',
-        scoreModel: 'points',
-        useRounds: false,
-        roundsCount: 1,
-        useSets: false,
-        setsCount: 1,
-        pointsPerAction: 1,
-        pointsRanking: 'highest-first',
-        useBonusPoints: false,
-        bonusPoints: 1,
-        timeNotation: 'mm:ss',
-        timeRanking: 'fastest-first',
-        useTimeBonusPoints: false,
-        timeBonusPoints: 1,
-      }];
+      games.value = [
+        {
+          id: 'game-1',
+          name: '',
+          scoreModel: 'points',
+          useRounds: false,
+          roundsCount: 1,
+          useSets: false,
+          setsCount: 1,
+          pointsPerAction: 1,
+          pointsRanking: 'highest-first',
+          useBonusPoints: false,
+          bonusPoints: 1,
+          timeNotation: 'mm:ss',
+          timeRanking: 'fastest-first',
+          useTimeBonusPoints: false,
+          timeBonusPoints: 1,
+        },
+      ];
     }
     activeGameIndex.value = 0;
   } else if (
@@ -593,14 +595,23 @@ const getGameName = (gameId) => {
   return getDefaultGameName(games.value[index]);
 };
 
-const cancelSession = () => {
+const cancelSessionModalId = 'cancel-session-modal';
+
+const handleCancelSession = () => {
+  const dialog = document.getElementById(cancelSessionModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const confirmCancelSession = () => {
   socket.emit('session-cancel');
   router.push('/tablet');
 };
 
 const goToPreviousTab = () => {
   if (isFirstTab.value) {
-    cancelSession();
+    handleCancelSession();
   } else {
     const prevIndex = activeTabIndex.value - 1;
     gameSetupTabList.value = gameSetupTabList.value.map((item, idx) => ({
@@ -672,7 +683,7 @@ onUnmounted(() => {
           <div class="p-game-setup-view__settings__head">
             <div class="p-game-setup-view__settings__head__subtitle">
               <Button
-                @click="cancelSession"
+                @click="handleCancelSession"
                 :clickable="false"
                 :is-icon-button="true"
                 variant="secondary"
@@ -1162,6 +1173,16 @@ onUnmounted(() => {
               <p>Geen deelnemers gevonden.</p>
             </div>
           </Modal>
+
+          <Modal
+            :modal-id="cancelSessionModalId"
+            title="Sessie annuleren?"
+            text="Je staat op het punt de sessie te annuleren. De ingevoerde gegevens worden niet opgeslagen."
+            cancel-btn-text="Terug"
+            accept-btn-text="Afsluiten"
+            @cancel="() => {}"
+            @accept="confirmCancelSession"
+          />
 
           <div class="p-game-setup-view__settings__footer">
             <Button
