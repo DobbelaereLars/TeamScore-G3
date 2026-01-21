@@ -9,6 +9,9 @@ import logo from "../assets/logo.webp";
 import { finalScoreRepository } from "../services/api";
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const SessionID = sessionStorage.getItem("sessionId");
 
@@ -207,6 +210,9 @@ const exportData = async () => {
     URL.revokeObjectURL(url);
   }
 };
+const goBack = () => {
+  router.push({ name: "tablet-home" });
+};
 
 onMounted(() => {
   // Disable body scrolling
@@ -313,7 +319,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="c-display-end-game-summary-view__footer">
-      <Button buttonTekst="Sluit sessie" variant="secondary" />
+      <Button buttonTekst="Sluit sessie" variant="secondary" @click="goBack" />
 
       <Button buttonTekst="Exporteren" variant="primary" @click="exportData">
         <template #c-btn_icon-left>
