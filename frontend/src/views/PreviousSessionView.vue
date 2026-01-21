@@ -12,7 +12,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { finalScoreRepository } from "../services/api";
 
-const route = useRoute(); 
+const route = useRoute();
 const SessionID = route.params.id;
 
 const players = ref([]);
@@ -178,13 +178,16 @@ const exportData = async () => {
 
   // 3. Share or Download
   // Detect if mobile device to prefer native share, otherwise force download for PC
-  const isMobile =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
-    );
+  // Detect if we should FORCE download (Windows PC)
+  const isWindows = /Windows NT/i.test(navigator.userAgent);
 
-  // Check if Web Share API is supported, allowed to share files, AND we are on mobile
-  if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+  // Check if Web Share API is supported, allowed to share files, AND we are NOT on Windows
+  // (We assume non-Windows devices like iPads, Macs, Androids should use Share Sheet if available)
+  if (
+    !isWindows &&
+    navigator.canShare &&
+    navigator.canShare({ files: [file] })
+  ) {
     try {
       await navigator.share({
         files: [file],
