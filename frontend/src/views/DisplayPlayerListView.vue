@@ -1,29 +1,30 @@
 <script setup>
-import ProfileIcon from '../components/ProfileIcon.vue';
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import socket from '../utils/socket';
+import ProfileIcon from "../components/ProfileIcon.vue";
+import TypewriterText from "../components/TypewriterText.vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { useRouter } from "vue-router";
+import socket from "../utils/socket";
 
 const router = useRouter();
 const containerRef = ref(null);
-const scaleClass = ref('');
+const scaleClass = ref("");
 const isScrollable = ref(false);
-const participantMode = ref('players');
+const participantMode = ref("players");
 
 const players = ref([]);
 
 // Scale levels from largest to smallest for smoother transitions
 const scaleLevels = [
-  '',
-  'scale-150', // Slightly smaller
-  'scale-140',
-  'scale-130', // ~ Old Medium
-  'scale-120',
-  'scale-110',
-  'scale-100', // ~ Old Small
-  'scale-90',
-  'scale-80', // ~ Old Tiny
-  'scale-70', // New smallest
+  "",
+  "scale-150", // Slightly smaller
+  "scale-140",
+  "scale-130", // ~ Old Medium
+  "scale-120",
+  "scale-110",
+  "scale-100", // ~ Old Small
+  "scale-90",
+  "scale-80", // ~ Old Tiny
+  "scale-70", // New smallest
 ];
 
 const checkOverflow = async () => {
@@ -36,7 +37,7 @@ const checkOverflow = async () => {
   // Wait for the DOM to reflect the added player
   await nextTick();
 
-  const el = containerRef.value;
+  const el = containerRef.value.$el || containerRef.value;
   // Helper to check fit (buffer of 1px for rounding)
   const fits = () => el.scrollHeight <= el.clientHeight + 1;
 
@@ -90,7 +91,7 @@ const handleUpdateParticipants = (data) => {
   // Check if data is array (old format) or object (new format)
   if (Array.isArray(data)) {
     players.value = data;
-  } else if (data && typeof data === 'object') {
+  } else if (data && typeof data === "object") {
     players.value = data.list || [];
     if (data.mode) {
       participantMode.value = data.mode;
@@ -99,19 +100,19 @@ const handleUpdateParticipants = (data) => {
 };
 
 const statusText = computed(() => {
-  if (participantMode.value === 'players') {
-    return 'Spelers worden nog toegevoegd';
+  if (participantMode.value === "players") {
+    return "Spelers worden nog toegevoegd";
   } else {
-    return 'Teams worden nog toegevoegd';
+    return "Teams worden nog toegevoegd";
   }
 });
 
 const counterText = computed(() => {
   const count = totalPlayers.value;
-  if (participantMode.value === 'players') {
-    return `${count} speler${count === 1 ? '' : 's'} ...`;
+  if (participantMode.value === "players") {
+    return `${count} speler${count === 1 ? "" : "s"} `;
   } else {
-    return `${count} team${count === 1 ? '' : 's'} ...`;
+    return `${count} team${count === 1 ? "" : "s"} `;
   }
 });
 
@@ -124,44 +125,67 @@ watch(
 );
 
 onMounted(async () => {
-  socket.on('display:navigate', handleNavigate);
-  socket.on('display:update-participants', handleUpdateParticipants);
+  socket.on("display:navigate", handleNavigate);
+  socket.on("display:update-participants", handleUpdateParticipants);
 
   // Ask server for latest data immediately on connect
-  socket.emit('display:request-participants');
+  socket.emit("display:request-participants");
 
-  window.addEventListener('resize', checkOverflow);
+  window.addEventListener("resize", checkOverflow);
   await checkOverflow();
 });
 
 onUnmounted(() => {
-  socket.off('display:navigate', handleNavigate);
-  socket.off('display:update-participants', handleUpdateParticipants);
-  window.removeEventListener('resize', checkOverflow);
+  socket.off("display:navigate", handleNavigate);
+  socket.off("display:update-participants", handleUpdateParticipants);
+  window.removeEventListener("resize", checkOverflow);
 });
 </script>
 
 <template>
   <div class="container c-displayPlayerList">
     <div class="c-displayPlayerList__header">
-      <img class="c-displayPlayerList__header__img" src="@/assets/logo.webp" alt="Logo" />
+      <img
+        class="c-displayPlayerList__header__img"
+        src="@/assets/logo.webp"
+        alt="Logo"
+      />
       <div class="c-displayPlayerList__header__text">
         <h1 class="h4">Wachten tot het spel start</h1>
         <p class="h6">{{ statusText }}</p>
       </div>
     </div>
-    <div class="c-displayPlayerList__players" :class="[scaleClass, { 'allow-scroll': isScrollable }]"
-      ref="containerRef">
-      <div class="c-displayPlayerList__players__player" v-for="(player, index) in players"
-        :key="`${player.playerName}-${index}`">
-        <ProfileIcon :playerName="player.playerName" variant="default" size="extra-large" />
-        <p class="h6">{{ player.playerName }}</p>
+    <TransitionGroup
+      tag="div"
+      name="player-pop"
+      class="c-displayPlayerList__players"
+      :class="[scaleClass, { 'allow-scroll': isScrollable }]"
+      ref="containerRef"
+    >
+      <div
+        class="c-displayPlayerList__players__player"
+        v-for="(player, index) in players"
+        :key="player.id || index"
+      >
+        <ProfileIcon
+          :playerName="player.playerName"
+          variant="default"
+          size="extra-large"
+        />
+        <p class="h6">
+          <TypewriterText :text="player.playerName || player.name" />
+        </p>
       </div>
-    </div>
+    </TransitionGroup>
     <div class="c-displayPlayerList__footer">
-      <p class="h5">{{ counterText }}</p>
+      <p class="h5">
+        {{ counterText }}<span class="dot">.</span><span class="dot">.</span
+        ><span class="dot">.</span>
+      </p>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
