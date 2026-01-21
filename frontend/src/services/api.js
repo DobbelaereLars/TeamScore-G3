@@ -86,6 +86,11 @@ export const scoreRepository = {
     api.put(`/scores/${gameId}/participant/${participantId}/points`, {
       points,
     }),
+  updateScore: (gameId, participantId, value, type) => 
+    api.put(`/scores/${gameId}/participant/${participantId}/score`, {
+        value, 
+        type
+    }),
   update: (id, data) => api.put(`/scores/${id}`, data),
   delete: (id) => api.delete(`/scores/${id}`),
   bulkUpdate: (scores) => api.post('/scores/bulk', scores),

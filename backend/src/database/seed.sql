@@ -46,7 +46,7 @@ VALUES
 INSERT OR
 IGNORE INTO Player (name)
 VALUES
-    ('Alice');
+    ('Alice Langenaammens');
 INSERT OR
 IGNORE INTO Player (name)
 VALUES
@@ -71,15 +71,21 @@ VALUES
 -- Games in Sessie 1
 -- Game 1: Punten spel (Iedereen doet mee)
 INSERT OR
-IGNORE INTO Game (id, session_id, name, rounds, sets, score_model_id, is_finished, points_per_click, bonus_points)
+IGNORE INTO Game (id, session_id, name, rounds, sets, current_set, score_model_id, is_finished, points_per_click, bonus_points)
 VALUES
-    (1, 1, 'Punten Spel', 1, 1, 1, 1, 5, 10);
+    (1, 1, 'Punten Spel', 3, 4, 1, 1, 1, 5, 10);
 
 -- Game 2: Tijds spel (Slechts 2 spelers doen mee)
 INSERT OR
-IGNORE INTO Game (id, session_id, name, rounds, sets, score_model_id, is_finished, points_per_click, bonus_points)
+IGNORE INTO Game (id, session_id, name, rounds, sets, current_set, score_model_id, is_finished, points_per_click, bonus_points)
 VALUES
-    (2, 1, 'Tijdrit Finale', 1, 1, 2, 0, NULL, 5);
+    (2, 1, 'Tijdrit Finale', 2, 2, 1, 2, 0, NULL, 5);
+
+-- Game 3: Boolean spel (Alice en Bob)
+INSERT OR
+IGNORE INTO Game (id, session_id, name, rounds, sets, current_set, score_model_id, is_finished, points_per_click, bonus_points)
+VALUES
+    (3, 1, 'Succes Challenge', 1, 1, 1, 3, 0, NULL, 0);
 
 -- Participanten (Gekoppeld aan Game ID, niet meer aan Sessie ID)
 
@@ -118,6 +124,18 @@ IGNORE INTO Participant (game_id, type, player_id)
 VALUES
     (2, 'player', 3);
 -- Charlie
+
+-- Game 3 Participants
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id)
+VALUES
+    (3, 'player', 1);
+-- Alice
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id)
+VALUES
+    (3, 'player', 2);
+-- Bob
 
 -- Scores
 
@@ -171,22 +189,20 @@ VALUES
     (2, (SELECT id
         FROM Participant
         WHERE game_id=2 AND player_id=3), 125.0, 0, 2);
--- Charlie (Participant 3)
 
--- Game 2 Scores (Time) - Participants 4, 5
+-- Game 3 Scores (Boolean)
 INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, rank)
+IGNORE INTO Score (game_id, participant_id, value_bool, rank)
 VALUES
-    (2, 4, 120.5, 1);
--- Alice (Participant 4)
-
+    (3, (SELECT id
+        FROM Participant
+        WHERE game_id=3 AND player_id=1), 1, 1);
 INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, rank)
+IGNORE INTO Score (game_id, participant_id, value_bool, rank)
 VALUES
-    (2, 5, 130.2, 2);
--- Charlie (Participant 5)
-VALUES
-(2, 7, 48.7, 3);
+    (3, (SELECT id
+        FROM Participant
+        WHERE game_id=3 AND player_id=2), 0, 2);
 
 -- Scores for Game 4 (Session 3, Puzzle Challenge - boolean, finished)
 INSERT OR
