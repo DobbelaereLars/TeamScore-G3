@@ -31,6 +31,12 @@
   }
 
   &__input {
+    // Ensure the hidden input is positioned relative to the wrapper to prevent scroll jumps
+    &.u-hide {
+      top: 50%; /* Position inside the wrapper */
+      left: 50%;
+    }
+
     &:checked {
       & + .c-tabbar__label {
         background-color: $color-primary-blue-100;
@@ -49,6 +55,20 @@
     flex: 1 1 0;
     min-width: 0;
     cursor: pointer;
+
+    &__tekst {
+      text-align: center;
+    }
+
+    &__close {
+      background-color: transparent;
+      border: none;
+      padding: $spacing-2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-secondary-grey-400;
+    }
 
     &__icon {
       width: 20px;

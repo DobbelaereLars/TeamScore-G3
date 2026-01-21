@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import InputField from '../components/InputField.vue';
 import Button from '../components/Button.vue';
 import InputRadioCards from '../components/InputRadioCards.vue';
@@ -24,7 +24,34 @@ import SessionCard from '../components/SessionCard.vue';
 import Notice from '../components/Notice.vue';
 import Modal from '../components/Modal.vue';
 
+import { playerRepository } from '@/services/api';
+
 const playerPoints = ref(10);
+
+// VOORBEELD CODE OM ALLE SPELERS OP TE HALEN VIA DE API
+const players = ref([]);
+const loading = ref(false);
+const error = ref(null);
+
+// Haal alle spelers op
+const fetchPlayers = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const response = await playerRepository.getAll();
+    players.value = response.data;
+    console.log('Spelers opgehaald:', players.value);
+  } catch (err) {
+    error.value = err.message;
+    console.error('Error bij ophalen spelers:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchPlayers();
+});
 
 const radioItems = [
   {
@@ -186,6 +213,21 @@ const tabBarItems = [
       text="Je kunt nu nog terugkeren om al je instellingen te controleren. Sommige keuzes zijn straks definitief, maar je kunt tijdens de sessie nog punten per ronde en extra rondes toevoegen (niet verminderen)."
       cancel-btn-text="Terug" accept-btn-text="Volgende" />
     <Button onclick="modaltest.showModal()" button-tekst="Open Modal" :clickable="false" variant="primary" />
+
+    <!-- Spelers lijst -->
+    <div class="mt-5">
+      <h2>Alle Spelers (API Test)</h2>
+      <div v-if="loading">Laden...</div>
+      <div v-else-if="error" class="text-danger">Error: {{ error }}</div>
+      <div v-else>
+        <p>Aantal spelers: {{ players.length }}</p>
+        <ul>
+          <li v-for="player in players" :key="player.id">
+            {{ player.name }} (ID: {{ player.id }})
+          </li>
+        </ul>
+      </div>
+    </div>
 
   </div>
 </template>

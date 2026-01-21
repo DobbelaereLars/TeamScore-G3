@@ -1,12 +1,12 @@
 <script setup>
-import { Minus, Plus } from 'lucide-vue-next';
-import Button from './Button.vue';
-import ProfileIcon from './ProfileIcon.vue';
+import { Minus, Plus } from "lucide-vue-next";
+import Button from "./Button.vue";
+import ProfileIcon from "./ProfileIcon.vue";
 
 const props = defineProps({
     name: {
         type: String,
-        default: 'Speler',
+        default: "Speler",
     },
     points: {
         type: Number,
@@ -20,9 +20,10 @@ const props = defineProps({
         type: Number,
         default: 1,
     },
-    sizeUp: {
-        type: Boolean,
-        default: false,
+    size: {
+        type: String,
+        default: "default",
+        validator: (value) => ["default", "large", "extra-large"].includes(value),
     },
 });
 
@@ -42,7 +43,7 @@ const decreasePoints = () => {
 
         <div class="c-host-player-item__playercontainer">
             <div class="c-host-player-item__profile">
-                <ProfileIcon variant="default" :size-up="sizeUp" :player-name="name" />
+                <ProfileIcon variant="default" :size="size" :player-name="name" />
                 <span class="c-host-player-item__rank">#{{ rank }}</span>
             </div>
 

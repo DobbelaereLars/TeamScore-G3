@@ -1,0 +1,237 @@
+.c-displayPlayerList {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  padding: $spacing-10 0;
+  box-sizing: border-box;
+  gap: $spacing-10;
+}
+
+.c-displayPlayerList__footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.c-displayPlayerList__header {
+  display: flex;
+  gap: $spacing-9;
+  flex-shrink: 0;
+
+  .c-displayPlayerList__header__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: $spacing-4;
+
+    & p {
+      color: $color-secondary-grey-500;
+      margin-left: $spacing-2;
+    }
+  }
+
+  .c-displayPlayerList__header__img {
+    width: 8rem;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+.c-displayPlayerList__players {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  column-gap: $spacing-6;
+  row-gap: $spacing-8;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  align-content: flex-start;
+
+  &.allow-scroll {
+    overflow-y: auto;
+  }
+
+  .c-displayPlayerList__players__player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $spacing-4;
+    width: 100%; // Fill grid cell
+
+    $player-colors:
+      $colors-vibrant-red, $colors-vibrant-green, $colors-vibrant-yellow,
+      $colors-vibrant-blue;
+
+    @for $i from 1 through length($player-colors) {
+      &:nth-child(#{length($player-colors)}n + #{$i}) {
+        .c-profile__icon {
+          color: nth($player-colors, $i);
+        }
+      }
+    }
+
+    & p.h6 {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    // Default overrides for extra-large icon (forced by Vue prop, overridden here)
+    .c-profile__icon {
+      // Component prop sets it to 6.75rem, we keep that for small counts (<16)
+    }
+  }
+
+  /* -------------------------------------------------- */
+  /* Scale modifiers controlled by JS                   */
+  /* -------------------------------------------------- */
+
+  // Note: Default width is 160px (see above)
+
+  // Intermediate step ~150px
+  &.scale-150 {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-3;
+      // Icon stays large
+    }
+  }
+
+  // Intermediate step ~140px
+  &.scale-140 {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-3;
+      .c-profile__icon {
+        width: 5.5rem;
+        height: 5.5rem;
+      }
+    }
+  }
+
+  // ~130px (Was Medium)
+  &.scale-130 {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-3;
+      .c-profile__icon {
+        width: 5rem;
+        height: 5rem;
+        font-size: var(--font-size-h5);
+      }
+      p.h6 {
+        font-size: var(--font-size-h6);
+      }
+    }
+  }
+
+  // Intermediate ~120px
+  &.scale-120 {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-2;
+      row-gap: $spacing-6;
+      .c-profile__icon {
+        width: 4.5rem;
+        height: 4.5rem;
+        font-size: var(--font-size-h6);
+      }
+      p.h6 {
+        font-size: var(--font-size-h6);
+      }
+    }
+  }
+
+  // Intermediate ~110px
+  &.scale-110 {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-2;
+      row-gap: $spacing-5;
+      .c-profile__icon {
+        width: 4rem;
+        height: 4rem;
+        font-size: var(--font-size-body-1);
+      }
+      p.h6 {
+        font-size: var(--font-size-body-1);
+      }
+    }
+  }
+
+  // ~100px (Was Small)
+  &.scale-100 {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-2;
+      row-gap: $spacing-4;
+      .c-profile__icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: var(--font-size-body-1);
+        padding: $spacing-2;
+      }
+      p.h6 {
+        font-size: var(--font-size-body-2);
+      }
+    }
+  }
+
+  // Intermediate ~90px
+  &.scale-90 {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-1;
+      row-gap: $spacing-3;
+      .c-profile__icon {
+        width: 3rem;
+        height: 3rem;
+        font-size: var(--font-size-label-1);
+        padding: $spacing-1;
+      }
+      p.h6 {
+        font-size: var(--font-size-body-2);
+      }
+    }
+  }
+
+  // ~80px (Was Tiny)
+  &.scale-80 {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: $spacing-1;
+      row-gap: $spacing-2;
+      .c-profile__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: var(--font-size-label-2);
+        padding: 4px;
+      }
+      p.h6 {
+        font-size: var(--font-size-label-2);
+      }
+    }
+  }
+
+  // ~70px (New Smallest)
+  &.scale-70 {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    .c-displayPlayerList__players__player {
+      gap: 0;
+      row-gap: $spacing-1;
+      .c-profile__icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: var(--font-size-label-2);
+        padding: 2px;
+      }
+      p.h6 {
+        font-size: 10px; // Hard stop
+        margin: 0;
+      }
+    }
+  }
+}

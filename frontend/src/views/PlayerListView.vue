@@ -1,5 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { sessionRepository, scoreRepository } from '../services/api';
+import socket from '../utils/socket';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
 import LogoHeader from '../components/Logo.vue';
@@ -7,61 +10,48 @@ import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
 import { Cog } from 'lucide-vue-next';
 
-// Simulatie van meerdere games (later vanuit database)
-const games = ref([
-  {
-    id: 1,
-    name: 'Game 1',
-    perClick: 2,
-    rounds: 5,
-    currentRound: 1,
-    players: [
-      { id: 1, name: 'Alice', points: 10 },
-      { id: 2, name: 'Bob', points: 8 },
-      { id: 3, name: 'Charlie', points: 6 },
-      { id: 4, name: 'David', points: 4 },
-      { id: 5, name: 'Eve', points: 2 }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Volleybal Toernooi 2026',
-    perClick: 5,
-    rounds: 3,
-    currentRound: 1,
-    players: [
-      { id: 6, name: 'Frank', points: 25 },
-      { id: 7, name: 'Grace', points: 20 },
-      { id: 2, name: 'Bob', points: 15 },
-      { id: 8, name: 'Henry', points: 10 }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Game 3',
-    perClick: 1,
-    rounds: 10,
-    currentRound: 1,
-    players: [
-      { id: 1, name: 'Alice', points: 7 },
-      { id: 9, name: 'Ivy', points: 5 },
-      { id: 10, name: 'Jack', points: 3 }
-    ]
+const router = useRouter();
+const currentSessionId = ref(1);
+
+// Games from DB (Session 1)
+const games = ref([]);
+
+const selectedGameId = ref(null);
+
+watch(selectedGameId, (newId) => {
+  if (newId) {
+    console.log('Sending selected game to display:', newId);
+    socket.emit('display:selected-game', {
+      gameId: newId,
+      sessionId: currentSessionId.value
+    });
   }
-]);
+});
 
-const selectedGameId = ref(1);
-
-// Responsive breakpoint voor sizeUp
+// Responsive breakpoint voor size
 const windowWidth = ref(window.innerWidth);
-const isMdOrLarger = computed(() => windowWidth.value >= 768);
+const playerItemSize = computed(() => {
+  if (windowWidth.value >= 768) return 'large';
+  return 'default';
+});
 
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize);
+
+  // TODO: Later via Socket.IO
+  try {
+    const response = await sessionRepository.getGames(currentSessionId.value);
+    games.value = response.data;
+    if (games.value.length > 0) {
+      selectedGameId.value = games.value[0].id;
+    }
+  } catch (error) {
+    console.error('Failed to fetch games for session 1:', error);
+  }
 });
 
 onUnmounted(() => {
@@ -101,12 +91,44 @@ const hasNextRound = computed(() => {
   return currentGame.value.currentRound < currentGame.value.rounds;
 });
 
-const updatePlayerPointsInArray = (playerId, newPoints) => {
+const updatePlayerPointsInArray = async (participantId, newPoints) => {
   if (!currentGame.value) return;
 
-  const player = currentGame.value.players.find(p => p.id === playerId);
+  // Optimistische update in UI
+  const player = currentGame.value.players.find(p => p.participantId === participantId);
+
   if (player) {
+    const oldPoints = player.points;
     player.points = newPoints;
+
+    // Stuur naar backend
+    try {
+      await scoreRepository.updatePoints(currentGame.value.id, participantId, newPoints);
+      console.log(`Updated points for participant ${participantId} to ${newPoints}`);
+    } catch (error) {
+      console.error('Failed to update points:', error);
+      // Rollback bij error
+      player.points = oldPoints;
+    }
+  }
+};
+
+const endGame = () => {
+  // Navigate display
+  socket.emit('display:navigate', {
+    name: 'display-scoreboard',
+    params: { sessionId: currentSessionId.value }
+  });
+
+  // Navigate local
+  router.push({
+    name: 'endgame-summary',
+    query: { sessionId: currentSessionId.value }
+  });
+
+  const modal = document.getElementById('endgame');
+  if (modal) {
+    modal.close();
   }
 };
 
@@ -149,16 +171,17 @@ const goToNextRound = () => {
           </div>
 
           <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players">
-            <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.id}`" :name="player.name"
-              :points="player.points" :size-up="isMdOrLarger" :rank="player.rank" :perClick="currentGame?.perClick || 1"
-              @updatePoints="(newPoints) => updatePlayerPointsInArray(player.id, newPoints)" />
+            <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
+              :name="player.name" :points="player.points" :size="playerItemSize" :rank="player.rank"
+              :perClick="currentGame?.perClick || 1"
+              @updatePoints="(newPoints) => updatePlayerPointsInArray(player.participantId, newPoints)" />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
             <Button onclick="endgame.showModal()" button-tekst="Beëindig spel" variant="secondary" :clickable="false" />
             <Modal modal-id="endgame" title="Het spel beëindigen?"
               text="Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. Je gaat direct door naar de einduitslag, waar je de resultaten kunt bekijken en exporteren."
-              cancel-btn-text="Terug" accept-btn-text="Beëindig spel" />
+              cancel-btn-text="Terug" accept-btn-text="Beëindig spel" @accept="endGame" />
             <Button v-if="hasNextRound" onclick="nextround.showModal()" button-tekst="Volgende ronde" variant="primary"
               :clickable="false" />
             <Modal modal-id="nextround" title="Naar de volgende ronde?"

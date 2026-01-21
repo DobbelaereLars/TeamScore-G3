@@ -84,31 +84,22 @@ ssh ${PI_USER}@${PI_HOST} /bin/bash << EOF
 
   cd ..
 
-  # 4) Startscript uit repo uitvoerbaar maken
-  echo ">> Ensure start script is executable..."
-  chmod +x "${PI_APP_DIR}/start-teamscore.sh" || true
-
-  # 5) Desktop snelkoppeling aanmaken indien nog niet bestaat
-  DESKTOP_FILE="\$HOME/Desktop/TeamScore.desktop"
-
-  if [ ! -f "\$DESKTOP_FILE" ]; then
-    echo ">> Creating desktop shortcut..."
-    mkdir -p "\$HOME/Desktop"
-
-    cat > "\$DESKTOP_FILE" << DESKEOF
-[Desktop Entry]
-Type=Application
-Name=TeamScore
-Comment=Start TeamScore backend en open scoreboard
-Exec=${PI_APP_DIR}/start-teamscore.sh
-Icon=chromium
-Terminal=false
-DESKEOF
-
-    chmod +x "\$DESKTOP_FILE"
-  else
-    echo ">> Desktop shortcut already exists, skipping."
+  # 4) Start applicatie met PM2
+  echo ">> Starting/Reloading app with PM2..."
+  
+  # Check of PM2 geinstalleerd is
+  if ! command -v pm2 &> /dev/null; then
+    echo ">> PM2 not found, installing global..."
+    npm install -g pm2
   fi
+
+  # Zorg dat we in root zitten voor ecosystem file
+  if pm2 describe teamscore-app > /dev/null; then
+    pm2 reload ecosystem.config.js
+  else
+    pm2 start ecosystem.config.js
+  fi
+  pm2 save
 
   echo "== Deploy finished =="
 EOF

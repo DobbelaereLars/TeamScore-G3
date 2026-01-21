@@ -80,7 +80,7 @@ const onInput = (value) => {
         </template>
       </Button>
       <InputField :modelValue="internalValue" @update:modelValue="onInput" :label="false"
-        :placeholder="String(minValue)" :id="id" :name="name" :type="type" :model-value="minValue" :min="minValue"
+        :placeholder="String(minValue)" :id="id" :name="name" :type="type" :min="minValue"
         :max="maxValue" />
       <Button :clickable="false" :is-icon-button="true" @click="updateValue(1)"
         :is-disabled="internalValue >= maxValue">

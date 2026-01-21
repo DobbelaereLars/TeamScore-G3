@@ -1,0 +1,285 @@
+.c-display-leaderboard-view-finale {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // justify-content: center;
+  height: 100vh;
+  max-height: 100vh;
+  position: relative;
+  // overflow: hidden;
+  padding: $spacing-5;
+
+  &.is-centered {
+    justify-content: center;
+  }
+
+  .c-display-leaderboard-view-finale__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+  }
+
+  .c-display-leaderboard-view-finale__logo {
+    display: flex;
+    width: 7rem;
+    height: 7rem;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1/1;
+    position: absolute;
+    left: 1.5rem;
+    top: 1.5rem;
+    opacity: 0; // Hidden initially
+    transition: opacity 1.5s ease-in-out;
+
+    &--visible {
+      opacity: 1;
+    }
+  }
+
+  .c-display-leaderboard-view-finale__podium {
+    width: 47.375rem;
+    // ... (rest is unchanged, I need to match context carefully)
+    // better to use chunks or just replace the logo part and the end part.
+
+    // Let's replace the logo block first
+    // Then replace the animation block at the end
+    height: 26rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: $spacing-8;
+    position: relative;
+    padding: $spacing-2 $spacing-8 $spacing-6;
+    border-radius: $border-radius-20;
+    margin-bottom: $spacing-6;
+    align-items: end;
+
+    // Purple elliptical background
+    &::before {
+      content: "";
+      position: absolute;
+      width: 40rem;
+      height: 40rem;
+      background: $color-primary-blue-75;
+      top: 70%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+      pointer-events: none;
+      border-radius: $border-radius-999;
+    }
+
+    // 2nd place (red) - bottom left
+    > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: center;
+    }
+
+    // 1st place (blue) - top center
+    > :nth-child(2) {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      justify-self: center;
+      align-self: start;
+    }
+
+    // 3rd place (orange) - bottom right
+    > :nth-child(3) {
+      grid-column: 3;
+      grid-row: 2;
+      justify-self: center;
+    }
+  }
+
+  .c-display-leaderboard-view-finale__players {
+    display: flex;
+    width: 76.875rem;
+    max-width: 90%; // Responsive width
+    flex-direction: column;
+    align-items: center; // Centered
+    justify-content: flex-start;
+    gap: $spacing-5;
+    position: relative;
+    // overflow: hidden;
+
+    .c-display-leaderboard-view-finale__players-container {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-5;
+      width: 100%;
+
+      &.margin-bottom {
+        padding-bottom: $spacing-4;
+      }
+    }
+
+    .c-leaderboard-pagination {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: $spacing-3;
+      margin-top: $spacing-2;
+
+      .c-leaderboard-pagination__dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: rgb(222, 222, 222); // Light grey inactive
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &--active {
+          background-color: rgb(112, 112, 112); // Darker grey active
+          transform: scale(1.1);
+        }
+
+        &:hover {
+          background-color: rgb(180, 180, 180);
+        }
+      }
+    }
+  }
+
+  // Smooth transition animations for player cards
+  .player-slide-enter-active,
+  .player-slide-leave-active {
+    transition: all 1.5s ease-in-out;
+  }
+
+  .player-slide-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .player-slide-leave-to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  // Animation for Podium Reveal - Unique Wobble Pop
+  @keyframes podiumPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateY(100px) rotate(0deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2) translateY(-30px) rotate(-10deg); // Big Pop + Tilt Left
+    }
+    65% {
+      transform: scale(0.9) translateY(10px) rotate(8deg); // Squish + Tilt Right
+    }
+    80% {
+      transform: scale(1.05) translateY(-10px) rotate(-4deg); // Rebound + Tilt Left
+    }
+    100% {
+      transform: scale(1) translateY(0) rotate(0deg); // Settle
+    }
+  }
+
+  .podium-reveal {
+    transform-origin: bottom center;
+    will-change: transform, opacity;
+    animation: podiumPop 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  // Animation for Runner Ups Reveal
+  @keyframes slideUpFade {
+    0% {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .runners-up-reveal {
+    // Apply animation to children
+    > * {
+      opacity: 0; // Start hidden
+      will-change: transform, opacity;
+      animation: slideUpFade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
+      // Stagger delays for up to 30 items
+      @for $i from 1 through 30 {
+        &:nth-child(#{$i}) {
+          animation-delay: #{$i * 0.1}s;
+        }
+      }
+    }
+  }
+
+  // Intense Screen Shake Animation
+  @keyframes screenShake {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    10% {
+      transform: translate(-5px, -5px) rotate(-1deg);
+    }
+    20% {
+      transform: translate(5px, 5px) rotate(1deg);
+    }
+    30% {
+      transform: translate(-5px, 5px) rotate(0deg);
+    }
+    40% {
+      transform: translate(5px, -5px) rotate(1deg);
+    }
+    50% {
+      transform: translate(-5px, -5px) rotate(-1deg);
+    }
+    60% {
+      transform: translate(5px, 5px) rotate(0deg);
+    }
+    70% {
+      transform: translate(-3px, 3px) rotate(-1deg);
+    }
+    80% {
+      transform: translate(3px, -3px) rotate(1deg);
+    }
+    90% {
+      transform: translate(-1px, 1px) rotate(0deg);
+    }
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+  }
+
+  &.screen-shake {
+    animation: screenShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    will-change: transform;
+  }
+
+  // Subtle Drumroll Shake (Vibration)
+  @keyframes drumrollShake {
+    0% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(1px, 1px);
+    }
+    50% {
+      transform: translate(-1px, -1px);
+    }
+    75% {
+      transform: translate(-1px, 1px);
+    }
+    100% {
+      transform: translate(1px, -1px);
+    }
+  }
+
+  &.drumroll-shake {
+    animation: drumrollShake 0.1s infinite;
+    will-change: transform;
+  }
+}

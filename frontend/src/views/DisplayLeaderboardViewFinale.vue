@@ -1,8 +1,6 @@
 <script setup>
 import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
 import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
-import Button from "../components/Button.vue";
-import { Download } from "lucide-vue-next";
 
 import logo from "../assets/logo.webp";
 
@@ -131,7 +129,7 @@ const displayedPlayers = computed(() => {
 
 import confetti from "canvas-confetti";
 
-// Visibility states
+// Visibility states for podium animation
 const showRank1 = ref(false); // 1st Place
 const showRank2 = ref(false); // 2nd Place
 const showRank3 = ref(false); // 3rd Place
@@ -140,52 +138,83 @@ const showLogo = ref(false); // Logo
 const isShaking = ref(false); // Screen shake effect
 const isDrumrolling = ref(false); // Drumroll vibration
 
-// Swipe Logic
-const touchStartX = ref(0);
-const touchEndX = ref(0);
+let autoScrollInterval = null;
 
-const handleTouchStart = (e) => {
-  touchStartX.value = e.changedTouches[0].screenX;
-};
+const startAutoScroll = () => {
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
 
-const handleTouchEnd = (e) => {
-  touchEndX.value = e.changedTouches[0].screenX;
-  handleSwipe();
-};
-
-const handleSwipe = () => {
-  const SWIPE_THRESHOLD = 50;
-  if (touchStartX.value - touchEndX.value > SWIPE_THRESHOLD) {
-    // Swipe Left -> Next Page
-    if (currentPage.value < totalPages.value - 1) {
-      currentPage.value++;
+  autoScrollInterval = setInterval(() => {
+    if (showRunnerUps.value && totalPages.value > 1) {
+      currentPage.value = (currentPage.value + 1) % totalPages.value;
     }
-  } else if (touchEndX.value - touchStartX.value > SWIPE_THRESHOLD) {
-    // Swipe Right -> Prev Page
-    if (currentPage.value > 0) {
-      currentPage.value--;
-    }
-  }
+  }, 30000); // 30 seconds interval
 };
 
 const goToPage = (pageIndex) => {
   currentPage.value = pageIndex;
+  // Reset timer on manual interaction
+  startAutoScroll();
 };
 
 const startPodiumAnimation = () => {
-  showRank1.value = true;
-  showRank2.value = true;
-  showRank3.value = true;
-  showRunnerUps.value = true;
-  showLogo.value = true;
+  // Reset
+  showRank1.value = false;
+  showRank2.value = false;
+  showRank3.value = false;
+  showRunnerUps.value = false;
+  showLogo.value = false;
+  isShaking.value = false;
+  isDrumrolling.value = false;
+  currentPage.value = 0; // Reset page
 
-  // Trigger Confetti
-  confetti({
-    particleCount: 150,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ["#534aff", "#ff3b30", "#ffd60a"],
-  });
+  // Sequence: 3rd -> 2nd -> 1st -> Runner Ups -> Logo
+  // 3rd Place appears quickly
+  setTimeout(() => {
+    showRank3.value = true;
+  }, 1000);
+
+  // 2nd Place appears after 3rd
+  setTimeout(() => {
+    showRank2.value = true;
+  }, 4000); // 3s delay after 3rd
+
+  // Start Drumroll (Building tension)
+  setTimeout(() => {
+    isDrumrolling.value = true;
+  }, 6000);
+
+  // 1st Place (Winner) appears last with more suspense
+  setTimeout(() => {
+    // Stop drumroll, start huge shake
+    isDrumrolling.value = false;
+
+    showRank1.value = true;
+
+    // Trigger Screen Shake
+    isShaking.value = true;
+    setTimeout(() => {
+      isShaking.value = false;
+    }, 500); // Duration of shake animation
+
+    // Trigger Confetti
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
+    });
+  }, 10000);
+
+  // Runner Ups appear after the winner
+  setTimeout(() => {
+    showRunnerUps.value = true;
+    startAutoScroll(); // Start auto-scroll when runner ups appear
+  }, 14000);
+
+  // Logo fades in last
+  setTimeout(() => {
+    showLogo.value = true;
+  }, 15500);
 };
 
 onMounted(() => {
@@ -204,6 +233,7 @@ onUnmounted(() => {
   // Re-enable body scrolling
   document.body.style.overflow = "";
   window.removeEventListener("resize", calculateItemsPerPage);
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
 });
 </script>
 
@@ -211,6 +241,8 @@ onUnmounted(() => {
   <div
     class="c-display-leaderboard-view-finale"
     :class="{
+      'screen-shake': isShaking,
+      'drumroll-shake': isDrumrolling,
       'is-centered': !showRunnerUps,
     }"
   >
@@ -261,8 +293,6 @@ onUnmounted(() => {
         class="c-display-leaderboard-view-finale__players-container runners-up-reveal margin-bottom"
         v-if="displayedPlayers.length > 0"
         v-show="showRunnerUps"
-        @touchstart="handleTouchStart"
-        @touchend="handleTouchEnd"
       >
         <LeaderboardPlayerCard
           v-for="(player, index) in displayedPlayers"
@@ -290,15 +320,6 @@ onUnmounted(() => {
           @click="goToPage(pageIndex - 1)"
         ></div>
       </div>
-    </div>
-    <div class="c-display-end-game-summary-view__footer">
-      <Button buttonTekst="Sluiten" variant="secondary" />
-
-      <Button buttonTekst="Exporteren" variant="primary">
-        <template #c-btn_icon-left>
-          <Download :size="18" />
-        </template>
-      </Button>
     </div>
   </div>
 </template>

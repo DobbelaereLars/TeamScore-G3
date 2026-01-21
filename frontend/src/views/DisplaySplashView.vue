@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import socket from '../utils/socket';
 
+const router = useRouter();
 const showPopup = ref(false);
 const popupMessage = ref('');
 
@@ -16,22 +18,27 @@ const handleShowPopup = (data) => {
   }, 3000);
 };
 
+const handleNavigate = (data) => {
+  console.log('Received navigate event:', data);
+  if (data.name) {
+    router.push({ name: data.name, query: data.params });
+  }
+};
+
 onMounted(() => {
   socket.on('show-popup', handleShowPopup);
+  socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
   socket.off('show-popup', handleShowPopup);
+  socket.off('display:navigate', handleNavigate);
 });
 </script>
 
 <template>
   <div class="container p-display-splash-view">
-    <img
-      class="p-display-splash-view__logo"
-      src="../assets/logo.webp"
-      alt="Logo"
-    />
+    <img class="p-display-splash-view__logo" src="../assets/logo.webp" alt="Logo" />
     <h1 class="p-display-splash-view__title h3">Wachten op een sessie...</h1>
 
     <!-- Socket.io test popup -->

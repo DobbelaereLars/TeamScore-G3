@@ -97,8 +97,9 @@
   }
   .c-leaderboard-podium-icon__rank {
     display: flex;
-    width: 3rem;
-    padding: 0.35rem 0.85rem;
+    width: 2.5rem; // Fixed width
+    height: 2.5rem; // Fixed height
+    // padding: 0.35rem 0.85rem; // Removed variable padding
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -106,9 +107,9 @@
     border-radius: 50%;
     background: $colors-gradient-red;
     position: absolute;
-   
 
-    h4, h3 {
+    h4,
+    h3 {
       color: $color-secondary-grey-50;
     }
   }
@@ -116,7 +117,6 @@
     // padding: 0.65rem 1.15rem;
     background: $colors-gradient-blue;
     // bottom: 0.5rem;
-
   }
   .c-leaderboard-podium-icon__rank--orange {
     background: $colors-gradient-orange;
@@ -130,4 +130,5 @@
   align-items: center;
   width: fit-content;
   gap: $spacing-3;
+  white-space: nowrap; // Prevent name from wrapping
 }
