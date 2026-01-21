@@ -26,6 +26,18 @@
     }
   }
 
+  &__subheader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    @include media-breakpoint-down(md) {
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-6;
+    }
+  }
+
   &__gameround {
     display: flex;
     flex-direction: column;
@@ -95,3 +107,5 @@
     color: $color-primary-blue-500;
   }
 }
+
+/* Extra styles for bonus modal list */

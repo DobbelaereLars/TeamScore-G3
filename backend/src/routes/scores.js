@@ -8,7 +8,7 @@ const { getDatabase } = require('../database/db');
 router.put('/:gameId/participant/:participantId/score', (req, res) => {
     const db = getDatabase();
     const { gameId, participantId } = req.params;
-    const { value, type, points, time, bool } = req.body;
+    const { value, type, points, time, bool, bonus } = req.body;
 
     let column = '';
     let val = null;
@@ -22,10 +22,13 @@ router.put('/:gameId/participant/:participantId/score', (req, res) => {
     } else if (type === 'boolean' || type === 'bool' || bool !== undefined) {
         column = 'value_bool';
         val = value !== undefined ? value : bool;
+    } else if (type === 'bonus' || bonus !== undefined) {
+        column = 'bonus';
+        val = value !== undefined ? value : bonus;
     }
 
     if (!column || val === undefined || val === null) {
-        return res.status(400).json({ error: 'Valid value (points, time, or bool) is required' });
+        return res.status(400).json({ error: 'Valid value (points, time, bool, or bonus) is required' });
     }
 
     const query = `
@@ -41,7 +44,8 @@ router.put('/:gameId/participant/:participantId/score', (req, res) => {
         }
 
         const scoreType = column === 'value_number' ? 'points' : 
-                          column === 'value_time' ? 'time' : 'boolean';
+                          column === 'value_time' ? 'time' : 
+                          column === 'bonus' ? 'bonus' : 'boolean';
 
         const io = req.app.get('socketio');
         if (io) {

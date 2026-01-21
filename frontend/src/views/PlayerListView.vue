@@ -8,16 +8,17 @@ import Button from '../components/Button.vue';
 import LogoHeader from '../components/Logo.vue';
 import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
-import { Cog } from 'lucide-vue-next';
+import { Cog, Flame, Plus } from 'lucide-vue-next';
 
 const router = useRouter();
 const currentSessionId = ref(1);
 
-// Games from DB (Session 1)
+// Games from DB
 const games = ref([]);
 
 const selectedGameId = ref(null);
 const accumulatedScores = ref({}); // { [participantId]: number }
+const selectedBonusParticipants = ref([]);
 
 watch(selectedGameId, (newId) => {
   if (newId) {
@@ -200,6 +201,41 @@ const updatePlayerScore = async (participantId, newVal) => {
   }
 };
 
+const bonusAmount = computed(() => {
+  if (!currentGame.value || !currentGame.value.bonus_points) return 0;
+  return Number(currentGame.value.bonus_points);
+});
+
+const toggleBonusParticipant = (participantId) => {
+  if (selectedBonusParticipants.value.includes(participantId)) {
+    selectedBonusParticipants.value = selectedBonusParticipants.value.filter(id => id !== participantId);
+  } else {
+    selectedBonusParticipants.value.push(participantId);
+  }
+};
+
+const saveBonus = async () => {
+  if (!currentGame.value || selectedBonusParticipants.value.length === 0 || bonusAmount.value === 0) {
+    document.getElementById('bonusmodal')?.close();
+    return;
+  }
+
+  const amount = bonusAmount.value;
+  const promises = selectedBonusParticipants.value.map(participantId => {
+
+    const player = currentGame.value.players.find(p => p.participantId === participantId);
+    if (player) {
+      const newPoints = (player.points || 0) + amount;
+      updatePlayerScore(participantId, newPoints); // This handles API + Optimistic UI
+    }
+  });
+
+  await Promise.all(promises);
+
+  selectedBonusParticipants.value = [];
+  document.getElementById('bonusmodal')?.close();
+};
+
 const goToNext = async () => {
   if (!currentGame.value) return;
 
@@ -289,12 +325,36 @@ const endGame = () => {
           </Button>
         </div>
         <div class="c-player-list__main">
+          <div class="c-player-list__subheader">
+            <div class="c-player-list__title">
+              <p class="h4">Deelnemers</p>
+              <p class="c-player-list--greytext">Klik op + of - om punten toe te voegen of af te trekken, of voeg
+                bonuspunten
+                toe.</p>
+            </div>
 
-          <div class="c-player-list__title">
-            <p class="h4">Deelnemers</p>
-            <p class="c-player-list--greytext">Klik op + of - om punten toe te voegen of af te trekken, of voeg
-              bonuspunten
-              toe.</p>
+            <div v-if="currentGame?.score_type === 'points'">
+              <Button onclick="bonusmodal.showModal()" button-tekst="Bonuspunten toekennen" variant="primary">
+                <template #c-btn_icon-left>
+                  <Flame :size="18" />
+                </template>
+              </Button>
+              <Modal modal-id="bonusmodal" title="Bonuspunten toevoegen" cancel-btn-text="Annuleren"
+                accept-btn-text="Toevoegen" @accept="saveBonus">
+                <p class="c-modal__text">Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers</p>
+                <div class="c-assignment-modal-list">
+                  <div v-if="currentGame?.players?.length === 0">Geen deelnemers gevonden.</div>
+                  <label v-for="player in currentGame?.players" :key="player.participantId"
+                    class="c-assignment-modal-list__item"
+                    :class="{ 'c-assignment-modal-list__item--active': selectedBonusParticipants.includes(player.participantId) }">
+                    <input type="checkbox" :checked="selectedBonusParticipants.includes(player.participantId)"
+                      @change="toggleBonusParticipant(player.participantId)" />
+                    <span class="c-assignment-modal-list__item_name">{{ player.name }}</span>
+                  </label>
+                </div>
+              </Modal>
+            </div>
+
           </div>
 
           <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players" :class="{
@@ -351,3 +411,5 @@ const endGame = () => {
   transform: translateY(10px);
 }
 </style>
+
+<style scoped></style>
