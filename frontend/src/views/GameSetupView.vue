@@ -1,16 +1,16 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
-import Button from "../components/Button.vue";
-import TabList from "../components/TabList.vue";
-import InputField from "../components/InputField.vue";
-import InputSelect from "../components/InputSelect.vue";
-import TabBar from "../components/TabBar.vue";
-import Notice from "../components/Notice.vue";
-import InputRadioCards from "../components/InputRadioCards.vue";
-import ToggleWithDropdown from "../components/ToggleWithDropdown.vue";
-import PlayersSetting from "../components/PlayersSetting.vue";
-import Modal from "../components/Modal.vue";
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import Button from '../components/Button.vue';
+import TabList from '../components/TabList.vue';
+import InputField from '../components/InputField.vue';
+import InputSelect from '../components/InputSelect.vue';
+import TabBar from '../components/TabBar.vue';
+import Notice from '../components/Notice.vue';
+import InputRadioCards from '../components/InputRadioCards.vue';
+import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
+import PlayersSetting from '../components/PlayersSetting.vue';
+import Modal from '../components/Modal.vue';
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,43 +25,43 @@ import {
   Clock7,
   SquareCheck,
   LayoutList,
-} from "lucide-vue-next";
-import InputNumber from "../components/InputNumber.vue";
-import socket from "../utils/socket";
-import { sessionRepository } from "../services/api";
+} from 'lucide-vue-next';
+import InputNumber from '../components/InputNumber.vue';
+import socket from '../utils/socket';
+import { sessionRepository } from '../services/api';
 
 const router = useRouter();
 
 // Form state
-const sessionName = ref("");
-const selectedParticipantMode = ref("players");
-const selectedGameMode = ref("single-game");
+const sessionName = ref('');
+const selectedParticipantMode = ref('players');
+const selectedGameMode = ref('single-game');
 const participants = ref([]);
 
 // Time notation options
 const timeNotationOptions = [
-  { value: "hh:mm:ss", label: "Uur : minuut : seconde" },
-  { value: "mm:ss", label: "Minuut : seconde" },
-  { value: "ss", label: "Seconde" },
-  { value: "hh:mm:ss:ms", label: "Uur : minuut : seconde : milliseconde" },
+  { value: 'hh:mm:ss', label: 'Uur : minuut : seconde' },
+  { value: 'mm:ss', label: 'Minuut : seconde' },
+  { value: 'ss', label: 'Seconde' },
+  { value: 'hh:mm:ss:ms', label: 'Uur : minuut : seconde : milliseconde' },
 ];
 
 // Games management (voor serie en parallelle games)
 const games = ref([
   {
-    id: "game-1",
-    name: "",
-    scoreModel: "points",
+    id: 'game-1',
+    name: '',
+    scoreModel: 'points',
     useRounds: false,
     roundsCount: 1,
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
-    pointsRanking: "highest-first",
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
     bonusPoints: 1,
-    timeNotation: "mm:ss",
-    timeRanking: "fastest-first",
+    timeNotation: 'mm:ss',
+    timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
     timeBonusPoints: 1,
   },
@@ -69,37 +69,37 @@ const games = ref([
 
 const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
-const deleteGameModalId = "delete-game-modal";
-const deleteGameModalTitle = ref("Game verwijderen?");
+const deleteGameModalId = 'delete-game-modal';
+const deleteGameModalTitle = ref('Game verwijderen?');
 
 // Assignment
 const assignmentGameId = ref(null);
-const assignmentModalId = "assignment-modal";
-const assignmentModalTitle = ref("");
+const assignmentModalId = 'assignment-modal';
+const assignmentModalTitle = ref('');
 const tempAssignments = ref({}); // Stores temporary state while modal is open { participantId: gameId | null }
 
 // Computed
 const sessionNamePlaceholder = computed(() => {
   const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
   const year = today.getFullYear();
   return `Bv. Sportdag ${day}/${month}/${year}`;
 });
 
 const activeGameId = computed(
-  () => games.value[activeGameIndex.value]?.id ?? "game-1",
+  () => games.value[activeGameIndex.value]?.id ?? 'game-1',
 );
 const activeGame = computed(() => games.value[activeGameIndex.value]);
 
 const showGameSeries = computed(
   () =>
-    selectedGameMode.value === "series-of-games" ||
-    selectedGameMode.value === "parallel-games",
+    selectedGameMode.value === 'series-of-games' ||
+    selectedGameMode.value === 'parallel-games',
 );
 
 const hasValidParticipants = computed(() => {
-  if (selectedParticipantMode.value === "teams-with-players") {
+  if (selectedParticipantMode.value === 'teams-with-players') {
     return participants.value.some(
       (team) => team.players && team.players.length > 0,
     );
@@ -125,135 +125,135 @@ const gameOptions = computed(() =>
 
 const timerankingTabBar = computed(() => [
   {
-    id: "fastest-first",
-    value: "fastest-first",
-    label: "Snelste tijd wint",
-    checked: activeGame.value?.timeRanking === "fastest-first",
+    id: 'fastest-first',
+    value: 'fastest-first',
+    label: 'Snelste tijd wint',
+    checked: activeGame.value?.timeRanking === 'fastest-first',
   },
   {
-    id: "slowest-first",
-    value: "slowest-first",
-    label: "Langzaamste tijd wint",
-    checked: activeGame.value?.timeRanking === "slowest-first",
+    id: 'slowest-first',
+    value: 'slowest-first',
+    label: 'Langzaamste tijd wint',
+    checked: activeGame.value?.timeRanking === 'slowest-first',
   },
 ]);
 
 const pointsRankingTabBar = computed(() => [
   {
-    id: "highest-first",
-    value: "highest-first",
-    label: "Hoogste score wint",
-    checked: activeGame.value?.pointsRanking === "highest-first",
+    id: 'highest-first',
+    value: 'highest-first',
+    label: 'Hoogste score wint',
+    checked: activeGame.value?.pointsRanking === 'highest-first',
   },
   {
-    id: "lowest-first",
-    value: "lowest-first",
-    label: "Laagste score wint",
-    checked: activeGame.value?.pointsRanking === "lowest-first",
+    id: 'lowest-first',
+    value: 'lowest-first',
+    label: 'Laagste score wint',
+    checked: activeGame.value?.pointsRanking === 'lowest-first',
   },
 ]);
 
 const scoreModelRadioCards = computed(() => [
   {
     id: `points-${activeGameId.value}`,
-    value: "points",
-    label: "Puntenscore",
-    description: "Punten op basis van juiste antwoorden of acties.",
+    value: 'points',
+    label: 'Puntenscore',
+    description: 'Punten op basis van juiste antwoorden of acties.',
     icon: Target,
-    checked: activeGame.value?.scoreModel === "points",
+    checked: activeGame.value?.scoreModel === 'points',
   },
   {
     id: `time-${activeGameId.value}`,
-    value: "time",
-    label: "Tijdscore",
-    description: "Score bepaald door snelheid en tijdslimiet.",
+    value: 'time',
+    label: 'Tijdscore',
+    description: 'Score bepaald door snelheid en tijdslimiet.',
     icon: Clock7,
-    checked: activeGame.value?.scoreModel === "time",
+    checked: activeGame.value?.scoreModel === 'time',
   },
   {
     id: `completed-${activeGameId.value}`,
-    value: "completed",
-    label: "Voltooid / niet voltooid",
-    description: "Punten alleen voor afgeronde opdrachten.",
+    value: 'completed',
+    label: 'Voltooid / niet voltooid',
+    description: 'Punten alleen voor afgeronde opdrachten.',
     icon: SquareCheck,
-    checked: activeGame.value?.scoreModel === "completed",
+    checked: activeGame.value?.scoreModel === 'completed',
   },
 ]);
 
 const gameModusRadioCards = computed(() => [
   {
-    id: "single-game",
-    value: "single-game",
-    label: "Scoreboard voor één game",
-    description: "Eén scoreboard voor een enkele game.",
+    id: 'single-game',
+    value: 'single-game',
+    label: 'Scoreboard voor één game',
+    description: 'Eén scoreboard voor een enkele game.',
     icon: Dices,
-    checked: selectedGameMode.value === "single-game",
+    checked: selectedGameMode.value === 'single-game',
   },
   {
-    id: "series-of-games",
-    value: "series-of-games",
-    label: "Serie van games",
-    description: "Meerdere games na elkaar in één reeks.",
+    id: 'series-of-games',
+    value: 'series-of-games',
+    label: 'Serie van games',
+    description: 'Meerdere games na elkaar in één reeks.',
     icon: Route,
-    checked: selectedGameMode.value === "series-of-games",
+    checked: selectedGameMode.value === 'series-of-games',
   },
   {
-    id: "parallel-games",
-    value: "parallel-games",
-    label: "Parallelle games",
-    description: "Meerdere games tegelijk met verdeelde spelers/teams.",
+    id: 'parallel-games',
+    value: 'parallel-games',
+    label: 'Parallelle games',
+    description: 'Meerdere games tegelijk met verdeelde spelers/teams.',
     icon: Workflow,
-    checked: selectedGameMode.value === "parallel-games",
+    checked: selectedGameMode.value === 'parallel-games',
   },
 ]);
 
 const gameSetupTabList = ref([
   {
-    id: "session",
-    value: "session",
-    label: "Sessie",
+    id: 'session',
+    value: 'session',
+    label: 'Sessie',
     icon: Gamepad2,
     checked: true,
   },
   {
-    id: "rules",
-    value: "rules",
-    label: "Spelregels",
+    id: 'rules',
+    value: 'rules',
+    label: 'Spelregels',
     icon: Settings2,
   },
   {
-    id: "participants",
-    value: "participants",
-    label: "Deelnemers",
+    id: 'participants',
+    value: 'participants',
+    label: 'Deelnemers',
     icon: Users,
   },
 ]);
 
 const participantModusTabBar = computed(() => [
   {
-    id: "players",
-    value: "players",
-    label: "Individuele spelers",
-    checked: selectedParticipantMode.value === "players",
+    id: 'players',
+    value: 'players',
+    label: 'Individuele spelers',
+    checked: selectedParticipantMode.value === 'players',
   },
   {
-    id: "teams",
-    value: "teams",
-    label: "Teams",
-    checked: selectedParticipantMode.value === "teams",
+    id: 'teams',
+    value: 'teams',
+    label: 'Teams',
+    checked: selectedParticipantMode.value === 'teams',
   },
   {
-    id: "teams-with-players",
-    value: "teams-with-players",
-    label: "Teams met spelers",
-    checked: selectedParticipantMode.value === "teams-with-players",
+    id: 'teams-with-players',
+    value: 'teams-with-players',
+    label: 'Teams met spelers',
+    checked: selectedParticipantMode.value === 'teams-with-players',
   },
 ]);
 
 // Track active tab
 const activeTab = computed(() => {
   const activeItem = gameSetupTabList.value.find((item) => item.checked);
-  return activeItem?.id ?? "session";
+  return activeItem?.id ?? 'session';
 });
 
 const activeTabIndex = computed(() =>
@@ -269,19 +269,19 @@ const nextButtonText = computed(() => {
   // If Parallel Games is selected and we are on participants tab,
   // we always want 'Volgende' because 'Indeling' comes next (even if hidden/disabled)
   if (
-    selectedGameMode.value === "parallel-games" &&
-    activeTab.value === "participants"
+    selectedGameMode.value === 'parallel-games' &&
+    activeTab.value === 'participants'
   ) {
-    return "Volgende";
+    return 'Volgende';
   }
-  return isLastTab.value ? "Klaar" : "Volgende";
+  return isLastTab.value ? 'Klaar' : 'Volgende';
 });
 
 const isNextButtonDisabled = computed(() => {
-  if (activeTab.value === "participants") {
+  if (activeTab.value === 'participants') {
     return !hasValidParticipants.value;
   }
-  if (activeTab.value === "assignment") {
+  if (activeTab.value === 'assignment') {
     const allParticipantsAssigned = participants.value.every(
       (p) => p.assignedGameId,
     );
@@ -294,25 +294,25 @@ const isNextButtonDisabled = computed(() => {
 });
 
 const updateAssignmentTabVisibility = () => {
-  const isParallel = selectedGameMode.value === "parallel-games";
+  const isParallel = selectedGameMode.value === 'parallel-games';
   const isValid = hasValidParticipants.value;
   const shouldHaveAssignment = isParallel && isValid;
 
   const assignmentIndex = gameSetupTabList.value.findIndex(
-    (t) => t.id === "assignment",
+    (t) => t.id === 'assignment',
   );
 
   if (shouldHaveAssignment && assignmentIndex === -1) {
     gameSetupTabList.value.push({
-      id: "assignment",
-      value: "assignment",
-      label: "Indeling",
+      id: 'assignment',
+      value: 'assignment',
+      label: 'Indeling',
       icon: LayoutList,
     });
   } else if (!shouldHaveAssignment && assignmentIndex !== -1) {
-    if (activeTab.value === "assignment") {
+    if (activeTab.value === 'assignment') {
       const participantsIndex = gameSetupTabList.value.findIndex(
-        (t) => t.id === "participants",
+        (t) => t.id === 'participants',
       );
       if (participantsIndex !== -1) {
         gameSetupTabList.value.forEach(
@@ -321,7 +321,7 @@ const updateAssignmentTabVisibility = () => {
       }
     }
     gameSetupTabList.value = gameSetupTabList.value.filter(
-      (t) => t.id !== "assignment",
+      (t) => t.id !== 'assignment',
     );
   }
 };
@@ -341,10 +341,10 @@ const handleGameModeChange = (value) => {
   // Tabs update handled by watcher
 
   // Reset to single game if switching to single-game mode
-  if (value === "single-game") {
+  if (value === 'single-game') {
     if (games.value.length > 0) {
       // Keep only the first game and reset its ID to game-1
-      const firstGame = { ...games.value[0], id: "game-1" };
+      const firstGame = { ...games.value[0], id: 'game-1' };
       // If the name was Default (empty), it will now show "Spel 1" due to ID change.
       // If it had a custom name, it keeps it.
       games.value = [firstGame];
@@ -352,19 +352,19 @@ const handleGameModeChange = (value) => {
       // Should not happen, but safe fallback
       games.value = [
         {
-          id: "game-1",
-          name: "",
-          scoreModel: "points",
+          id: 'game-1',
+          name: '',
+          scoreModel: 'points',
           useRounds: false,
           roundsCount: 1,
           useSets: false,
           setsCount: 1,
           pointsPerAction: 1,
-          pointsRanking: "highest-first",
+          pointsRanking: 'highest-first',
           useBonusPoints: false,
           bonusPoints: 1,
-          timeNotation: "mm:ss",
-          timeRanking: "fastest-first",
+          timeNotation: 'mm:ss',
+          timeRanking: 'fastest-first',
           useTimeBonusPoints: false,
           timeBonusPoints: 1,
         },
@@ -372,7 +372,7 @@ const handleGameModeChange = (value) => {
     }
     activeGameIndex.value = 0;
   } else if (
-    (value === "parallel-games" || value === "series-of-games") &&
+    (value === 'parallel-games' || value === 'series-of-games') &&
     games.value.length < 2
   ) {
     addGame();
@@ -396,8 +396,8 @@ const handleGameTabChange = (gameId) => {
 
 const handleGameTabClose = (gameId) => {
   const minGames =
-    selectedGameMode.value === "parallel-games" ||
-    selectedGameMode.value === "series-of-games"
+    selectedGameMode.value === 'parallel-games' ||
+    selectedGameMode.value === 'series-of-games'
       ? 2
       : 1;
 
@@ -407,11 +407,11 @@ const handleGameTabClose = (gameId) => {
 
   gameToDeleteId.value = gameId;
   const game = games.value.find((g) => g.id === gameId);
-  const displayName = game ? getDefaultGameName(game) : "Game";
+  const displayName = game ? getDefaultGameName(game) : 'Game';
   deleteGameModalTitle.value = `${displayName} verwijderen?`;
 
   const dialog = document.getElementById(deleteGameModalId);
-  if (dialog && typeof dialog.showModal === "function") {
+  if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
   }
 };
@@ -443,18 +443,18 @@ function addGame() {
 
   games.value.push({
     id: newGameId,
-    name: "",
-    scoreModel: "points",
+    name: '',
+    scoreModel: 'points',
     useRounds: false,
     roundsCount: 1,
     useSets: false,
     setsCount: 1,
     pointsPerAction: 1,
-    pointsRanking: "highest-first",
+    pointsRanking: 'highest-first',
     useBonusPoints: false,
     bonusPoints: 1,
-    timeNotation: "mm:ss",
-    timeRanking: "fastest-first",
+    timeNotation: 'mm:ss',
+    timeRanking: 'fastest-first',
     useTimeBonusPoints: false,
     timeBonusPoints: 1,
   });
@@ -465,9 +465,9 @@ function addGame() {
     const label = document.querySelector(`label[for="${newGameId}"]`);
     if (label) {
       label.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
       });
     }
   });
@@ -486,10 +486,10 @@ const confirmDeleteGame = () => {
 
   if (games.value.length === 0) {
     games.value.push({
-      id: "game-1",
-      name: "",
-      pointsRanking: "highest-first",
-      scoreModel: "points",
+      id: 'game-1',
+      name: '',
+      pointsRanking: 'highest-first',
+      scoreModel: 'points',
       useRounds: false,
       roundsCount: 1,
       useSets: false,
@@ -497,8 +497,8 @@ const confirmDeleteGame = () => {
       pointsPerAction: 1,
       useBonusPoints: false,
       bonusPoints: 1,
-      timeNotation: "mm:ss",
-      timeRanking: "fastest-first",
+      timeNotation: 'mm:ss',
+      timeRanking: 'fastest-first',
       useTimeBonusPoints: false,
       timeBonusPoints: 1,
     });
@@ -532,11 +532,11 @@ const openAssignmentModal = (gameId) => {
     const gameName = getDefaultGameName(game);
     assignmentModalTitle.value = `Deelnemers voor ${gameName}`;
   } else {
-    assignmentModalTitle.value = "Deelnemers toewijzen";
+    assignmentModalTitle.value = 'Deelnemers toewijzen';
   }
 
   const dialog = document.getElementById(assignmentModalId);
-  if (dialog && typeof dialog.showModal === "function") {
+  if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
   }
 };
@@ -579,7 +579,7 @@ const getAssignedParticipants = (gameId) => {
 
 const getDefaultGameName = (game) => {
   if (game.name) return game.name;
-  if (!game.id) return "Spel ?";
+  if (!game.id) return 'Spel ?';
   // Try to use ID number if possible
   const match = game.id.match(/^game-(\d+)$/);
   if (match) return `Spel ${match[1]}`;
@@ -592,34 +592,34 @@ const getDefaultGameName = (game) => {
 
 const getGameName = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
-  if (index === -1) return "ander spel";
+  if (index === -1) return 'ander spel';
   return getDefaultGameName(games.value[index]);
 };
 
-const cancelSessionModalId = "cancel-session-modal";
+const cancelSessionModalId = 'cancel-session-modal';
 
 const handleCancelSession = () => {
   const dialog = document.getElementById(cancelSessionModalId);
-  if (dialog && typeof dialog.showModal === "function") {
+  if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
   }
 };
 
 const confirmCancelSession = () => {
-  socket.emit("session-cancel");
-  router.push("/tablet");
+  socket.emit('session-cancel');
+  router.push('/tablet');
 };
 
-const saveSessionModalId = "save-session-modal";
+const saveSessionModalId = 'save-session-modal';
 
 const handleFinishSetup = () => {
   const dialog = document.getElementById(saveSessionModalId);
-  if (dialog && typeof dialog.showModal === "function") {
+  if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
   }
 };
 
-const saveSessionToDb = async (status = "created") => {
+const saveSessionToDb = async (status = 'created') => {
   try {
     const payload = {
       sessionName: sessionName.value,
@@ -633,8 +633,8 @@ const saveSessionToDb = async (status = "created") => {
     const response = await sessionRepository.create(payload);
     return response.data;
   } catch (error) {
-    console.error("Failed to save session:", error);
-    alert("Er is een fout opgetreden bij het opslaan van de sessie.");
+    console.error('Failed to save session:', error);
+    alert('Er is een fout opgetreden bij het opslaan van de sessie.');
     throw error;
   }
 };
@@ -642,15 +642,15 @@ const saveSessionToDb = async (status = "created") => {
 const saveSessionOnly = async () => {
   // Save session (not starting yet)
   try {
-    await saveSessionToDb("created");
+    await saveSessionToDb('created');
 
     // Reset display to splash screen
-    socket.emit("display:navigate", { name: "display-splash" });
+    socket.emit('display:navigate', { name: 'display-splash' });
 
     // Clear participants on display/server
-    socket.emit("display:update-participants", []);
+    socket.emit('display:update-participants', []);
 
-    router.push("/tablet");
+    router.push('/tablet');
   } catch (e) {
     // Error handled in saveSessionToDb
   }
@@ -659,16 +659,15 @@ const saveSessionOnly = async () => {
 const saveAndStartSession = async () => {
   // Save session and start
   try {
-    const data = await saveSessionToDb("in_progress");
+    const data = await saveSessionToDb('in_progress');
 
     // Emit navigation event for display
-    socket.emit("display:navigate", { name: "display-scoreboard" });
-    socket.emit("display:session", { sessionId: data.id });
-    sessionStorage.setItem("sessionId", data.id);
-
+    socket.emit('display:navigate', { name: 'display-scoreboard' });
+    socket.emit('display:session', { sessionId: data.id });
+    sessionStorage.setItem('sessionId', data.id);
 
     // Navigate tablet to player list (game interface)
-    router.push("/tablet/game/players");
+    router.push('/tablet/game/players');
   } catch (e) {
     // Error handled in saveSessionToDb
   }
@@ -683,11 +682,13 @@ const goToPreviousTab = () => {
       ...item,
       checked: idx === prevIndex,
     }));
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 
 const goToNextTab = () => {
+  if (isNextButtonDisabled.value) return;
+
   if (isLastTab.value) {
     handleFinishSetup();
   } else {
@@ -696,7 +697,7 @@ const goToNextTab = () => {
       ...item,
       checked: idx === nextIndex,
     }));
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 };
 
@@ -704,7 +705,7 @@ watch(
   [participants, selectedParticipantMode],
   ([newParticipants, newMode]) => {
     const displayList = newParticipants.map((p) => ({ playerName: p.name }));
-    socket.emit("display:update-participants", {
+    socket.emit('display:update-participants', {
       list: displayList,
       mode: newMode,
     });
@@ -715,7 +716,7 @@ watch(
 const handleSocketConnect = () => {
   if (participants.value.length > 0) {
     const displayList = participants.value.map((p) => ({ playerName: p.name }));
-    socket.emit("display:update-participants", {
+    socket.emit('display:update-participants', {
       list: displayList,
       mode: selectedParticipantMode.value,
     });
@@ -723,7 +724,7 @@ const handleSocketConnect = () => {
 };
 
 onMounted(() => {
-  socket.on("connect", handleSocketConnect);
+  socket.on('connect', handleSocketConnect);
   // Also check immediately if already connected
   if (socket.connected) {
     handleSocketConnect();
@@ -731,7 +732,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  socket.off("connect", handleSocketConnect);
+  socket.off('connect', handleSocketConnect);
 });
 </script>
 
