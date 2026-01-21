@@ -6,63 +6,33 @@ import logo from "../assets/logo.webp";
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 
-const players = ref([
-  {
-    id: 1,
-    spelersnaam: "John Doe",
-    score: 121,
-  },
-  {
-    id: 2,
-    spelersnaam: "Jane Smith",
-    score: 72,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johfdsdnson",
-    score: 78,
-  },
-  {
-    id: 6,
-    spelersnaam: "Bob Johnson",
-    score: 55,
-  },
-  {
-    id: 7,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 8,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 4,
-    spelersnaam: "Alice Williams",
-    score: 78,
-  },
-  {
-    id: 5,
-    spelersnaam: "Charlie Brown",
-    score: 84,
-  },
-  {
-    id: 9,
-    spelersnaam: "Yarne Diopere",
-    score: 124,
-  },
-  {
-    id: 10,
-    spelersnaam: "Lars Dobbelaere",
-    score: 114,
-  },
-  {
-    id: 11,
-    spelersnaam: "Renz Deheegher",
-    score: 118,
-  },
-]);
+import { finalScoreRepository } from "../services/api";
+
+const sessionID = sessionStorage.getItem("display_sessionId");
+console.log("Leaderboard view initialized with sessionID:", sessionID);
+
+const players = ref([]);
+
+const loadGameData = async () => {
+  if (!sessionID) {
+    console.error("No session ID found for leaderboard");
+    return;
+  }
+
+  try {
+    const response = await finalScoreRepository.getBySession(sessionID);
+    console.log("Final scores fetched:", response.data);
+
+    // Map backend data to frontend structure
+    players.value = response.data.map((p) => ({
+      id: p.participant_id, // Note: backend returns participant_id
+      spelersnaam: p.player_name || p.team_name || "Unknown",
+      score: p.total_points || 0,
+    }));
+  } catch (error) {
+    console.error("Failed to load final scores:", error);
+  }
+};
 
 // Sort players by score (highest first)
 const sortedPlayers = computed(() => {
@@ -220,6 +190,7 @@ const startPodiumAnimation = () => {
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = "hidden";
+  loadGameData();
 
   // Calculate initial items per page
   calculateItemsPerPage();

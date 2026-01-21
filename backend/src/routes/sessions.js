@@ -118,6 +118,37 @@ router.get("/:id/games", async (req, res) => {
   }
 });
 
+// GET final scores for a session (Leaderboard)
+router.get("/:id/final-scores", async (req, res) => {
+  const db = getDatabase();
+  const { id } = req.params;
+
+  try {
+    const query = `
+      SELECT 
+        fs.participant_id,
+        fs.total_points,
+        fs.final_rank,
+        p.id as participant_id,
+        p.type as participant_type,
+        pl.name as player_name,
+        tm.name as team_name
+      FROM FinalScore fs
+      JOIN Participant p ON fs.participant_id = p.id
+      LEFT JOIN Player pl ON p.player_id = pl.id
+      LEFT JOIN Team tm ON p.team_id = tm.id
+      WHERE fs.session_id = ?
+      ORDER BY fs.total_points DESC
+    `;
+
+    const scores = await all(db, query, [id]);
+    res.json(scores);
+  } catch (error) {
+    console.error("Error fetching final scores:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post("/", async (req, res) => {
   const db = getDatabase();
   const {
@@ -279,6 +310,13 @@ router.post("/", async (req, res) => {
               `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
               [dbGameId, partRes.lastID],
             );
+
+            // Initialize FinalScore for this participant in this session
+            await run(
+              db,
+              `INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)`,
+              [sessionId, partRes.lastID],
+            );
           }
         } else if (participantMode === "players") {
           const partRes = await run(
@@ -291,6 +329,13 @@ router.post("/", async (req, res) => {
             `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
             [dbGameId, partRes.lastID],
           );
+
+          // Initialize FinalScore for this participant in this session
+          await run(
+            db,
+            `INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)`,
+            [sessionId, partRes.lastID],
+          );
         } else if (participantMode === "teams") {
           const partRes = await run(
             db,
@@ -301,6 +346,13 @@ router.post("/", async (req, res) => {
             db,
             `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
             [dbGameId, partRes.lastID],
+          );
+
+          // Initialize FinalScore for this participant in this session
+          await run(
+            db,
+            `INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)`,
+            [sessionId, partRes.lastID],
           );
         }
       }

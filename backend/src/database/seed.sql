@@ -1,231 +1,59 @@
 -- ====================================================================================
--- DEEL 1: STANDAARD DATA (Configuratie die altijd aanwezig moet zijn)
---
--- Beschikbare opties (Hardcoded in database constraints):
--- - Participant Mode: 'players', 'teams', 'teams_with_players'
--- - Game Mode: 'single', 'series', 'parallel'
--- - Ranking Rule: 'highest_wins', 'lowest_wins'
+-- DEEL 1: STANDAARD DATA
 -- ====================================================================================
 
--- Score Models
--- We definiëren hier de standaard score modellen die gekoppeld kunnen worden aan games.
-
--- 1. Points Model
--- Type: points
--- Bonus: Ja
--- Ranking: highest_wins (Meeste punten winnen)
-INSERT OR
-IGNORE INTO ScoreModel (id, type, has_bonus, ranking_rule, config_json)
-VALUES
-    (1, 'points', 1, 'highest_wins', '{"label": "Standaard Punten"}');
-
--- 2. Time Model
--- Type: time
--- Bonus: Ja (User request: time has bonus points)
--- Ranking: lowest_wins (Snelste tijd wint)
-INSERT OR
-IGNORE INTO ScoreModel (id, type, has_bonus, ranking_rule, config_json)
-VALUES
-    (2, 'time', 1, 'lowest_wins', '{"label": "Tijdrit", "format": "mm:ss"}');
-
--- 3. Boolean Model
--- Type: boolean
--- Bonus: Nee
--- Ranking: highest_wins (Succes/Voltooid is 1, wint van 0)
-INSERT OR
-IGNORE INTO ScoreModel (id, type, has_bonus, ranking_rule, config_json)
-VALUES
-    (3, 'boolean', 0, 'highest_wins', '{"label": "Voltooid/Niet"}');
-
+INSERT OR IGNORE INTO ScoreModel (id, type, has_bonus, ranking_rule, config_json) VALUES 
+(1, 'points', 1, 'highest_wins', '{"label": "Standaard Punten"}'),
+(2, 'time', 1, 'lowest_wins', '{"label": "Tijdrit", "format": "mm:ss"}'),
+(3, 'boolean', 0, 'highest_wins', '{"label": "Voltooid/Niet"}');
 
 -- ====================================================================================
--- DEEL 2: DUMMY DATA (Voor development en testen)
+-- DEEL 2: DUMMY DATA
 -- ====================================================================================
 
--- Spelers
-INSERT OR
-IGNORE INTO Player (name)
-VALUES
-    ('Alice');
-INSERT OR
-IGNORE INTO Player (name)
-VALUES
-    ('Bob');
-INSERT OR
-IGNORE INTO Player (name)
-VALUES
-    ('Charlie');
-INSERT OR
-IGNORE INTO Player (name)
-VALUES
-    ('David');
+-- Spelers (8 spelers voor full leaderboard test)
+INSERT OR IGNORE INTO Player (name) VALUES 
+('Alice'), ('Bob'), ('Charlie'), ('David'), 
+('Eve'), ('Frank'), ('Grace'), ('Heidi');
 
--- Sessie 1: Demo Sessie
--- Mode: Players (Individueel)
--- Game Mode: Series (Meerdere games na elkaar)
-INSERT OR
-IGNORE INTO Session (id, name, participant_mode, game_mode)
-VALUES
-    (1, 'Demo Sessie', 'players', 'series');
+-- Sessie 1
+INSERT OR IGNORE INTO Session (id, name, participant_mode, game_mode, status) VALUES 
+(1, 'Finale Sessie', 'players', 'single', 'finished');
 
--- Games in Sessie 1
--- Game 1: Punten spel (Iedereen doet mee)
-INSERT OR
-IGNORE INTO Game (id, session_id, name, rounds, sets, score_model_id, is_finished, points_per_click, bonus_points)
-VALUES
-    (1, 1, 'Punten Spel', 1, 1, 1, 1, 5, 10);
+-- Game 1
+INSERT OR IGNORE INTO Game (id, session_id, name, rounds, sets, score_model_id, is_finished, points_per_click, bonus_points) VALUES 
+(1, 1, 'Grote Finale', 1, 1, 1, 1, 10, 5);
 
--- Game 2: Tijds spel (Slechts 2 spelers doen mee)
-INSERT OR
-IGNORE INTO Game (id, session_id, name, rounds, sets, score_model_id, is_finished, points_per_click, bonus_points)
-VALUES
-    (2, 1, 'Tijdrit Finale', 1, 1, 2, 0, NULL, 5);
+-- Participants (Koppel alle 8 spelers aan Game 1)
+INSERT OR IGNORE INTO Participant (id, game_id, type, player_id) VALUES 
+(1, 1, 'player', 1), -- Alice
+(2, 1, 'player', 2), -- Bob
+(3, 1, 'player', 3), -- Charlie
+(4, 1, 'player', 4), -- David
+(5, 1, 'player', 5), -- Eve
+(6, 1, 'player', 6), -- Frank
+(7, 1, 'player', 7), -- Grace
+(8, 1, 'player', 8); -- Heidi
 
--- Participanten (Gekoppeld aan Game ID, niet meer aan Sessie ID)
+-- Scores (Game 1)
+INSERT OR IGNORE INTO Score (game_id, participant_id, value_number, rank) VALUES 
+(1, 1, 150, 1), -- Alice
+(1, 2, 140, 2), -- Bob
+(1, 3, 130, 3), -- Charlie
+(1, 4, 120, 4), -- David
+(1, 5, 110, 5), -- Eve
+(1, 6, 100, 6), -- Frank
+(1, 7, 90, 7),  -- Grace
+(1, 8, 80, 8);  -- Heidi
 
--- Game 1: Iedereen (4 spelers)
--- Note: id's for participants will auto-increment. Assuming order: 1, 2, 3, 4
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (1, 'player', 1);
--- Alice
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (1, 'player', 2);
--- Bob
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (1, 'player', 3);
--- Charlie
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (1, 'player', 4);
--- David
-
--- Game 2: Enkel Alice en Charlie
--- Note: id's will be 5, 6
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (2, 'player', 1);
--- Alice
-INSERT OR
-IGNORE INTO Participant (game_id, type, player_id)
-VALUES
-    (2, 'player', 3);
--- Charlie
-
--- Scores
-
--- Game 1 (Finished): Alice wint, Bob 2e, Charlie 3e
--- Alice: 50 punten + 10 bonus
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_number, bonus, rank)
-VALUES
-    (1, (SELECT id
-        FROM Participant
-        WHERE game_id=1 AND player_id=1), 50, 10, 1);
-
--- Charlie: 40 punten + 0 bonus
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_number, bonus, rank)
-VALUES
-    (1, (SELECT id
-        FROM Participant
-        WHERE game_id=1 AND player_id=3), 40, 0, 2);
-
--- Bob: 30 punten + 0 bonus
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_number, bonus, rank)
-VALUES
-    (1, (SELECT id
-        FROM Participant
-        WHERE game_id=1 AND player_id=2), 30, 0, 3);
-
--- David: 10 punten
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_number, bonus, rank)
-VALUES
-    (1, (SELECT id
-        FROM Participant
-        WHERE game_id=1 AND player_id=4), 10, 0, 4);
-
-
--- Game 2 (On finished): Voorlopige tijden
--- Alice: 120.5 seconden
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, bonus, rank)
-VALUES
-    (2, (SELECT id
-        FROM Participant
-        WHERE game_id=2 AND player_id=1), 120.5, 0, 1);
-
--- Charlie: 125.0 seconden
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, bonus, rank)
-VALUES
-    (2, (SELECT id
-        FROM Participant
-        WHERE game_id=2 AND player_id=3), 125.0, 0, 2);
--- Charlie (Participant 3)
-
--- Game 2 Scores (Time) - Participants 4, 5
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, rank)
-VALUES
-    (2, 4, 120.5, 1);
--- Alice (Participant 4)
-
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_time, rank)
-VALUES
-    (2, 5, 130.2, 2);
--- Charlie (Participant 5)
-VALUES
-(2, 7, 48.7, 3);
-
--- Scores for Game 4 (Session 3, Puzzle Challenge - boolean, finished)
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_bool, rank)
-VALUES
-    (4, 8, 1, 1);
-INSERT OR
-IGNORE INTO Score (game_id, participant_id, value_bool, rank)
-VALUES
-    (4, 9, 0, 2);
-
--- FinalScores for Session 1 (finished session)
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank)
-VALUES
-    (1, 1, 95, 1);
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank)
-VALUES
-    (1, 3, 86, 2);
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank)
-VALUES
-    (1, 2, 77, 3);
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank)
-VALUES
-    (1, 4, 65, 4);
-
--- FinalScores for Session 2 (finished sprint race)
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_time, final_rank)
-VALUES
-    (2, 5, 42.1, 1);
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_time, final_rank)
-VALUES
-    (2, 6, 45.3, 2);
-INSERT OR
-IGNORE INTO FinalScore (session_id, participant_id, total_time, final_rank)
-VALUES
-    (2, 7, 48.7, 3);
+-- Final Scores (Sessie 1)
+-- MOET OOK wordne ingevuld voor de FinalScore tab
+INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES 
+(1, 1, 150, 1), -- Alice
+(1, 2, 140, 2), -- Bob
+(1, 3, 130, 3), -- Charlie
+(1, 4, 120, 4), -- David
+(1, 5, 110, 5), -- Eve
+(1, 6, 100, 6), -- Frank
+(1, 7, 90, 7),  -- Grace
+(1, 8, 80, 8);  -- Heidi
