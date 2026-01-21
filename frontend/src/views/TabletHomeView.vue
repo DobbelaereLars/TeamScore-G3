@@ -47,7 +47,12 @@ const formatDate = (dateString) => {
 
 const getSubtitle = (session) => {
   const count = session.participant_count || 0;
-  const label = session.participant_mode === 'players' ? 'spelers' : 'teams';
+  let label = '';
+  if (session.participant_mode === 'players') {
+    label = count === 1 ? 'speler' : 'spelers';
+  } else {
+    label = count === 1 ? 'team' : 'teams';
+  }
   return `${count} ${label}`;
 };
 
