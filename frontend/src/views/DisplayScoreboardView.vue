@@ -1,6 +1,6 @@
 <script setup>
 import ScoreboardPlayercard from "../components/ScoreboardPlayercard.vue";
-import { gameRepository } from "../services/api"; // Import repository
+import { gameRepository, sessionRepository } from "../services/api"; // Import repository
 import logo from "../assets/logo.webp";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 
@@ -40,8 +40,7 @@ defineExpose({
   loadGameData,
 });
 
-// Mock data removed in favor of dynamic loading, but keeping structure ready
-/* 
+/*
 const players = ref([
   {
     id: 1,
@@ -60,7 +59,9 @@ const gameinfo = ref({
 
 // Calculate the highest score among all players
 const maxScore = computed(() => {
-  return Math.max(...players.value.map((player) => player.score));
+  if (players.value.length === 0) return 100;
+  const max = Math.max(...players.value.map((player) => player.score));
+  return max > 0 ? max : 100;
 });
 
 // Computed property to sort players by score and calculate position/variant
@@ -118,11 +119,66 @@ const totalPages = computed(() => {
   return Math.ceil(sortedPlayers.value.length / playersPerPage.value);
 });
 
+import socket from "../utils/socket";
+
 let pageInterval = null;
 
+const handleSession = (data) => {
+  if (data && data.sessionId) {
+    console.log("Received session:", data.sessionId);
+    // Persist to URL
+    const url = new URL(window.location);
+    url.searchParams.set("sessionId", data.sessionId);
+    window.history.pushState({}, "", url);
+    // Persist to storage
+    sessionStorage.setItem("display_sessionId", data.sessionId);
+
+    sessionRepository.getGames(data.sessionId).then((response) => {
+      if (response.data && response.data.length > 0) {
+        const lowestGameId = Math.min(...response.data.map((g) => g.id));
+        loadGameData(lowestGameId);
+      }
+    });
+    return;
+  }
+};
+
+const handleSelectedGame = (data) => {
+  if (data && data.gameId) {
+    console.log("Received selected game:", data.gameId);
+    // Persist to URL
+    const url = new URL(window.location);
+    url.searchParams.set("gameId", data.gameId);
+    window.history.pushState({}, "", url);
+    // Persist to storage
+    sessionStorage.setItem("display_gameId", data.gameId);
+
+    loadGameData(data.gameId);
+  }
+};
+
 onMounted(() => {
-  // TEST: Load game 2 (Time based, Teams) automatically
-  loadGameData(1);
+  // Listen for game selection from dashboard
+  socket.on("display:session", handleSession);
+  socket.on("display:selected-game", handleSelectedGame);
+
+  // Check URL params first, then sessionStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlGameId = urlParams.get("gameId");
+  const urlSessionId = urlParams.get("sessionId");
+
+  const storedGameId = sessionStorage.getItem("display_gameId");
+  const storedSessionId = sessionStorage.getItem("display_sessionId");
+
+  const gameIdToLoad = urlGameId || storedGameId;
+  const sessionIdToLoad = urlSessionId || storedSessionId;
+
+  if (gameIdToLoad) {
+    loadGameData(gameIdToLoad);
+  } else if (sessionIdToLoad) {
+    // If we only have session, load games to find the first one
+    handleSession({ sessionId: sessionIdToLoad });
+  }
 
   calculatePlayersPerPage();
 
@@ -138,6 +194,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  socket.off("display:session", handleSession);
+  socket.off("display:selected-game", handleSelectedGame);
   window.removeEventListener("resize", calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
@@ -166,7 +224,7 @@ onUnmounted(() => {
             :key="player.id"
             :spelersnaam="player.spelersnaam"
             :score="player.score"
-            :max-value="player.maxValue"
+            :max-value="maxScore"
             :position="player.position"
             :variant="player.variant"
           />

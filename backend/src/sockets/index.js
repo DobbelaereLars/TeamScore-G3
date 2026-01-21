@@ -1,73 +1,78 @@
-const socketIo = require('socket.io');
+const socketIo = require("socket.io");
 
 function setupSockets(server) {
   const io = socketIo(server, {
     cors: {
-      origin: '*',
-      methods: ['GET', 'POST'],
+      origin: "*",
+      methods: ["GET", "POST"],
     },
   });
 
   // Store the latest participants list in memory
   let currentParticipants = [];
 
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+  io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
 
-    socket.on('test-popup', (data) => {
-      console.log('Test popup event received:', data);
+    socket.on("test-popup", (data) => {
+      console.log("Test popup event received:", data);
       // Broadcast naar alle clients
-      io.emit('show-popup', {
-        message: data.message || 'Test popup!',
+      io.emit("show-popup", {
+        message: data.message || "Test popup!",
         timestamp: new Date().toISOString(),
       });
     });
 
-    socket.on('session-init', () => {
-      console.log('Session init event received');
-      io.emit('display:navigate', {
-        name: 'display-player-list',
+    socket.on("session-init", () => {
+      console.log("Session init event received");
+      io.emit("display:navigate", {
+        name: "display-player-list",
       });
     });
 
-    socket.on('session-cancel', () => {
-      console.log('Session cancel event received');
+    socket.on("session-cancel", () => {
+      console.log("Session cancel event received");
 
       // Clear stored participants
       currentParticipants = [];
       // Clean up the display as well
-      io.emit('display:update-participants', []);
+      io.emit("display:update-participants", []);
 
-      io.emit('display:navigate', {
-        name: 'display-splash',
+      io.emit("display:navigate", {
+        name: "display-splash",
       });
     });
 
-    socket.on('display:update-participants', (participants) => {
+    socket.on("display:update-participants", (participants) => {
       // Update memory store
       currentParticipants = participants;
       // Broadcast to all
-      io.emit('display:update-participants', participants);
+      io.emit("display:update-participants", participants);
     });
 
-    socket.on('display:request-participants', () => {
+    socket.on("display:request-participants", () => {
       // Send only to the requester
-      console.log('Sending current participants to requester:', socket.id);
-      socket.emit('display:update-participants', currentParticipants);
+      console.log("Sending current participants to requester:", socket.id);
+      socket.emit("display:update-participants", currentParticipants);
     });
 
-    socket.on('display:navigate', (data) => {
-      console.log('Display navigate event received:', data);
-      io.emit('display:navigate', data);
+    socket.on("display:navigate", (data) => {
+      console.log("Display navigate event received:", data);
+      io.emit("display:navigate", data);
     });
 
-    socket.on('display:selected-game', (data) => {
-      console.log('Display selected game event received:', data);
-      io.emit('display:selected-game', data);
+    socket.on("display:selected-game", (data) => {
+      console.log("Display selected game event received:", data);
+      io.emit("display:selected-game", data);
     });
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+    socket.on("display:session", (data) => {
+      console.log("Display session event received:", data);
+      io.emit("display:session", data);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
     });
   });
 

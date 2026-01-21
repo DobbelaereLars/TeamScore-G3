@@ -32,7 +32,7 @@ router.get("/:id/scores", (req, res) => {
     SELECT 
       part.id as id,
       COALESCE(pl.name, tm.name) as spelersnaam,
-      COALESCE(s.value_number, s.value_time, s.value_bool) as score,
+      COALESCE(s.value_number, s.value_time, s.value_bool, 0) as score,
       s.rank
     FROM Score s
     JOIN Participant part ON s.participant_id = part.id
