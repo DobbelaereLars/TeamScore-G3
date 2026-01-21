@@ -91,5 +91,6 @@ if (fs.existsSync(KEY_PATH) && fs.existsSync(CERT_PATH)) {
 }
 
 // Setup Socket.io
-setupSockets(server);
+const io = setupSockets(server);
+app.set("socketio", io);
 console.log("Socket.io initialized");

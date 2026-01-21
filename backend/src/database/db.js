@@ -66,6 +66,14 @@ async function performSchemaUpdates(database) {
     'is_finished',
     'INTEGER DEFAULT 0 CHECK (is_finished IN (0, 1))',
   );
+  
+  // Update voor Game.current_set (toegevoegd jan 2026 voor sets support)
+  await ensureColumnExists(
+    database,
+    'Game',
+    'current_set',
+    'INTEGER DEFAULT 1',
+  );
 
   // Update voor Participant.type constraints en velden kunnen complexer zijn,
   // maar ALTER TABLE ondersteunt geen constraint modificaties makkelijk in SQLite.

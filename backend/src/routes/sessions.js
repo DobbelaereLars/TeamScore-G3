@@ -64,14 +64,17 @@ router.get("/:id/games", async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
 
-  try {
-    const games = await all(db, "SELECT * FROM Game WHERE session_id = ?", [
-      id,
-    ]);
-
-    if (games.length === 0) {
-      return res.json([]);
-    }
+    try {
+        const games = await all(db, `
+            SELECT g.*, sm.type as score_type, sm.ranking_rule, sm.config_json as score_config
+            FROM Game g
+            JOIN ScoreModel sm ON g.score_model_id = sm.id
+            WHERE g.session_id = ?
+        `, [id]);
+        
+        if (games.length === 0) {
+            return res.json([]);
+        }
 
     const gameIds = games.map((g) => g.id);
     const placeholders = gameIds.map(() => "?").join(",");
@@ -80,6 +83,8 @@ router.get("/:id/games", async (req, res) => {
             SELECT
                 s.game_id,
                 s.value_number,
+                s.value_time,
+                s.value_bool,
                 p.id as participant_id,
                 pl.id as player_id,
                 pl.name as player_name,
@@ -94,22 +99,25 @@ router.get("/:id/games", async (req, res) => {
 
     const scores = await all(db, scoreQuery, gameIds);
 
-    const gamesWithDetails = games.map((game) => {
-      const gameScores = scores.filter((s) => s.game_id === game.id);
-      const players = gameScores.map((s) => ({
-        id: s.player_id || s.team_id,
-        name: s.player_name || s.team_name || "Unknown",
-        points: s.value_number || 0,
-        participantId: s.participant_id,
-      }));
+        const gamesWithDetails = games.map(game => {
+            const gameScores = scores.filter(s => s.game_id === game.id);
+            const players = gameScores.map(s => ({
+                id: s.player_id || s.team_id,
+                name: s.player_name || s.team_name || 'Unknown',
+                points: s.value_number || 0,
+                time: s.value_time || 0,
+                bool: s.value_bool || 0,
+                participantId: s.participant_id
+            }));
 
-      return {
-        ...game,
-        perClick: game.points_per_click || 1,
-        currentRound: 1,
-        players: players,
-      };
-    });
+            return {
+                ...game,
+                perClick: game.points_per_click || 1, 
+                currentRound: game.current_round || 1,
+                currentSet: game.current_set || 1,
+                players: players
+            };
+        });
 
     res.json(gamesWithDetails);
   } catch (error) {

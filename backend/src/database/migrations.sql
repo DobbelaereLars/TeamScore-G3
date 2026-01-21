@@ -45,6 +45,7 @@ IF NOT EXISTS Game
     rounds INTEGER,
     current_round INTEGER DEFAULT 1,
     sets INTEGER,
+    current_set INTEGER DEFAULT 1,
     score_model_id INTEGER NOT NULL,
     is_finished INTEGER DEFAULT 0 CHECK
 (is_finished IN

@@ -50,4 +50,43 @@ router.get("/:id/scores", (req, res) => {
   });
 });
 
+// PUT /api/games/:id
+// Update game info (bijv. current_round, current_set, is_finished)
+router.put("/:id", (req, res) => {
+    const db = getDatabase();
+    const { id } = req.params;
+    const { current_round, current_set, is_finished } = req.body;
+
+    // Bouw dynamische query
+    let fields = [];
+    let values = [];
+
+    if (current_round !== undefined) {
+        fields.push("current_round = ?");
+        values.push(current_round);
+    }
+    if (current_set !== undefined) {
+        fields.push("current_set = ?");
+        values.push(current_set);
+    }
+    if (is_finished !== undefined) {
+        fields.push("is_finished = ?");
+        values.push(is_finished);
+    }
+
+    if (fields.length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+    }
+
+    values.push(id);
+    const query = `UPDATE Game SET ${fields.join(", ")} WHERE id = ?`;
+
+    db.run(query, values, function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true, changes: this.changes });
+    });
+});
+
 module.exports = router;

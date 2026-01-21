@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, TransitionGroup } from 'vue';
 import { useRouter } from 'vue-router';
-import { sessionRepository, scoreRepository } from '../services/api';
+import { sessionRepository, scoreRepository, gameRepository } from '../services/api';
 import socket from '../utils/socket';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
@@ -17,6 +17,7 @@ const currentSessionId = ref(1);
 const games = ref([]);
 
 const selectedGameId = ref(null);
+const accumulatedScores = ref({}); // { [participantId]: number }
 
 watch(selectedGameId, (newId) => {
   if (newId) {
@@ -42,8 +43,12 @@ const handleResize = () => {
 onMounted(async () => {
   window.addEventListener('resize', handleResize);
 
-  // TODO: Later via Socket.IO
+  socket.on('score:update', handleScoreUpdate);
+
   try {
+    const sessionResponse = await sessionRepository.getById(currentSessionId.value);
+    console.log('Current Session:', sessionResponse.data);
+
     const response = await sessionRepository.getGames(currentSessionId.value);
     games.value = response.data;
     if (games.value.length > 0) {
@@ -56,12 +61,43 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
+  socket.off('score:update', handleScoreUpdate);
 });
 
 // Huidige geselecteerde game
 const currentGame = computed(() => {
   return games.value.find(game => game.id === selectedGameId.value);
 });
+
+// Samengetelde scores laden voor time offset
+watch(
+  () => [
+    currentGame.value?.id,
+    currentGame.value?.currentSet,
+    currentGame.value?.currentRound
+  ],
+  ([gameId, currentSet, currentRound]) => {
+    if (!gameId) return;
+
+    if (currentGame.value?.score_type === 'time') {
+      const key = `offsets_${gameId}_${currentSet || 1}_${currentRound || 1}`;
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          accumulatedScores.value = JSON.parse(stored);
+        } else {
+          accumulatedScores.value = {};
+        }
+      } catch (e) {
+        console.error('Error loading offsets:', e);
+        accumulatedScores.value = {};
+      }
+    } else {
+      accumulatedScores.value = {};
+    }
+  },
+  { immediate: true }
+);
 
 // Game opties voor de custom select
 const gameOptions = computed(() => {
@@ -85,31 +121,126 @@ const sortedPlayers = computed(() => {
   }));
 });
 
+// Check of er nog een volgende set is
+const hasNextSet = computed(() => {
+  if (!currentGame.value || !currentGame.value.sets) return false;
+  return currentGame.value.currentSet < currentGame.value.sets;
+});
+
 // Check of er nog een volgende ronde is
 const hasNextRound = computed(() => {
   if (!currentGame.value) return false;
   return currentGame.value.currentRound < currentGame.value.rounds;
 });
 
-const updatePlayerPointsInArray = async (participantId, newPoints) => {
+const nextButtonLabel = computed(() => {
+  if (hasNextSet.value) return "Volgende set";
+  if (hasNextRound.value) return "Volgende ronde";
+  return "";
+});
+
+const nextModalTitle = computed(() => {
+  if (hasNextSet.value) return "Naar de volgende set?";
+  return "Naar de volgende ronde?";
+});
+
+const nextModalText = computed(() => {
+  if (hasNextSet.value) return "Ben je zeker dat je naar de volgende set wilt gaan? Scores blijven behouden.";
+  return "Ben je zeker dat je naar de volgende ronde wilt gaan? Je kunt later nog steeds terugkeren om scores aan te passen.";
+});
+
+const handleScoreUpdate = (data) => {
+  if (!currentGame.value || currentGame.value.id !== data.gameId) return;
+
+  const player = currentGame.value.players.find(p => p.participantId === data.participantId);
+  if (player) {
+    if (data.scoreType === 'points') player.points = data.score;
+    else if (data.scoreType === 'time') player.time = data.score;
+    else if (data.scoreType === 'boolean' || data.scoreType === 'bool') player.bool = data.score;
+  }
+};
+
+const updatePlayerScore = async (participantId, newVal) => {
   if (!currentGame.value) return;
 
   // Optimistische update in UI
   const player = currentGame.value.players.find(p => p.participantId === participantId);
 
   if (player) {
+    const scoreType = currentGame.value.score_type || 'points';
+
+    // Save old values
     const oldPoints = player.points;
-    player.points = newPoints;
+    const oldTime = player.time;
+    const oldBool = player.bool;
+
+    // Apply new value
+    if (scoreType === 'points') player.points = newVal;
+    else if (scoreType === 'time') {
+      // For time, the input sends the RELATIVE value (current round time).
+      // We need to add the accumulated offset to get the absolute Total to store in DB.
+      const offset = accumulatedScores.value[participantId] || 0;
+      player.time = newVal + offset;
+    }
+    else if (scoreType === 'boolean') player.bool = newVal;
 
     // Stuur naar backend
+    const valueToSend = scoreType === 'time' ? player.time : newVal;
+
     try {
-      await scoreRepository.updatePoints(currentGame.value.id, participantId, newPoints);
-      console.log(`Updated points for participant ${participantId} to ${newPoints}`);
+      await scoreRepository.updateScore(currentGame.value.id, participantId, valueToSend, scoreType);
+      console.log(`Updated score for participant ${participantId} to ${valueToSend}`);
     } catch (error) {
-      console.error('Failed to update points:', error);
+      console.error('Failed to update score:', error);
       // Rollback bij error
-      player.points = oldPoints;
+      if (scoreType === 'points') player.points = oldPoints;
+      else if (scoreType === 'time') player.time = oldTime;
+      else if (scoreType === 'boolean') player.bool = oldBool;
     }
+  }
+};
+
+const goToNext = async () => {
+  if (!currentGame.value) return;
+
+  // 1. Capture current totals (BEFORE update) to use as offsets for the next round
+  const newOffsets = {};
+  if (currentGame.value.score_type === 'time') {
+    currentGame.value.players.forEach(p => {
+      newOffsets[p.participantId] = p.time || 0;
+    });
+  }
+
+  if (hasNextSet.value) {
+    currentGame.value.currentSet++;
+  } else if (hasNextRound.value) {
+    currentGame.value.currentRound++;
+    if (currentGame.value.sets) {
+      currentGame.value.currentSet = 1;
+    }
+  }
+
+  // 2. Save offsets for the NEW state (so round 2 starts at 0 input)
+  if (currentGame.value.score_type === 'time') {
+    const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet}_${currentGame.value.currentRound}`;
+    localStorage.setItem(key, JSON.stringify(newOffsets));
+    accumulatedScores.value = newOffsets;
+  }
+
+  // Persist to backend
+  try {
+    await gameRepository.update(currentGame.value.id, {
+      current_round: currentGame.value.currentRound,
+      current_set: currentGame.value.currentSet
+    });
+  } catch (error) {
+    console.error('Failed to update game state:', error);
+  }
+
+  // Sluit de modal
+  const modal = document.getElementById('nextround');
+  if (modal) {
+    modal.close();
   }
 };
 
@@ -131,28 +262,24 @@ const endGame = () => {
     modal.close();
   }
 };
-
-const goToNextRound = () => {
-  if (!currentGame.value || !hasNextRound.value) return;
-  currentGame.value.currentRound++;
-  // Sluit de modal
-  const modal = document.getElementById('nextround');
-  if (modal) {
-    modal.close();
-  }
-};
 </script>
 
 <template>
   <div class="container">
     <div class="row">
       <div class="c-player-list">
+
         <div class="c-player-list__header">
           <LogoHeader :class="'c-player-list__logo'" />
           <div class="c-player-list__gameround">
             <CustomSelect v-if="games.length > 1" v-model="selectedGameId" :options="gameOptions" />
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
-            <p class="c-player-list--greytext">Ronde {{ currentGame?.currentRound }} van {{ currentGame?.rounds }}</p>
+            <p class="c-player-list--greytext h6">Ronde {{ currentGame?.currentRound }} van {{ currentGame?.rounds }}
+            </p>
+            <div v-if="currentGame?.sets" class="c-player-list__sets">
+              <p>Set {{ currentGame?.currentSet }} van {{ currentGame?.sets }}</p>
+            </div>
+
           </div>
 
           <Button button-tekst="Spelinstellingen" variant="secondary" :href="'/tablet/game/ingame-settings'">
@@ -170,11 +297,16 @@ const goToNextRound = () => {
               toe.</p>
           </div>
 
-          <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players">
+          <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players" :class="{
+            'c-player-list__players--boolean': currentGame?.score_type === 'boolean',
+            'c-player-list__players--time': currentGame?.score_type === 'time'
+          }">
             <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
-              :name="player.name" :points="player.points" :size="playerItemSize" :rank="player.rank"
+              :name="player.name" :points="player.points"
+              :value="currentGame?.score_type === 'time' ? (player.time - (accumulatedScores[player.participantId] || 0)) : currentGame?.score_type === 'boolean' ? player.bool : player.points"
+              :score-type="currentGame?.score_type || 'points'" :size="playerItemSize" :rank="player.rank"
               :perClick="currentGame?.perClick || 1"
-              @updatePoints="(newPoints) => updatePlayerPointsInArray(player.participantId, newPoints)" />
+              @updateScore="(newVal) => updatePlayerScore(player.participantId, newVal)" />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
@@ -182,11 +314,10 @@ const goToNextRound = () => {
             <Modal modal-id="endgame" title="Het spel beëindigen?"
               text="Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. Je gaat direct door naar de einduitslag, waar je de resultaten kunt bekijken en exporteren."
               cancel-btn-text="Terug" accept-btn-text="Beëindig spel" @accept="endGame" />
-            <Button v-if="hasNextRound" onclick="nextround.showModal()" button-tekst="Volgende ronde" variant="primary"
-              :clickable="false" />
-            <Modal modal-id="nextround" title="Naar de volgende ronde?"
-              text="Ben je zeker dat je naar de volgende ronde wilt gaan? Je kunt later nog steeds terugkeren om scores aan te passen."
-              cancel-btn-text="Terug" accept-btn-text="Volgende ronde" @accept="goToNextRound" />
+            <Button v-if="hasNextRound || hasNextSet" onclick="nextround.showModal()" :button-tekst="nextButtonLabel"
+              variant="primary" :clickable="false" />
+            <Modal modal-id="nextround" :title="nextModalTitle" :text="nextModalText" cancel-btn-text="Terug"
+              :accept-btn-text="nextButtonLabel" @accept="goToNext" />
           </div>
         </div>
 
