@@ -62,23 +62,6 @@ const remainingPlayers = computed(() => {
   return sortedPlayers.value.slice(3, 8);
 });
 
-const boostLowScorePlayer = () => {
-  if (remainingPlayers.value.length === 0) return;
-
-  // Get the player with the lowest score currently VISIBLE in the list
-  const lowestVisiblePlayer =
-    remainingPlayers.value[remainingPlayers.value.length - 1];
-
-  // Find this player in the main players source array
-  const playerToUpdate = players.value.find(
-    (p) => p.id === lowestVisiblePlayer.id,
-  );
-
-  if (playerToUpdate) {
-    // Add a significant amount of points to potentially move them up
-    playerToUpdate.score += 30; // Boost by 30
-  }
-};
 
 onMounted(() => {
   // Disable body scrolling
@@ -142,27 +125,6 @@ onUnmounted(() => {
         </div>
       </TransitionGroup>
     </div>
-
-    <!-- Test Button -->
-    <button
-      @click="boostLowScorePlayer"
-      style="
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 9999;
-        padding: 1rem 2rem;
-        background-color: #ffffff;
-        color: #000000;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      "
-    >
-      Boost Lowest Player
-    </button>
   </div>
 </template>
 

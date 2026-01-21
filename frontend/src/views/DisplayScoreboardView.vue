@@ -201,6 +201,7 @@ onUnmounted(() => {
     clearInterval(pageInterval);
   }
 });
+
 </script>
 
 <template>
@@ -218,17 +219,26 @@ onUnmounted(() => {
     </div>
     <div class="v-display-scoreboard-players-wrapper" ref="playersContainer">
       <Transition name="slide">
-        <div :key="currentPage" class="v-display-scoreboard-players-container">
-          <ScoreboardPlayercard
+        <TransitionGroup
+          tag="div"
+          name="scoreboard-item"
+          :key="currentPage"
+          class="v-display-scoreboard-players-container"
+        >
+          <div
             v-for="player in paginatedPlayers"
             :key="player.id"
-            :spelersnaam="player.spelersnaam"
-            :score="player.score"
-            :max-value="maxScore"
-            :position="player.position"
-            :variant="player.variant"
-          />
-        </div>
+            class="scoreboard-item-wrapper"
+          >
+            <ScoreboardPlayercard
+              :spelersnaam="player.spelersnaam"
+              :score="player.score"
+              :max-value="maxScore"
+              :position="player.position"
+              :variant="player.variant"
+            />
+          </div>
+        </TransitionGroup>
       </Transition>
     </div>
   </div>

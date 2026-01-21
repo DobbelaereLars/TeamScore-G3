@@ -1,4 +1,4 @@
-.v-display-scoreboard{
+.v-display-scoreboard {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -10,7 +10,7 @@
   overflow-y: visible;
 }
 
-.v-display-scoreboard-header{
+.v-display-scoreboard-header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -18,17 +18,15 @@
   gap: 0.625rem;
 }
 
-
-.v-display-scoreboard-info{
+.v-display-scoreboard-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.3125rem;
   grid-column: 2;
 }
-.v-display-scoreboard-round{
+.v-display-scoreboard-round {
   color: $color-secondary-grey-500;
-  
 }
 
 .v-display-scoreboard-players-container {
@@ -53,9 +51,10 @@
   position: relative;
 }
 
+/* Page Transition (Slide) */
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-leave-active {
@@ -73,22 +72,28 @@
   transform: translateX(-100%);
 }
 
-.slide-enter-active {
-  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* FLIP Animation for Scoreboard Items */
+.scoreboard-item-move {
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 10;
+  position: relative;
+
+  // Create a "lift" effect during move
+  :deep(.c-player-card) {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transition: all 0.5s ease;
+    z-index: 100;
+  }
 }
 
-.slide-leave-active {
-  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+.scoreboard-item-enter-active,
+.scoreboard-item-leave-active {
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.slide-enter-from {
-  transform: translateX(100%);
-}
-
-.slide-leave-to {
-  transform: translateX(-100%);
+.scoreboard-item-enter-from,
+.scoreboard-item-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
