@@ -1063,7 +1063,7 @@ onUnmounted(() => {
                   ></TabBar>
                 </div>
 
-                <div
+                <!-- <div
                   class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
                 >
                   <h2 class="h6">Bonuspunten</h2>
@@ -1079,7 +1079,7 @@ onUnmounted(() => {
                     v-model:toggled="activeGame.useTimeBonusPoints"
                     v-model="activeGame.timeBonusPoints"
                   ></ToggleWithDropdown>
-                </div>
+                </div> -->
               </div>
             </div>
 
