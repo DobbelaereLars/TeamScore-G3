@@ -216,3 +216,101 @@ INSERT OR
 IGNORE INTO FinalScore (session_id, participant_id, total_time, final_rank)
 VALUES
     (2, 7, 48.7, 3);
+
+-- ====================================================================================
+-- DEEL 4: TEAMS MET SPELERS SCENARIO
+-- ====================================================================================
+
+-- Nieuwe spelers voor teams
+INSERT OR
+IGNORE INTO Player (id, name)
+VALUES
+    (10, 'Team Rood Speler 1');
+INSERT OR
+IGNORE INTO Player (id, name)
+VALUES
+    (11, 'Team Rood Speler 2');
+INSERT OR
+IGNORE INTO Player (id, name)
+VALUES
+    (12, 'Team Blauw Speler 1');
+INSERT OR
+IGNORE INTO Player (id, name)
+VALUES
+    (13, 'Team Blauw Speler 2');
+
+-- Teams
+INSERT OR
+IGNORE INTO Team (id, name)
+VALUES
+    (1, 'Team Rood');
+INSERT OR
+IGNORE INTO Team (id, name)
+VALUES
+    (2, 'Team Blauw');
+
+-- Spelers koppelen aan teams
+INSERT OR
+IGNORE INTO TeamPlayer (team_id, player_id)
+VALUES
+    (1, 10);
+INSERT OR
+IGNORE INTO TeamPlayer (team_id, player_id)
+VALUES
+    (1, 11);
+INSERT OR
+IGNORE INTO TeamPlayer (team_id, player_id)
+VALUES
+    (2, 12);
+INSERT OR
+IGNORE INTO TeamPlayer (team_id, player_id)
+VALUES
+    (2, 13);
+
+-- Sessie 4: Team Battle
+INSERT OR
+IGNORE INTO Session (id, name, participant_mode, game_mode)
+VALUES
+    (4, 'Team Battle', 'teams_with_players', 'series');
+
+-- Game 10: Team Punten Strijd
+INSERT OR
+IGNORE INTO Game (id, session_id, name, rounds, sets, current_set, score_model_id, is_finished, points_per_click, bonus_points)
+VALUES
+    (10, 4, 'Team Punten Strijd', 2, 1, 1, 1, 0, 10, 25);
+
+-- Participants (Spelers, maar gelinkt aan ID)
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id, team_id)
+VALUES
+    (10, 'player', 10, 1);
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id, team_id)
+VALUES
+    (10, 'player', 11, 1);
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id, team_id)
+VALUES
+    (10, 'player', 12, 2);
+INSERT OR
+IGNORE INTO Participant (game_id, type, player_id, team_id)
+VALUES
+    (10, 'player', 13, 2);
+
+-- Scores (Initieel 0)
+INSERT OR
+IGNORE INTO Score (game_id, participant_id, value_number, bonus)
+VALUES
+    (10, (SELECT id
+        FROM Participant
+        WHERE game_id=10 AND player_id=10), 0, 0),
+    (10, (SELECT id
+        FROM Participant
+        WHERE game_id=10 AND player_id=11), 0, 0),
+    (10, (SELECT id
+        FROM Participant
+        WHERE game_id=10 AND player_id=12), 0, 0),
+    (10, (SELECT id
+        FROM Participant
+        WHERE game_id=10 AND player_id=13), 0, 0);
+

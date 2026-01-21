@@ -103,6 +103,8 @@ router.get("/:id/games", async (req, res) => {
             const gameScores = scores.filter(s => s.game_id === game.id);
             const players = gameScores.map(s => ({
                 id: s.player_id || s.team_id,
+                team_id: s.team_id,
+                team_name: s.team_name,
                 name: s.player_name || s.team_name || 'Unknown',
                 points: s.value_number || 0,
                 time: s.value_time || 0,

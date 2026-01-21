@@ -5,13 +5,15 @@ import { sessionRepository, scoreRepository, gameRepository } from '../services/
 import socket from '../utils/socket';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
+import TeamTabButton from '../components/TeamTabButton.vue';
 import LogoHeader from '../components/Logo.vue';
 import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
-import { Cog, Flame, Plus } from 'lucide-vue-next';
+import { Cog, Flame } from 'lucide-vue-next';
 
 const router = useRouter();
-const currentSessionId = ref(1);
+const currentSessionId = ref(4);
+const currentSession = ref(null);
 
 // Games from DB
 const games = ref([]);
@@ -19,6 +21,9 @@ const games = ref([]);
 const selectedGameId = ref(null);
 const accumulatedScores = ref({}); // { [participantId]: number }
 const selectedBonusParticipants = ref([]);
+
+const activeTeamId = ref(null);
+const activeModalTeamId = ref(null);
 
 watch(selectedGameId, (newId) => {
   if (newId) {
@@ -49,6 +54,7 @@ onMounted(async () => {
   try {
     const sessionResponse = await sessionRepository.getById(currentSessionId.value);
     console.log('Current Session:', sessionResponse.data);
+    currentSession.value = sessionResponse.data;
 
     const response = await sessionRepository.getGames(currentSessionId.value);
     games.value = response.data;
@@ -132,6 +138,50 @@ const hasNextSet = computed(() => {
 const hasNextRound = computed(() => {
   if (!currentGame.value) return false;
   return currentGame.value.currentRound < currentGame.value.rounds;
+});
+
+const isTeamsWithPlayers = computed(() => {
+  return currentSession.value?.participant_mode === 'teams_with_players';
+});
+
+const availableTeams = computed(() => {
+  if (!currentGame.value?.players) return [];
+
+  const teamsMap = new Map();
+  currentGame.value.players.forEach(p => {
+    if (p.team_id && p.team_name) {
+      if (!teamsMap.has(p.team_id)) {
+        teamsMap.set(p.team_id, { id: p.team_id, name: p.team_name });
+      }
+    }
+  });
+  return Array.from(teamsMap.values());
+});
+
+// Set default active team when teams load
+watch(availableTeams, (teams) => {
+  if (teams.length > 0) {
+    if (!activeTeamId.value || !teams.find(t => t.id === activeTeamId.value)) {
+      activeTeamId.value = teams[0].id;
+    }
+    if (!activeModalTeamId.value || !teams.find(t => t.id === activeModalTeamId.value)) {
+      activeModalTeamId.value = teams[0].id;
+    }
+  }
+}, { immediate: true });
+
+const filteredSortedPlayers = computed(() => {
+  if (isTeamsWithPlayers.value && activeTeamId.value) {
+    return sortedPlayers.value.filter(p => p.team_id === activeTeamId.value);
+  }
+  return sortedPlayers.value;
+});
+
+const filteredBonusPlayers = computed(() => {
+  if (isTeamsWithPlayers.value && activeModalTeamId.value) {
+    return currentGame.value?.players.filter(p => p.team_id === activeModalTeamId.value) || [];
+  }
+  return currentGame.value?.players || [];
 });
 
 const nextButtonLabel = computed(() => {
@@ -342,9 +392,15 @@ const endGame = () => {
               <Modal modal-id="bonusmodal" title="Bonuspunten toevoegen" cancel-btn-text="Annuleren"
                 accept-btn-text="Toevoegen" @accept="saveBonus">
                 <p class="c-modal__text">Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers</p>
+
+                <div v-if="isTeamsWithPlayers" class="c-player-list__tabs u-mb-sm">
+                  <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
+                    :isActive="activeModalTeamId === team.id" @click="activeModalTeamId = team.id" />
+                </div>
+
                 <div class="c-assignment-modal-list">
-                  <div v-if="currentGame?.players?.length === 0">Geen deelnemers gevonden.</div>
-                  <label v-for="player in currentGame?.players" :key="player.participantId"
+                  <div v-if="filteredBonusPlayers.length === 0">Geen deelnemers gevonden.</div>
+                  <label v-for="player in filteredBonusPlayers" :key="player.participantId"
                     class="c-assignment-modal-list__item"
                     :class="{ 'c-assignment-modal-list__item--active': selectedBonusParticipants.includes(player.participantId) }">
                     <input type="checkbox" :checked="selectedBonusParticipants.includes(player.participantId)"
@@ -357,11 +413,17 @@ const endGame = () => {
 
           </div>
 
-          <TransitionGroup :key="selectedGameId" name="player-list" tag="div" class="c-player-list__players" :class="{
-            'c-player-list__players--boolean': currentGame?.score_type === 'boolean',
-            'c-player-list__players--time': currentGame?.score_type === 'time'
-          }">
-            <HostPlayerItem v-for="player in sortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
+          <div v-if="isTeamsWithPlayers && availableTeams.length > 0" class="c-player-list__tabs">
+            <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
+              :isActive="activeTeamId === team.id" @click="activeTeamId = team.id" />
+          </div>
+
+          <TransitionGroup :key="`${selectedGameId}-${activeTeamId}`" name="player-list" tag="div"
+            class="c-player-list__players" :class="{
+              'c-player-list__players--boolean': currentGame?.score_type === 'boolean',
+              'c-player-list__players--time': currentGame?.score_type === 'time'
+            }">
+            <HostPlayerItem v-for="player in filteredSortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
               :name="player.name" :points="player.points"
               :value="currentGame?.score_type === 'time' ? (player.time - (accumulatedScores[player.participantId] || 0)) : currentGame?.score_type === 'boolean' ? player.bool : player.points"
               :score-type="currentGame?.score_type || 'points'" :size="playerItemSize" :rank="player.rank"
@@ -412,4 +474,6 @@ const endGame = () => {
 }
 </style>
 
-<style scoped></style>
+<style scoped>
+/* Extra styles for bonus modal list */
+</style>
