@@ -112,6 +112,7 @@ onMounted(() => {
               <SessionCard
                 :title="`${session.name} - ${formatDate(session.created_at)}`"
                 :subtitle="getSubtitle(session)"
+                :status="session.status"
                 image-src="/podium_screens/podium_screen_ph.png"
                 :href="`/tablet/sessions/${session.id}`"
               >
