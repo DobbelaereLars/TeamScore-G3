@@ -12,7 +12,7 @@ import CustomSelect from '../components/CustomSelect.vue';
 import { Cog, Flame } from 'lucide-vue-next';
 
 const router = useRouter();
-const currentSessionId = ref(1);
+const currentSessionId = ref(5);
 const currentSession = ref(null);
 
 // Games from DB
@@ -330,6 +330,18 @@ const goToNext = async () => {
   }
 };
 
+// Check of er nog een volgend spel is (voor series en parallel)
+const hasNextGame = computed(() => {
+  if (!currentGame.value || !games.value.length) return false;
+
+  // Zoek de huidige game index
+  const currentIndex = games.value.findIndex(g => g.id === currentGame.value.id);
+  if (currentIndex === -1) return false;
+
+  // Is er een game na deze?
+  return currentIndex < games.value.length - 1;
+});
+
 const isLastPhase = computed(() => {
   if (!currentGame.value) return false;
   // If no sets are used (sets=1 or null), check rounds
@@ -347,22 +359,69 @@ const isLastPhase = computed(() => {
 });
 
 const endGameButtonText = computed(() => {
-  return isLastPhase.value ? "Beëindig spel" : "Spel pauzeren";
+  // Als we in de laatste fase zijn
+  if (isLastPhase.value) {
+    // En er is nog een volgend spel in de serie
+    if (hasNextGame.value) {
+      return "Volgend spel";
+    }
+    // Anders is dit echt het einde van alles
+    return "Beëindig spel";
+  }
+  // Als we niet in de laatste fase zijn
+  return "Spel pauzeren";
 });
 
 const endGameModalTitle = computed(() => {
-  return isLastPhase.value ? "Spel voltooien?" : "Spel pauzeren?";
+  if (isLastPhase.value) {
+    if (hasNextGame.value) return "Naar volgend spel?";
+    return "Spel voltooien?";
+  }
+  return "Spel pauzeren?";
 });
 
 const endGameModalText = computed(() => {
   if (isLastPhase.value) {
+    if (hasNextGame.value) {
+      return "Je staat op het punt dit spel af te ronden en door te gaan naar het volgende spel in de reeks.";
+    }
     return "Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. De scores worden opgeslagen als eindresultaat.";
   }
   return "Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.";
 });
 
+const nextGame = async () => {
+  // Mark current game as finished
+  try {
+    await gameRepository.update(currentGame.value.id, {
+      is_finished: 1
+    });
+    currentGame.value.is_finished = 1;
+
+    // Find next game
+    const currentIndex = games.value.findIndex(g => g.id === currentGame.value.id);
+    if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
+      selectedGameId.value = games.value[currentIndex + 1].id;
+    }
+  } catch (e) {
+    console.error('Failed to update game finished status:', e);
+  }
+
+  // Sluit modal
+  const modal = document.getElementById('endgame');
+  if (modal) {
+    modal.close();
+  }
+}
+
 const endGame = async () => {
   if (currentGame.value) {
+    // SPECIAAL GEVAL: Volgend spel in serie
+    if (isLastPhase.value && hasNextGame.value) {
+      await nextGame();
+      return;
+    }
+
     const isFinished = isLastPhase.value ? 1 : 0;
 
     // 1. Update Game Status
@@ -433,7 +492,11 @@ const endGame = async () => {
         <div class="c-player-list__header">
           <LogoHeader :class="'c-player-list__logo'" />
           <div class="c-player-list__gameround">
-            <CustomSelect v-if="games.length > 1" v-model="selectedGameId" :options="gameOptions" />
+            <template v-if="games.length > 1">
+              <CustomSelect v-if="currentSession?.game_mode !== 'series'" v-model="selectedGameId"
+                :options="gameOptions" />
+              <h2 v-else class="h2">{{ currentGame?.name }}</h2>
+            </template>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             <p class="c-player-list--greytext h6">Ronde {{ currentGame?.currentRound }} van {{ currentGame?.rounds }}
             </p>
