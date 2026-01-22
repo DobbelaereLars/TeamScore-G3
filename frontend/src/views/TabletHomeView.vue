@@ -51,9 +51,17 @@ const handleSessionReferal = (session) => {
     router.push(`/tablet/sessions/${session.id}`);
   }
   else if (session.status === 'in_progress') {
+    socket.emit('display:navigate', {
+      name: 'display-scoreboard',
+      params: { sessionId: session.id },
+    });
     router.push(`/tablet/game/players`);
   }
   else if (session.status === 'created') {
+    socket.emit('display:navigate', {
+      name: 'display-scoreboard',
+      params: { sessionId: session.id },
+    });
     router.push(`/tablet/game/players`);
 
   }
