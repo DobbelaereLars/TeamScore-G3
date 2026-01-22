@@ -587,7 +587,7 @@ const endGame = async () => {
               Ronde {{ currentGame?.currentRound }} van
               {{ currentGame?.rounds }}
             </p>
-            <div v-if="currentGame?.sets" class="c-player-list__sets">
+            <div v-if="currentGame?.use_sets" class="c-player-list__sets">
               <p>
                 Set {{ currentGame?.currentSet }} van {{ currentGame?.sets }}
               </p>
