@@ -8,63 +8,35 @@ import logo from "../assets/logo.webp";
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 
-const players = ref([
-  {
-    id: 1,
-    spelersnaam: "John Doe",
-    score: 121,
-  },
-  {
-    id: 2,
-    spelersnaam: "Jane Smith",
-    score: 72,
-  },
-  {
-    id: 3,
-    spelersnaam: "Bob Johfdsdnson",
-    score: 78,
-  },
-  {
-    id: 6,
-    spelersnaam: "Bob Johnson",
-    score: 55,
-  },
-  {
-    id: 7,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 8,
-    spelersnaam: "Bob Johnson",
-    score: 65,
-  },
-  {
-    id: 4,
-    spelersnaam: "Alice Williams",
-    score: 78,
-  },
-  {
-    id: 5,
-    spelersnaam: "Charlie Brown",
-    score: 84,
-  },
-  {
-    id: 9,
-    spelersnaam: "Yarne Diopere",
-    score: 124,
-  },
-  {
-    id: 10,
-    spelersnaam: "Lars Dobbelaere",
-    score: 114,
-  },
-  {
-    id: 11,
-    spelersnaam: "Renz Deheegher",
-    score: 118,
-  },
-]);
+import { useRoute, useRouter } from "vue-router";
+
+import { finalScoreRepository } from "../services/api";
+
+const route = useRoute();
+const SessionID = route.params.id;
+
+const players = ref([]);
+
+const loadGameData = async () => {
+  if (!SessionID) {
+    console.error("No session ID found for leaderboard");
+    return;
+  }
+
+  try {
+    const response = await finalScoreRepository.getBySession(SessionID);
+    console.log("Final scores fetched:", response.data);
+
+    // Map backend data to frontend structure
+    players.value = response.data.map((p) => ({
+      id: p.participant_id, // Note: backend returns participant_id
+      spelersnaam: p.player_name || p.team_name || "Unknown",
+      score: p.total_points || 0,
+    }));
+  } catch (error) {
+    console.error("Failed to load final scores:", error);
+  }
+};
 
 // Sort players by score (highest first)
 const sortedPlayers = computed(() => {
@@ -188,9 +160,72 @@ const startPodiumAnimation = () => {
   });
 };
 
+const exportData = async () => {
+  // 1. Generate CSV content
+  const headers = ["Rank", "Name", "Score"];
+  const rows = sortedPlayers.value.map((player, index) => {
+    // Escape quotes if necessary and handle commas in names
+    const name = `"${player.spelersnaam.replace(/"/g, '""')}"`;
+    return [index + 1, name, player.score].join(",");
+  });
+
+  const csvContent = [headers.join(","), ...rows].join("\n");
+
+  // 2. Create File/Blob
+  const filename = `leaderboard_session_${SessionID}.csv`;
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const file = new File([blob], filename, { type: "text/csv" });
+
+  // 3. Share or Download
+  // Detect if mobile device to prefer native share, otherwise force download for PC
+  // Detect if we should FORCE download (Windows PC)
+  const isWindows = /Windows NT/i.test(navigator.userAgent);
+  const isMACos = /Macintosh/i.test(navigator.userAgent);
+
+  // Check if Web Share API is supported, allowed to share files, AND we are NOT on Windows
+  // (We assume non-Windows devices like iPads, Macs, Androids should use Share Sheet if available)
+  if (
+    !isWindows &&
+    !isMACos &&
+    navigator.canShare &&
+    navigator.canShare({ files: [file] })
+  ) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: "Leaderboard Resultaten",
+        text: "Hier zijn de eindresultaten van de sessie.",
+      });
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Error sharing:", error);
+      }
+    }
+  } else {
+    // Fallback: Download via anchor tag (PC default)
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+};
+
+const router = useRouter(); // Ensure router is available
+
+const goBack = () => {
+  router.push({ name: "tablet-home" });
+};
+
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = "hidden";
+  loadGameData();
 
   // Calculate initial items per page
   calculateItemsPerPage();
@@ -292,9 +327,9 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="c-display-end-game-summary-view__footer">
-      <Button buttonTekst="Sluiten" variant="secondary" />
+      <Button buttonTekst="Sluiten" variant="secondary" @click="goBack" />
 
-      <Button buttonTekst="Exporteren" variant="primary">
+      <Button buttonTekst="Exporteren" variant="primary" @click="exportData">
         <template #c-btn_icon-left>
           <Download :size="18" />
         </template>
