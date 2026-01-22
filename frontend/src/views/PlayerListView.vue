@@ -12,7 +12,7 @@ import CustomSelect from '../components/CustomSelect.vue';
 import { Cog, Flame } from 'lucide-vue-next';
 
 const router = useRouter();
-const currentSessionId = ref(4);
+const currentSessionId = ref(1);
 const currentSession = ref(null);
 
 // Games from DB
@@ -330,18 +330,93 @@ const goToNext = async () => {
   }
 };
 
-const endGame = () => {
-  // Navigate display
-  socket.emit('display:navigate', {
-    name: 'display-scoreboard',
-    params: { sessionId: currentSessionId.value }
-  });
+const isLastPhase = computed(() => {
+  if (!currentGame.value) return false;
+  // If no sets are used (sets=1 or null), check rounds
+  const totalRounds = currentGame.value.rounds || 1;
+  const currentRound = currentGame.value.currentRound || 1;
 
-  // Navigate local
-  router.push({
-    name: 'endgame-summary',
-    query: { sessionId: currentSessionId.value }
-  });
+  if (currentGame.value.sets > 1) {
+    const currentSet = currentGame.value.currentSet || 1;
+    const totalSets = currentGame.value.sets;
+    // Last set AND last round
+    return currentSet === totalSets && currentRound === totalRounds;
+  }
+
+  return currentRound === totalRounds;
+});
+
+const endGameButtonText = computed(() => {
+  return isLastPhase.value ? "Beëindig spel" : "Spel pauzeren";
+});
+
+const endGameModalTitle = computed(() => {
+  return isLastPhase.value ? "Spel voltooien?" : "Spel pauzeren?";
+});
+
+const endGameModalText = computed(() => {
+  if (isLastPhase.value) {
+    return "Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. De scores worden opgeslagen als eindresultaat.";
+  }
+  return "Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.";
+});
+
+const endGame = async () => {
+  if (currentGame.value) {
+    const isFinished = isLastPhase.value ? 1 : 0;
+
+    // 1. Update Game Status
+    try {
+      await gameRepository.update(currentGame.value.id, {
+        is_finished: isFinished
+      });
+      currentGame.value.is_finished = isFinished;
+    } catch (e) {
+      console.error('Failed to update game finished status:', e);
+    }
+
+    // 2. Check Session Status based on ALL games
+    if (isLastPhase.value) {
+      const allFinished = games.value.every(g => {
+        if (g.id === currentGame.value.id) return isFinished === 1;
+        return g.is_finished === 1;
+      });
+
+      const newSessionStatus = allFinished ? 'finished' : 'in_progress';
+
+      try {
+        await sessionRepository.update(currentSessionId.value, {
+          status: newSessionStatus
+        });
+      } catch (e) {
+        console.error('Failed to update session status:', e);
+      }
+
+      // Navigate display
+      socket.emit('display:navigate', {
+        name: 'display-scoreboard',
+        params: { sessionId: currentSessionId.value }
+      });
+
+      // Navigate local
+      router.push({
+        name: 'endgame-summary',
+        query: { sessionId: currentSessionId.value }
+      });
+    } else {
+      // Early exit (Pause) -> session is in_progress
+      try {
+        await sessionRepository.update(currentSessionId.value, {
+          status: 'in_progress'
+        });
+      } catch (e) {
+        console.error('Failed to update session status:', e);
+      }
+
+      // Early exit (Pause) -> Go back to tablet home
+      router.push('/tablet');
+    }
+  }
 
   const modal = document.getElementById('endgame');
   if (modal) {
@@ -432,10 +507,10 @@ const endGame = () => {
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
-            <Button onclick="endgame.showModal()" button-tekst="Beëindig spel" variant="secondary" :clickable="false" />
-            <Modal modal-id="endgame" title="Het spel beëindigen?"
-              text="Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. Je gaat direct door naar de einduitslag, waar je de resultaten kunt bekijken en exporteren."
-              cancel-btn-text="Terug" accept-btn-text="Beëindig spel" @accept="endGame" />
+            <Button onclick="endgame.showModal()" :button-tekst="endGameButtonText" variant="secondary"
+              :clickable="false" />
+            <Modal modal-id="endgame" :title="endGameModalTitle" :text="endGameModalText" cancel-btn-text="Terug"
+              :accept-btn-text="endGameButtonText" @accept="endGame" />
             <Button v-if="hasNextRound || hasNextSet" onclick="nextround.showModal()" :button-tekst="nextButtonLabel"
               variant="primary" :clickable="false" />
             <Modal modal-id="nextround" :title="nextModalTitle" :text="nextModalText" cancel-btn-text="Terug"

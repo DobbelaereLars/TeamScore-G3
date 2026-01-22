@@ -377,4 +377,34 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT /api/sessions/:id
+// Update session info (e.g. status)
+router.put("/:id", (req, res) => {
+  const db = getDatabase();
+  const { id } = req.params;
+  const { status } = req.body;
+
+  let fields = [];
+  let values = [];
+
+  if (status !== undefined) {
+    fields.push("status = ?");
+    values.push(status);
+  }
+
+  if (fields.length === 0) {
+    return res.status(400).json({ error: "No fields to update" });
+  }
+
+  values.push(id);
+  const query = `UPDATE Session SET ${fields.join(", ")} WHERE id = ?`;
+
+  db.run(query, values, function(err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ success: true, changes: this.changes });
+  });
+});
+
 module.exports = router;
