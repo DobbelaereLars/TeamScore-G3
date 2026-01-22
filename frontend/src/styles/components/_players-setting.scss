@@ -160,6 +160,14 @@
     color: $color-primary-blue-500;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
   }
 
   &__players-list {
