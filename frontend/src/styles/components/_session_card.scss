@@ -63,8 +63,11 @@
     }
 
     &--finished {
-      background-color: $color-primary-blue-500;
-      background-color: $color-secondary-grey-50;
+      /* color: $color-secondary-grey-400;
+      background-color: transparent; */
+
+      background-color: $color-primary-blue-75;
+      color: $color-primary-blue-500;
     }
   }
 
