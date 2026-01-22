@@ -71,6 +71,16 @@ function setupSockets(server) {
       io.emit("display:session", data);
     });
 
+    socket.on("display:update-game-info", (data) => {
+      console.log("Display update game info event received:", data);
+      io.emit("display:update-game-info", data);
+    });
+
+    socket.on("score:update", (data) => {
+      // Broadcast score updates to all clients (including display)
+      io.emit("score:update", data);
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });

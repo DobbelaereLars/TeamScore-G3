@@ -366,6 +366,14 @@ const goToNext = async () => {
       current_round: currentGame.value.currentRound,
       current_set: currentGame.value.currentSet,
     });
+
+    // Notify display of round change
+    socket.emit("display:update-game-info", {
+      gameId: currentGame.value.id,
+      gameName: currentGame.value.name,
+      currentRound: currentGame.value.currentRound,
+      totalRounds: currentGame.value.rounds,
+    });
   } catch (error) {
     console.error("Failed to update game state:", error);
   }

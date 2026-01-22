@@ -191,12 +191,40 @@ const handleScoreUpdate = (data) => {
   }
 };
 
+const showRoundOverlay = ref(false);
+
+const handleGameInfoUpdate = (data) => {
+  console.log("Game info update received:", data);
+  if (data.gameId) {
+    // Only update if it matches current game or we just want to show latest info
+    const currentGameId = sessionStorage.getItem("display_gameId");
+    if (!currentGameId || String(data.gameId) === String(currentGameId)) {
+      if (data.gameName) gameinfo.value.gamename = data.gameName;
+
+      // Check for round change to trigger animation
+      if (
+        data.currentRound &&
+        data.currentRound !== gameinfo.value.currentRound
+      ) {
+        showRoundOverlay.value = true;
+        setTimeout(() => {
+          showRoundOverlay.value = false;
+        }, 3000); // Show overlay for 3 seconds
+      }
+
+      if (data.currentRound) gameinfo.value.currentRound = data.currentRound;
+      if (data.totalRounds) gameinfo.value.totalRounds = data.totalRounds;
+    }
+  }
+};
+
 onMounted(() => {
   // Listen for game selection from dashboard
   socket.on("display:session", handleSession);
   socket.on("display:selected-game", handleSelectedGame);
   socket.on("display:navigate", handleNavigate);
   socket.on("score:update", handleScoreUpdate);
+  socket.on("display:update-game-info", handleGameInfoUpdate);
 
   // Check URL params first, then sessionStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -234,6 +262,7 @@ onUnmounted(() => {
   socket.off("display:selected-game", handleSelectedGame);
   socket.off("display:navigate", handleNavigate);
   socket.off("score:update", handleScoreUpdate);
+  socket.off("display:update-game-info", handleGameInfoUpdate);
   window.removeEventListener("resize", calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
@@ -278,7 +307,25 @@ onUnmounted(() => {
         </TransitionGroup>
       </Transition>
     </div>
+
+    <!-- Round Transition Banner -->
+    <Transition name="banner-slide">
+      <div v-if="showRoundOverlay" class="v-display-scoreboard-round-banner">
+        <div class="v-display-scoreboard-round-banner__track">
+          <!-- Repeated text for marquee effect -->
+          <span
+            v-for="n in 10"
+            :key="n"
+            class="v-display-scoreboard-round-banner__text"
+          >
+            RONDE {{ gameinfo.currentRound }} <span class="dot">&bull;</span>
+          </span>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
