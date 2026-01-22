@@ -12,10 +12,11 @@ import CustomSelect from '../components/CustomSelect.vue';
 import { Cog, Flame } from 'lucide-vue-next';
 
 const router = useRouter();
-const currentSessionId = ref(5);
+const currentSessionId = sessionStorage.getItem('sessionId');
+console.log('Current Session ID:', currentSessionId);
 const currentSession = ref(null);
 
-// Games from DB
+// Games from DB  
 const games = ref([]);
 
 const selectedGameId = ref(null);
@@ -30,7 +31,7 @@ watch(selectedGameId, (newId) => {
     console.log('Sending selected game to display:', newId);
     socket.emit('display:selected-game', {
       gameId: newId,
-      sessionId: currentSessionId.value
+      sessionId: currentSessionId
     });
   }
 });
@@ -52,11 +53,11 @@ onMounted(async () => {
   socket.on('score:update', handleScoreUpdate);
 
   try {
-    const sessionResponse = await sessionRepository.getById(currentSessionId.value);
+    const sessionResponse = await sessionRepository.getById(currentSessionId);
     console.log('Current Session:', sessionResponse.data);
     currentSession.value = sessionResponse.data;
 
-    const response = await sessionRepository.getGames(currentSessionId.value);
+    const response = await sessionRepository.getGames(currentSessionId);
     games.value = response.data;
     if (games.value.length > 0) {
       selectedGameId.value = games.value[0].id;
