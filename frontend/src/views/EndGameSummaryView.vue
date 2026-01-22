@@ -3,6 +3,7 @@ import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
 import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
 import Button from "../components/Button.vue";
 import { Download } from "lucide-vue-next";
+import socket from "../utils/socket";
 
 import logo from "../assets/logo.webp";
 
@@ -216,8 +217,13 @@ const exportData = async () => {
   }
 };
 const goBack = () => {
-  sessionStorage.clear();
   router.push({ name: "tablet-home" });
+  socket.emit("display:navigate", {
+    name: "display-splash",
+  });
+  // Clear participants on backend/display to prevent old data persistence
+  socket.emit("display:update-participants", []);
+  sessionStorage.clear();
 };
 
 onMounted(() => {

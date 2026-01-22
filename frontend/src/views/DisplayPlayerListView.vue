@@ -139,6 +139,9 @@ onUnmounted(() => {
   socket.off("display:navigate", handleNavigate);
   socket.off("display:update-participants", handleUpdateParticipants);
   window.removeEventListener("resize", checkOverflow);
+
+  // Clear local participants list on display when leaving this view
+  players.value = [];
 });
 </script>
 
@@ -186,6 +189,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

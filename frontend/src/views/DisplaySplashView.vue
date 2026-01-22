@@ -26,6 +26,10 @@ const handleNavigate = (data) => {
 };
 
 onMounted(() => {
+  // Clear any previous session data when returning to splash screen
+  sessionStorage.clear();
+  console.log("Display session storage cleared");
+
   socket.on("show-popup", handleShowPopup);
   socket.on("display:navigate", handleNavigate);
 });
@@ -57,6 +61,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
