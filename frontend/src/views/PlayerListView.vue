@@ -1,22 +1,33 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, TransitionGroup } from 'vue';
-import { useRouter } from 'vue-router';
-import { sessionRepository, scoreRepository, gameRepository } from '../services/api';
-import socket from '../utils/socket';
-import HostPlayerItem from '../components/HostPlayerItem.vue';
-import Button from '../components/Button.vue';
-import TeamTabButton from '../components/TeamTabButton.vue';
-import LogoHeader from '../components/Logo.vue';
-import Modal from '../components/Modal.vue';
-import CustomSelect from '../components/CustomSelect.vue';
-import { Cog, Flame } from 'lucide-vue-next';
+import {
+  ref,
+  computed,
+  onMounted,
+  onUnmounted,
+  watch,
+  TransitionGroup,
+} from "vue";
+import { useRouter } from "vue-router";
+import {
+  sessionRepository,
+  scoreRepository,
+  gameRepository,
+} from "../services/api";
+import socket from "../utils/socket";
+import HostPlayerItem from "../components/HostPlayerItem.vue";
+import Button from "../components/Button.vue";
+import TeamTabButton from "../components/TeamTabButton.vue";
+import LogoHeader from "../components/Logo.vue";
+import Modal from "../components/Modal.vue";
+import CustomSelect from "../components/CustomSelect.vue";
+import { Cog, Flame } from "lucide-vue-next";
 
 const router = useRouter();
-const currentSessionId = sessionStorage.getItem('sessionId');
-console.log('Current Session ID:', currentSessionId);
+const currentSessionId = sessionStorage.getItem("sessionId");
+console.log("Current Session ID:", currentSessionId);
 const currentSession = ref(null);
 
-// Games from DB  
+// Games from DB
 const games = ref([]);
 
 const selectedGameId = ref(null);
@@ -28,10 +39,10 @@ const activeModalTeamId = ref(null);
 
 watch(selectedGameId, (newId) => {
   if (newId) {
-    console.log('Sending selected game to display:', newId);
-    socket.emit('display:selected-game', {
+    console.log("Sending selected game to display:", newId);
+    socket.emit("display:selected-game", {
       gameId: newId,
-      sessionId: currentSessionId
+      sessionId: currentSessionId,
     });
   }
 });
@@ -39,8 +50,8 @@ watch(selectedGameId, (newId) => {
 // Responsive breakpoint voor size
 const windowWidth = ref(window.innerWidth);
 const playerItemSize = computed(() => {
-  if (windowWidth.value >= 768) return 'large';
-  return 'default';
+  if (windowWidth.value >= 768) return "large";
+  return "default";
 });
 
 const handleResize = () => {
@@ -48,13 +59,13 @@ const handleResize = () => {
 };
 
 onMounted(async () => {
-  window.addEventListener('resize', handleResize);
+  window.addEventListener("resize", handleResize);
 
-  socket.on('score:update', handleScoreUpdate);
+  socket.on("score:update", handleScoreUpdate);
 
   try {
     const sessionResponse = await sessionRepository.getById(currentSessionId);
-    console.log('Current Session:', sessionResponse.data);
+    console.log("Current Session:", sessionResponse.data);
     currentSession.value = sessionResponse.data;
 
     const response = await sessionRepository.getGames(currentSessionId);
@@ -63,18 +74,18 @@ onMounted(async () => {
       selectedGameId.value = games.value[0].id;
     }
   } catch (error) {
-    console.error('Failed to fetch games for session 1:', error);
+    console.error("Failed to fetch games for session 1:", error);
   }
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-  socket.off('score:update', handleScoreUpdate);
+  window.removeEventListener("resize", handleResize);
+  socket.off("score:update", handleScoreUpdate);
 });
 
 // Huidige geselecteerde game
 const currentGame = computed(() => {
-  return games.value.find(game => game.id === selectedGameId.value);
+  return games.value.find((game) => game.id === selectedGameId.value);
 });
 
 // Samengetelde scores laden voor time offset
@@ -82,12 +93,12 @@ watch(
   () => [
     currentGame.value?.id,
     currentGame.value?.currentSet,
-    currentGame.value?.currentRound
+    currentGame.value?.currentRound,
   ],
   ([gameId, currentSet, currentRound]) => {
     if (!gameId) return;
 
-    if (currentGame.value?.score_type === 'time') {
+    if (currentGame.value?.score_type === "time") {
       const key = `offsets_${gameId}_${currentSet || 1}_${currentRound || 1}`;
       try {
         const stored = localStorage.getItem(key);
@@ -97,21 +108,21 @@ watch(
           accumulatedScores.value = {};
         }
       } catch (e) {
-        console.error('Error loading offsets:', e);
+        console.error("Error loading offsets:", e);
         accumulatedScores.value = {};
       }
     } else {
       accumulatedScores.value = {};
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Game opties voor de custom select
 const gameOptions = computed(() => {
-  return games.value.map(game => ({
+  return games.value.map((game) => ({
     value: game.id,
-    label: game.name
+    label: game.name,
   }));
 });
 
@@ -120,12 +131,14 @@ const sortedPlayers = computed(() => {
   if (!currentGame.value) return [];
 
   // Sorteer op punten (hoogste eerst)
-  const sorted = [...currentGame.value.players].sort((a, b) => b.points - a.points);
+  const sorted = [...currentGame.value.players].sort(
+    (a, b) => b.points - a.points,
+  );
 
   // Voeg rank toe op basis van positie
   return sorted.map((player, index) => ({
     ...player,
-    rank: index + 1
+    rank: index + 1,
   }));
 });
 
@@ -142,14 +155,14 @@ const hasNextRound = computed(() => {
 });
 
 const isTeamsWithPlayers = computed(() => {
-  return currentSession.value?.participant_mode === 'teams_with_players';
+  return currentSession.value?.participant_mode === "teams_with_players";
 });
 
 const availableTeams = computed(() => {
   if (!currentGame.value?.players) return [];
 
   const teamsMap = new Map();
-  currentGame.value.players.forEach(p => {
+  currentGame.value.players.forEach((p) => {
     if (p.team_id && p.team_name) {
       if (!teamsMap.has(p.team_id)) {
         teamsMap.set(p.team_id, { id: p.team_id, name: p.team_name });
@@ -160,27 +173,41 @@ const availableTeams = computed(() => {
 });
 
 // Set default active team when teams load
-watch(availableTeams, (teams) => {
-  if (teams.length > 0) {
-    if (!activeTeamId.value || !teams.find(t => t.id === activeTeamId.value)) {
-      activeTeamId.value = teams[0].id;
+watch(
+  availableTeams,
+  (teams) => {
+    if (teams.length > 0) {
+      if (
+        !activeTeamId.value ||
+        !teams.find((t) => t.id === activeTeamId.value)
+      ) {
+        activeTeamId.value = teams[0].id;
+      }
+      if (
+        !activeModalTeamId.value ||
+        !teams.find((t) => t.id === activeModalTeamId.value)
+      ) {
+        activeModalTeamId.value = teams[0].id;
+      }
     }
-    if (!activeModalTeamId.value || !teams.find(t => t.id === activeModalTeamId.value)) {
-      activeModalTeamId.value = teams[0].id;
-    }
-  }
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 
 const filteredSortedPlayers = computed(() => {
   if (isTeamsWithPlayers.value && activeTeamId.value) {
-    return sortedPlayers.value.filter(p => p.team_id === activeTeamId.value);
+    return sortedPlayers.value.filter((p) => p.team_id === activeTeamId.value);
   }
   return sortedPlayers.value;
 });
 
 const filteredBonusPlayers = computed(() => {
   if (isTeamsWithPlayers.value && activeModalTeamId.value) {
-    return currentGame.value?.players.filter(p => p.team_id === activeModalTeamId.value) || [];
+    return (
+      currentGame.value?.players.filter(
+        (p) => p.team_id === activeModalTeamId.value,
+      ) || []
+    );
   }
   return currentGame.value?.players || [];
 });
@@ -197,18 +224,22 @@ const nextModalTitle = computed(() => {
 });
 
 const nextModalText = computed(() => {
-  if (hasNextSet.value) return "Ben je zeker dat je naar de volgende set wilt gaan? Scores blijven behouden.";
+  if (hasNextSet.value)
+    return "Ben je zeker dat je naar de volgende set wilt gaan? Scores blijven behouden.";
   return "Ben je zeker dat je naar de volgende ronde wilt gaan? Je kunt later nog steeds terugkeren om scores aan te passen.";
 });
 
 const handleScoreUpdate = (data) => {
   if (!currentGame.value || currentGame.value.id !== data.gameId) return;
 
-  const player = currentGame.value.players.find(p => p.participantId === data.participantId);
+  const player = currentGame.value.players.find(
+    (p) => p.participantId === data.participantId,
+  );
   if (player) {
-    if (data.scoreType === 'points') player.points = data.score;
-    else if (data.scoreType === 'time') player.time = data.score;
-    else if (data.scoreType === 'boolean' || data.scoreType === 'bool') player.bool = data.score;
+    if (data.scoreType === "points") player.points = data.score;
+    else if (data.scoreType === "time") player.time = data.score;
+    else if (data.scoreType === "boolean" || data.scoreType === "bool")
+      player.bool = data.score;
   }
 };
 
@@ -216,10 +247,12 @@ const updatePlayerScore = async (participantId, newVal) => {
   if (!currentGame.value) return;
 
   // Optimistische update in UI
-  const player = currentGame.value.players.find(p => p.participantId === participantId);
+  const player = currentGame.value.players.find(
+    (p) => p.participantId === participantId,
+  );
 
   if (player) {
-    const scoreType = currentGame.value.score_type || 'points';
+    const scoreType = currentGame.value.score_type || "points";
 
     // Save old values
     const oldPoints = player.points;
@@ -227,27 +260,33 @@ const updatePlayerScore = async (participantId, newVal) => {
     const oldBool = player.bool;
 
     // Apply new value
-    if (scoreType === 'points') player.points = newVal;
-    else if (scoreType === 'time') {
+    if (scoreType === "points") player.points = newVal;
+    else if (scoreType === "time") {
       // For time, the input sends the RELATIVE value (current round time).
       // We need to add the accumulated offset to get the absolute Total to store in DB.
       const offset = accumulatedScores.value[participantId] || 0;
       player.time = newVal + offset;
-    }
-    else if (scoreType === 'boolean') player.bool = newVal;
+    } else if (scoreType === "boolean") player.bool = newVal;
 
     // Stuur naar backend
-    const valueToSend = scoreType === 'time' ? player.time : newVal;
+    const valueToSend = scoreType === "time" ? player.time : newVal;
 
     try {
-      await scoreRepository.updateScore(currentGame.value.id, participantId, valueToSend, scoreType);
-      console.log(`Updated score for participant ${participantId} to ${valueToSend}`);
+      await scoreRepository.updateScore(
+        currentGame.value.id,
+        participantId,
+        valueToSend,
+        scoreType,
+      );
+      console.log(
+        `Updated score for participant ${participantId} to ${valueToSend}`,
+      );
     } catch (error) {
-      console.error('Failed to update score:', error);
+      console.error("Failed to update score:", error);
       // Rollback bij error
-      if (scoreType === 'points') player.points = oldPoints;
-      else if (scoreType === 'time') player.time = oldTime;
-      else if (scoreType === 'boolean') player.bool = oldBool;
+      if (scoreType === "points") player.points = oldPoints;
+      else if (scoreType === "time") player.time = oldTime;
+      else if (scoreType === "boolean") player.bool = oldBool;
     }
   }
 };
@@ -259,22 +298,29 @@ const bonusAmount = computed(() => {
 
 const toggleBonusParticipant = (participantId) => {
   if (selectedBonusParticipants.value.includes(participantId)) {
-    selectedBonusParticipants.value = selectedBonusParticipants.value.filter(id => id !== participantId);
+    selectedBonusParticipants.value = selectedBonusParticipants.value.filter(
+      (id) => id !== participantId,
+    );
   } else {
     selectedBonusParticipants.value.push(participantId);
   }
 };
 
 const saveBonus = async () => {
-  if (!currentGame.value || selectedBonusParticipants.value.length === 0 || bonusAmount.value === 0) {
-    document.getElementById('bonusmodal')?.close();
+  if (
+    !currentGame.value ||
+    selectedBonusParticipants.value.length === 0 ||
+    bonusAmount.value === 0
+  ) {
+    document.getElementById("bonusmodal")?.close();
     return;
   }
 
   const amount = bonusAmount.value;
-  const promises = selectedBonusParticipants.value.map(participantId => {
-
-    const player = currentGame.value.players.find(p => p.participantId === participantId);
+  const promises = selectedBonusParticipants.value.map((participantId) => {
+    const player = currentGame.value.players.find(
+      (p) => p.participantId === participantId,
+    );
     if (player) {
       const newPoints = (player.points || 0) + amount;
       updatePlayerScore(participantId, newPoints); // This handles API + Optimistic UI
@@ -284,7 +330,7 @@ const saveBonus = async () => {
   await Promise.all(promises);
 
   selectedBonusParticipants.value = [];
-  document.getElementById('bonusmodal')?.close();
+  document.getElementById("bonusmodal")?.close();
 };
 
 const goToNext = async () => {
@@ -292,8 +338,8 @@ const goToNext = async () => {
 
   // 1. Capture current totals (BEFORE update) to use as offsets for the next round
   const newOffsets = {};
-  if (currentGame.value.score_type === 'time') {
-    currentGame.value.players.forEach(p => {
+  if (currentGame.value.score_type === "time") {
+    currentGame.value.players.forEach((p) => {
       newOffsets[p.participantId] = p.time || 0;
     });
   }
@@ -308,7 +354,7 @@ const goToNext = async () => {
   }
 
   // 2. Save offsets for the NEW state (so round 2 starts at 0 input)
-  if (currentGame.value.score_type === 'time') {
+  if (currentGame.value.score_type === "time") {
     const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet}_${currentGame.value.currentRound}`;
     localStorage.setItem(key, JSON.stringify(newOffsets));
     accumulatedScores.value = newOffsets;
@@ -318,14 +364,14 @@ const goToNext = async () => {
   try {
     await gameRepository.update(currentGame.value.id, {
       current_round: currentGame.value.currentRound,
-      current_set: currentGame.value.currentSet
+      current_set: currentGame.value.currentSet,
     });
   } catch (error) {
-    console.error('Failed to update game state:', error);
+    console.error("Failed to update game state:", error);
   }
 
   // Sluit de modal
-  const modal = document.getElementById('nextround');
+  const modal = document.getElementById("nextround");
   if (modal) {
     modal.close();
   }
@@ -336,7 +382,9 @@ const hasNextGame = computed(() => {
   if (!currentGame.value || !games.value.length) return false;
 
   // Zoek de huidige game index
-  const currentIndex = games.value.findIndex(g => g.id === currentGame.value.id);
+  const currentIndex = games.value.findIndex(
+    (g) => g.id === currentGame.value.id,
+  );
   if (currentIndex === -1) return false;
 
   // Is er een game na deze?
@@ -395,25 +443,27 @@ const nextGame = async () => {
   // Mark current game as finished
   try {
     await gameRepository.update(currentGame.value.id, {
-      is_finished: 1
+      is_finished: 1,
     });
     currentGame.value.is_finished = 1;
 
     // Find next game
-    const currentIndex = games.value.findIndex(g => g.id === currentGame.value.id);
+    const currentIndex = games.value.findIndex(
+      (g) => g.id === currentGame.value.id,
+    );
     if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
       selectedGameId.value = games.value[currentIndex + 1].id;
     }
   } catch (e) {
-    console.error('Failed to update game finished status:', e);
+    console.error("Failed to update game finished status:", e);
   }
 
   // Sluit modal
-  const modal = document.getElementById('endgame');
+  const modal = document.getElementById("endgame");
   if (modal) {
     modal.close();
   }
-}
+};
 
 const endGame = async () => {
   if (currentGame.value) {
@@ -428,57 +478,57 @@ const endGame = async () => {
     // 1. Update Game Status
     try {
       await gameRepository.update(currentGame.value.id, {
-        is_finished: isFinished
+        is_finished: isFinished,
       });
       currentGame.value.is_finished = isFinished;
     } catch (e) {
-      console.error('Failed to update game finished status:', e);
+      console.error("Failed to update game finished status:", e);
     }
 
     // 2. Check Session Status based on ALL games
     if (isLastPhase.value) {
-      const allFinished = games.value.every(g => {
+      const allFinished = games.value.every((g) => {
         if (g.id === currentGame.value.id) return isFinished === 1;
         return g.is_finished === 1;
       });
 
-      const newSessionStatus = allFinished ? 'finished' : 'in_progress';
+      const newSessionStatus = allFinished ? "finished" : "in_progress";
 
       try {
-        await sessionRepository.update(currentSessionId.value, {
-          status: newSessionStatus
+        await sessionRepository.update(currentSessionId, {
+          status: newSessionStatus,
         });
       } catch (e) {
-        console.error('Failed to update session status:', e);
+        console.error("Failed to update session status:", e);
       }
 
       // Navigate display
-      socket.emit('display:navigate', {
-        name: 'display-scoreboard',
-        params: { sessionId: currentSessionId.value }
+      socket.emit("display:navigate", {
+        name: "display-scoreboard",
+        params: { sessionId: currentSessionId.value },
       });
 
       // Navigate local
       router.push({
-        name: 'endgame-summary',
-        query: { sessionId: currentSessionId.value }
+        name: "endgame-summary",
+        query: { sessionId: currentSessionId.value },
       });
     } else {
       // Early exit (Pause) -> session is in_progress
       try {
         await sessionRepository.update(currentSessionId.value, {
-          status: 'in_progress'
+          status: "in_progress",
         });
       } catch (e) {
-        console.error('Failed to update session status:', e);
+        console.error("Failed to update session status:", e);
       }
 
       // Early exit (Pause) -> Go back to tablet home
-      router.push('/tablet');
+      router.push("/tablet");
     }
   }
 
-  const modal = document.getElementById('endgame');
+  const modal = document.getElementById("endgame");
   if (modal) {
     modal.close();
   }
@@ -489,25 +539,34 @@ const endGame = async () => {
   <div class="container">
     <div class="row">
       <div class="c-player-list">
-
         <div class="c-player-list__header">
           <LogoHeader :class="'c-player-list__logo'" />
           <div class="c-player-list__gameround">
             <template v-if="games.length > 1">
-              <CustomSelect v-if="currentSession?.game_mode !== 'series'" v-model="selectedGameId"
-                :options="gameOptions" />
+              <CustomSelect
+                v-if="currentSession?.game_mode !== 'series'"
+                v-model="selectedGameId"
+                :options="gameOptions"
+              />
               <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             </template>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
-            <p class="c-player-list--greytext h6">Ronde {{ currentGame?.currentRound }} van {{ currentGame?.rounds }}
+            <p class="c-player-list--greytext h6">
+              Ronde {{ currentGame?.currentRound }} van
+              {{ currentGame?.rounds }}
             </p>
             <div v-if="currentGame?.sets" class="c-player-list__sets">
-              <p>Set {{ currentGame?.currentSet }} van {{ currentGame?.sets }}</p>
+              <p>
+                Set {{ currentGame?.currentSet }} van {{ currentGame?.sets }}
+              </p>
             </div>
-
           </div>
 
-          <Button button-tekst="Spelinstellingen" variant="secondary" :href="'/tablet/game/ingame-settings'">
+          <Button
+            button-tekst="Spelinstellingen"
+            variant="secondary"
+            :href="'/tablet/game/ingame-settings'"
+          >
             <template #c-btn_icon-left>
               <Cog :size="18" />
             </template>
@@ -517,75 +576,159 @@ const endGame = async () => {
           <div class="c-player-list__subheader">
             <div class="c-player-list__title">
               <p class="h4">Deelnemers</p>
-              <p class="c-player-list--greytext">Klik op + of - om punten toe te voegen of af te trekken, of voeg
-                bonuspunten
-                toe.</p>
+              <p class="c-player-list--greytext">
+                Klik op + of - om punten toe te voegen of af te trekken, of voeg
+                bonuspunten toe.
+              </p>
             </div>
 
             <div v-if="currentGame?.score_type === 'points'">
-              <Button onclick="bonusmodal.showModal()" button-tekst="Bonuspunten toekennen" variant="primary">
+              <Button
+                onclick="bonusmodal.showModal()"
+                button-tekst="Bonuspunten toekennen"
+                variant="primary"
+              >
                 <template #c-btn_icon-left>
                   <Flame :size="18" />
                 </template>
               </Button>
-              <Modal modal-id="bonusmodal" title="Bonuspunten toevoegen" cancel-btn-text="Annuleren"
-                accept-btn-text="Toevoegen" @accept="saveBonus">
-                <p class="c-modal__text">Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers</p>
+              <Modal
+                modal-id="bonusmodal"
+                title="Bonuspunten toevoegen"
+                cancel-btn-text="Annuleren"
+                accept-btn-text="Toevoegen"
+                @accept="saveBonus"
+              >
+                <p class="c-modal__text">
+                  Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers
+                </p>
 
-                <div v-if="isTeamsWithPlayers" class="c-player-list__tabs u-mb-sm">
-                  <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
-                    :isActive="activeModalTeamId === team.id" @click="activeModalTeamId = team.id" />
+                <div
+                  v-if="isTeamsWithPlayers"
+                  class="c-player-list__tabs u-mb-sm"
+                >
+                  <TeamTabButton
+                    v-for="team in availableTeams"
+                    :key="team.id"
+                    :label="team.name"
+                    :isActive="activeModalTeamId === team.id"
+                    @click="activeModalTeamId = team.id"
+                  />
                 </div>
 
                 <div class="c-assignment-modal-list">
-                  <div v-if="filteredBonusPlayers.length === 0">Geen deelnemers gevonden.</div>
-                  <label v-for="player in filteredBonusPlayers" :key="player.participantId"
+                  <div v-if="filteredBonusPlayers.length === 0">
+                    Geen deelnemers gevonden.
+                  </div>
+                  <label
+                    v-for="player in filteredBonusPlayers"
+                    :key="player.participantId"
                     class="c-assignment-modal-list__item"
-                    :class="{ 'c-assignment-modal-list__item--active': selectedBonusParticipants.includes(player.participantId) }">
-                    <input type="checkbox" :checked="selectedBonusParticipants.includes(player.participantId)"
-                      @change="toggleBonusParticipant(player.participantId)" />
-                    <span class="c-assignment-modal-list__item_name">{{ player.name }}</span>
+                    :class="{
+                      'c-assignment-modal-list__item--active':
+                        selectedBonusParticipants.includes(
+                          player.participantId,
+                        ),
+                    }"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="
+                        selectedBonusParticipants.includes(player.participantId)
+                      "
+                      @change="toggleBonusParticipant(player.participantId)"
+                    />
+                    <span class="c-assignment-modal-list__item_name">{{
+                      player.name
+                    }}</span>
                   </label>
                 </div>
               </Modal>
             </div>
-
           </div>
 
-          <div v-if="isTeamsWithPlayers && availableTeams.length > 0" class="c-player-list__tabs">
-            <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
-              :isActive="activeTeamId === team.id" @click="activeTeamId = team.id" />
+          <div
+            v-if="isTeamsWithPlayers && availableTeams.length > 0"
+            class="c-player-list__tabs"
+          >
+            <TeamTabButton
+              v-for="team in availableTeams"
+              :key="team.id"
+              :label="team.name"
+              :isActive="activeTeamId === team.id"
+              @click="activeTeamId = team.id"
+            />
           </div>
 
-          <TransitionGroup :key="`${selectedGameId}-${activeTeamId}`" name="player-list" tag="div"
-            class="c-player-list__players" :class="{
-              'c-player-list__players--boolean': currentGame?.score_type === 'boolean',
-              'c-player-list__players--time': currentGame?.score_type === 'time'
-            }">
-            <HostPlayerItem v-for="player in filteredSortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
-              :name="player.name" :points="player.points"
-              :value="currentGame?.score_type === 'time' ? (player.time - (accumulatedScores[player.participantId] || 0)) : currentGame?.score_type === 'boolean' ? player.bool : player.points"
-              :score-type="currentGame?.score_type || 'points'" :size="playerItemSize" :rank="player.rank"
+          <TransitionGroup
+            :key="`${selectedGameId}-${activeTeamId}`"
+            name="player-list"
+            tag="div"
+            class="c-player-list__players"
+            :class="{
+              'c-player-list__players--boolean':
+                currentGame?.score_type === 'boolean',
+              'c-player-list__players--time':
+                currentGame?.score_type === 'time',
+            }"
+          >
+            <HostPlayerItem
+              v-for="player in filteredSortedPlayers"
+              :key="`${selectedGameId}-${player.participantId}`"
+              :name="player.name"
+              :points="player.points"
+              :value="
+                currentGame?.score_type === 'time'
+                  ? player.time - (accumulatedScores[player.participantId] || 0)
+                  : currentGame?.score_type === 'boolean'
+                    ? player.bool
+                    : player.points
+              "
+              :score-type="currentGame?.score_type || 'points'"
+              :size="playerItemSize"
+              :rank="player.rank"
               :perClick="currentGame?.perClick || 1"
-              @updateScore="(newVal) => updatePlayerScore(player.participantId, newVal)" />
+              @updateScore="
+                (newVal) => updatePlayerScore(player.participantId, newVal)
+              "
+            />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
-            <Button onclick="endgame.showModal()" :button-tekst="endGameButtonText" variant="secondary"
-              :clickable="false" />
-            <Modal modal-id="endgame" :title="endGameModalTitle" :text="endGameModalText" cancel-btn-text="Terug"
-              :accept-btn-text="endGameButtonText" @accept="endGame" />
-            <Button v-if="hasNextRound || hasNextSet" onclick="nextround.showModal()" :button-tekst="nextButtonLabel"
-              variant="primary" :clickable="false" />
-            <Modal modal-id="nextround" :title="nextModalTitle" :text="nextModalText" cancel-btn-text="Terug"
-              :accept-btn-text="nextButtonLabel" @accept="goToNext" />
+            <Button
+              onclick="endgame.showModal()"
+              :button-tekst="endGameButtonText"
+              variant="secondary"
+              :clickable="false"
+            />
+            <Modal
+              modal-id="endgame"
+              :title="endGameModalTitle"
+              :text="endGameModalText"
+              cancel-btn-text="Terug"
+              :accept-btn-text="endGameButtonText"
+              @accept="endGame"
+            />
+            <Button
+              v-if="hasNextRound || hasNextSet"
+              onclick="nextround.showModal()"
+              :button-tekst="nextButtonLabel"
+              variant="primary"
+              :clickable="false"
+            />
+            <Modal
+              modal-id="nextround"
+              :title="nextModalTitle"
+              :text="nextModalText"
+              cancel-btn-text="Terug"
+              :accept-btn-text="nextButtonLabel"
+              @accept="goToNext"
+            />
           </div>
         </div>
-
       </div>
     </div>
   </div>
-
 </template>
 
 <style scoped>
