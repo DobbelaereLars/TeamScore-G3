@@ -53,9 +53,9 @@ const games = ref([
     name: "",
     scoreModel: "points",
     useRounds: false,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
     pointsPerAction: 1,
     pointsRanking: "highest-first",
     useBonusPoints: false,
@@ -356,9 +356,9 @@ const handleGameModeChange = (value) => {
           name: "",
           scoreModel: "points",
           useRounds: false,
-          roundsCount: 1,
+          roundsCount: 2,
           useSets: false,
-          setsCount: 1,
+          setsCount: 2,
           pointsPerAction: 1,
           pointsRanking: "highest-first",
           useBonusPoints: false,
@@ -446,9 +446,9 @@ function addGame() {
     name: "",
     scoreModel: "points",
     useRounds: false,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
     pointsPerAction: 1,
     pointsRanking: "highest-first",
     useBonusPoints: false,
@@ -491,9 +491,9 @@ const confirmDeleteGame = () => {
       pointsRanking: "highest-first",
       scoreModel: "points",
       useRounds: false,
-      roundsCount: 1,
+      roundsCount: 2,
       useSets: false,
-      setsCount: 1,
+      setsCount: 2,
       pointsPerAction: 1,
       useBonusPoints: false,
       bonusPoints: 1,
@@ -847,12 +847,12 @@ onUnmounted(() => {
                 </div>
 
                 <div class="p-game-setup-view__settings__body__content__gamestructure__content">
-                  <ToggleWithDropdown :inputId="`rounds-toggle-${activeGameId}`" labelTekst="Gebruik van rondes" min="1"
+                  <ToggleWithDropdown :inputId="`rounds-toggle-${activeGameId}`" labelTekst="Gebruik van rondes" min="2"
                     max="100" label="Aantal rondes" :id="`rounds-${activeGameId}`" :name="`rounds-${activeGameId}`"
                     type="number" v-model:toggled="activeGame.useRounds" v-model="activeGame.roundsCount">
                   </ToggleWithDropdown>
 
-                  <ToggleWithDropdown :inputId="`sets-toggle-${activeGameId}`" labelTekst="Gebruik van sets" min="1"
+                  <ToggleWithDropdown :inputId="`sets-toggle-${activeGameId}`" labelTekst="Gebruik van sets" min="2"
                     max="100" :label="activeGame.useRounds
                         ? 'Aantal sets per ronde'
                         : 'Aantal sets per game'
