@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Plus, Users } from 'lucide-vue-next';
+import { Plus, Users, Upload } from 'lucide-vue-next';
 import Button from './Button.vue';
 import InputField from './InputField.vue';
 import TeamTabButton from './TeamTabButton.vue';
@@ -22,6 +22,9 @@ const selectedTeamId = ref(null);
 const teamToDeleteId = ref(null);
 const deleteTeamModalId = 'delete-team-modal';
 const deleteTeamModalTitle = ref('Team verwijderen?');
+
+const errorModalId = 'error-modal';
+const uploadErrorMessage = ref('');
 
 const nextId = computed(() => {
   if (participants.value.length === 0) return 1;
@@ -230,7 +233,84 @@ watch(
   { immediate: true },
 );
 
-const TeamRadioButtons = [];
+const fileInput = ref(null);
+
+const triggerFileUpload = () => {
+  fileInput.value.click();
+};
+
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    // Filter empty lines
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+
+    if (lines.length < 2) {
+      event.target.value = '';
+      return;
+    }
+
+    // Seperator en header bekijken
+    const headerLine = lines[0];
+    const separator = headerLine.includes(';') ? ';' : ',';
+    const headers = headerLine
+      .split(separator)
+      .map((h) => h.trim().toLowerCase().replace(/\s/g, ''));
+
+    const allowedHeaders = [
+      'name',
+      'naam',
+      'spelersnaam',
+      'speler',
+      'spelernaam',
+      'playername',
+      'player',
+      'fullname',
+      'volledigenaam',
+    ];
+
+    const nameIndex = headers.findIndex((h) => allowedHeaders.includes(h));
+
+    if (nameIndex === -1) {
+      uploadErrorMessage.value =
+        'Geen geldige header gevonden in het CSV-bestand. Zorg ervoor dat het bestand een kolom bevat met een titel zoals "Naam", "Speler" of "Name".';
+      const dialog = document.getElementById(errorModalId);
+      if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      }
+      event.target.value = '';
+      return;
+    }
+
+    const newItems = [];
+    let currentId = nextId.value;
+
+    // Skip header row
+    lines.slice(1).forEach((line) => {
+      const parts = line.split(separator);
+      if (parts.length > nameIndex) {
+        const trimmed = parts[nameIndex].trim();
+        if (trimmed) {
+          newItems.push({
+            id: currentId++,
+            name: trimmed,
+          });
+        }
+      }
+    });
+
+    if (newItems.length > 0) {
+      participants.value = [...participants.value, ...newItems];
+    }
+
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+};
 </script>
 
 <template>
@@ -244,23 +324,10 @@ const TeamRadioButtons = [];
         </div>
 
         <!-- Input voor spelers/teams toevoegen -->
-        <div
-          v-if="playerMode !== 'teams-with-players' || selectedTeamId"
-          class="c-players-setting__input"
-        >
-          <InputField
-            v-model="inputValue"
-            id="player-add"
-            name="player-add"
-            :label="false"
-            :placeholder="placeholder"
-            @keyup.enter="addPlayer"
-          />
-          <Button
-            :button-tekst="buttonText"
-            :clickable="false"
-            @click="addPlayer"
-          >
+        <div v-if="playerMode !== 'teams-with-players' || selectedTeamId" class="c-players-setting__input">
+          <InputField v-model="inputValue" id="player-add" name="player-add" :label="false" :placeholder="placeholder"
+            @keyup.enter="addPlayer" />
+          <Button :button-tekst="buttonText" :clickable="false" @click="addPlayer">
             <template #c-btn_icon-left>
               <Plus :size="18" />
             </template>
@@ -269,28 +336,13 @@ const TeamRadioButtons = [];
       </div>
 
       <!-- Teams tabs (alleen bij teams-with-players mode) -->
-      <div
-        v-if="playerMode === 'teams-with-players'"
-        class="c-players-setting__tabs-wrapper"
-      >
+      <div v-if="playerMode === 'teams-with-players'" class="c-players-setting__tabs-wrapper">
         <div class="c-players-setting__tabs">
-          <TeamTabButton
-            v-for="team in participants"
-            :key="team.id"
-            :label="team.name"
-            :count="team.players?.length || 0"
-            :is-active="selectedTeamId === team.id"
-            :closeable="true"
-            :editable="playerMode === 'teams-with-players'"
-            @click="selectedTeamId = team.id"
-            @close="requestDeleteTeam(team.id)"
-            @rename="(newName) => renameTeam(team.id, newName)"
-          />
-          <button
-            type="button"
-            class="c-players-setting__tab c-players-setting__tab--add"
-            @click="addTeam"
-          >
+          <TeamTabButton v-for="team in participants" :key="team.id" :label="team.name"
+            :count="team.players?.length || 0" :is-active="selectedTeamId === team.id" :closeable="true"
+            :editable="playerMode === 'teams-with-players'" @click="selectedTeamId = team.id"
+            @close="requestDeleteTeam(team.id)" @rename="(newName) => renameTeam(team.id, newName)" />
+          <button type="button" class="c-players-setting__tab c-players-setting__tab--add" @click="addTeam">
             <Plus :size="18" />
             Team toevoegen
           </button>
@@ -298,17 +350,9 @@ const TeamRadioButtons = [];
 
         <!-- Spelers lijst van geselecteerd team -->
         <div v-if="selectedTeamId" class="c-players-setting__players-list">
-          <PlayersSettingParticipant
-            v-for="player in selectedTeam?.players || []"
-            :key="player.id"
-            :name="player.name"
-            @delete="deletePlayerFromTeam(player.id)"
-            @rename="(newName) => renamePlayerInTeam(player.id, newName)"
-          />
-          <div
-            v-if="!selectedTeam?.players?.length"
-            class="c-players-setting__emptylist"
-          >
+          <PlayersSettingParticipant v-for="player in selectedTeam?.players || []" :key="player.id" :name="player.name"
+            @delete="deletePlayerFromTeam(player.id)" @rename="(newName) => renamePlayerInTeam(player.id, newName)" />
+          <div v-if="!selectedTeam?.players?.length" class="c-players-setting__emptylist">
             <p>
               Er zijn nog geen spelers toegevoegd aan {{ selectedTeam?.name }}
             </p>
@@ -317,38 +361,19 @@ const TeamRadioButtons = [];
       </div>
 
       <!-- Spelers lijst (bij players mode) -->
-      <div
-        v-if="playerMode === 'players' && participants.length > 0"
-        class="c-players-setting__players-list"
-      >
-        <PlayersSettingParticipant
-          v-for="player in participants"
-          :key="player.id"
-          :name="player.name"
-          @delete="deleteParticipant(player.id)"
-          @rename="(newName) => renameParticipant(player.id, newName)"
-        />
+      <div v-if="playerMode === 'players' && participants.length > 0" class="c-players-setting__players-list">
+        <PlayersSettingParticipant v-for="player in participants" :key="player.id" :name="player.name"
+          @delete="deleteParticipant(player.id)" @rename="(newName) => renameParticipant(player.id, newName)" />
       </div>
 
       <!-- Teams lijst (bij teams mode) -->
-      <div
-        v-if="playerMode === 'teams' && participants.length > 0"
-        class="c-players-setting__players-list"
-      >
-        <PlayersSettingParticipant
-          v-for="team in participants"
-          :key="team.id"
-          :name="team.name"
-          @delete="deleteParticipant(team.id)"
-          @rename="(newName) => renameParticipant(team.id, newName)"
-        />
+      <div v-if="playerMode === 'teams' && participants.length > 0" class="c-players-setting__players-list">
+        <PlayersSettingParticipant v-for="team in participants" :key="team.id" :name="team.name"
+          @delete="deleteParticipant(team.id)" @rename="(newName) => renameParticipant(team.id, newName)" />
       </div>
 
       <!-- Empty state -->
-      <div
-        v-if="participants.length === 0"
-        class="c-players-setting__emptylist"
-      >
+      <div v-if="participants.length === 0" class="c-players-setting__emptylist">
         <Users :size="22" />
         <p v-if="playerMode === 'teams-with-players'">
           Voeg eerst een team toe
@@ -358,25 +383,23 @@ const TeamRadioButtons = [];
             Er zijn nog geen
             {{ playerMode === 'players' ? 'spelers' : 'teams' }} toegevoegd
           </p>
-          <p
-            v-if="playerMode === 'players'"
-            class="c-players-setting__csv-upload"
-          >
-            + Voeg een CSV bestand toe
-          </p>
+          <button v-if="playerMode === 'players'" type="button" class="c-players-setting__csv-upload"
+            @click="triggerFileUpload">
+            <Upload :size="18" />
+            Voeg een CSV bestand toe
+            <input type="file" ref="fileInput" accept=".csv" style="display: none;" @change="handleFileUpload" />
+          </button>
         </div>
       </div>
     </div>
 
-    <Modal
-      :modal-id="deleteTeamModalId"
-      :title="deleteTeamModalTitle"
+    <Modal :modal-id="deleteTeamModalId" :title="deleteTeamModalTitle"
       text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
-      cancel-btn-text="Annuleren"
-      accept-btn-text="Verwijderen"
-      @cancel="cancelDeleteTeam"
-      @accept="confirmDeleteTeam"
-    />
+      cancel-btn-text="Annuleren" accept-btn-text="Verwijderen" @cancel="cancelDeleteTeam"
+      @accept="confirmDeleteTeam" />
+
+    <Modal :modal-id="errorModalId" title="Fout bij importeren" :text="uploadErrorMessage" accept-btn-text="Oké"
+      :show-cancel-btn="false" />
   </div>
 </template>
 
