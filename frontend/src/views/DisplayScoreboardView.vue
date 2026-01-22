@@ -167,11 +167,36 @@ const handleSelectedGame = (data) => {
   }
 };
 
+const handleScoreUpdate = (data) => {
+  console.log("Score update received:", data);
+  // data = { gameId, participantId, score, scoreType }
+
+  // Verify if update belongs to current game (if we know the current game ID)
+  const currentGameId = sessionStorage.getItem("display_gameId");
+  if (currentGameId && String(data.gameId) !== String(currentGameId)) {
+    return;
+  }
+
+  // Find player to update
+  const player = players.value.find(
+    (p) => String(p.id) === String(data.participantId),
+  );
+  if (player) {
+    player.score = data.score;
+  } else {
+    // If player not found locally, reload all data to be safe (might be new player or mapping issue)
+    if (currentGameId) {
+      loadGameData(currentGameId);
+    }
+  }
+};
+
 onMounted(() => {
   // Listen for game selection from dashboard
   socket.on("display:session", handleSession);
   socket.on("display:selected-game", handleSelectedGame);
   socket.on("display:navigate", handleNavigate);
+  socket.on("score:update", handleScoreUpdate);
 
   // Check URL params first, then sessionStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -208,6 +233,7 @@ onUnmounted(() => {
   socket.off("display:session", handleSession);
   socket.off("display:selected-game", handleSelectedGame);
   socket.off("display:navigate", handleNavigate);
+  socket.off("score:update", handleScoreUpdate);
   window.removeEventListener("resize", calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
