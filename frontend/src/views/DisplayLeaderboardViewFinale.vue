@@ -136,6 +136,8 @@ const goToPage = (pageIndex) => {
   startAutoScroll();
 };
 
+const timeouts = [];
+
 const startPodiumAnimation = () => {
   // Reset
   showRank1.value = false;
@@ -147,54 +149,75 @@ const startPodiumAnimation = () => {
   isDrumrolling.value = false;
   currentPage.value = 0; // Reset page
 
+  // Clear any existing timeouts first
+  timeouts.forEach((t) => clearTimeout(t));
+  timeouts.length = 0;
+
   // Sequence: 3rd -> 2nd -> 1st -> Runner Ups -> Logo
   // 3rd Place appears quickly
-  setTimeout(() => {
-    showRank3.value = true;
-  }, 1000);
+  timeouts.push(
+    setTimeout(() => {
+      showRank3.value = true;
+    }, 1000),
+  );
 
   // 2nd Place appears after 3rd
-  setTimeout(() => {
-    showRank2.value = true;
-  }, 4000); // 3s delay after 3rd
+  timeouts.push(
+    setTimeout(() => {
+      showRank2.value = true;
+    }, 4000),
+  ); // 3s delay after 3rd
 
   // Start Drumroll (Building tension)
-  setTimeout(() => {
-    isDrumrolling.value = true;
-  }, 6000);
+  timeouts.push(
+    setTimeout(() => {
+      isDrumrolling.value = true;
+    }, 6000),
+  );
 
   // 1st Place (Winner) appears last with more suspense
-  setTimeout(() => {
-    // Stop drumroll, start huge shake
-    isDrumrolling.value = false;
-
-    showRank1.value = true;
-
-    // Trigger Screen Shake
-    isShaking.value = true;
+  timeouts.push(
     setTimeout(() => {
-      isShaking.value = false;
-    }, 500); // Duration of shake animation
+      // Stop drumroll, start huge shake
+      isDrumrolling.value = false;
 
-    // Trigger Confetti
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
-    });
-  }, 10000);
+      showRank1.value = true;
+
+      // Trigger Screen Shake
+      isShaking.value = true;
+      timeouts.push(
+        setTimeout(() => {
+          isShaking.value = false;
+        }, 500),
+      ); // Duration of shake animation
+
+      // Trigger Confetti
+      if (showRank1.value) {
+        // Safety check
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
+        });
+      }
+    }, 10000),
+  );
 
   // Runner Ups appear after the winner
-  setTimeout(() => {
-    showRunnerUps.value = true;
-    startAutoScroll(); // Start auto-scroll when runner ups appear
-  }, 14000);
+  timeouts.push(
+    setTimeout(() => {
+      showRunnerUps.value = true;
+      startAutoScroll(); // Start auto-scroll when runner ups appear
+    }, 14000),
+  );
 
   // Logo fades in last
-  setTimeout(() => {
-    showLogo.value = true;
-  }, 15500);
+  timeouts.push(
+    setTimeout(() => {
+      showLogo.value = true;
+    }, 15500),
+  );
 };
 
 onMounted(() => {
@@ -217,6 +240,13 @@ onUnmounted(() => {
   window.removeEventListener("resize", calculateItemsPerPage);
   if (autoScrollInterval) clearInterval(autoScrollInterval);
   socket.off("display:navigate", handleNavigate);
+
+  // Clear all animation timeouts
+  timeouts.forEach((t) => clearTimeout(t));
+  timeouts.length = 0;
+
+  // Clean up confetti
+  confetti.reset();
 });
 </script>
 
