@@ -440,14 +440,35 @@ const endGameModalText = computed(() => {
 });
 
 const nextGame = async () => {
-  // Mark current game as finished
+  // 1. Mark current game as finished
   try {
     await gameRepository.update(currentGame.value.id, {
       is_finished: 1,
     });
     currentGame.value.is_finished = 1;
 
-    // Find next game
+    // Sluit modal meteen (UX)
+    const modal = document.getElementById("endgame");
+    if (modal) {
+      modal.close();
+    }
+
+    // 2. Toon tussenstand (Leaderboard) op Display
+    socket.emit("display:navigate", {
+      name: "display-leaderboard",
+      params: { sessionId: currentSessionId },
+    });
+
+    // 3. Wacht 15 seconden
+    await new Promise((resolve) => setTimeout(resolve, 15000));
+
+    // 4. Navigeer Display terug naar Scoreboard
+    socket.emit("display:navigate", {
+      name: "display-scoreboard",
+      params: { sessionId: currentSessionId },
+    });
+
+    // 5. Selecteer volgend spel (Triggers display update via watcher)
     const currentIndex = games.value.findIndex(
       (g) => g.id === currentGame.value.id,
     );
@@ -455,13 +476,12 @@ const nextGame = async () => {
       selectedGameId.value = games.value[currentIndex + 1].id;
     }
   } catch (e) {
-    console.error("Failed to update game finished status:", e);
-  }
-
-  // Sluit modal
-  const modal = document.getElementById("endgame");
-  if (modal) {
-    modal.close();
+    console.error("Failed to update game finished status or transition:", e);
+    // Fallback: close modal if error occurred before
+    const modal = document.getElementById("endgame");
+    if (modal && modal.open) {
+      modal.close();
+    }
   }
 };
 
