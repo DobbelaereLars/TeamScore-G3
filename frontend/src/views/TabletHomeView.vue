@@ -11,12 +11,12 @@ const router = useRouter();
 const sessions = ref([]);
 const loading = ref(true);
 
-const handleSocketTest = () => {
-  console.log('Sending test-popup event...');
-  socket.emit('test-popup', {
-    message: 'Dit is een test popup vanuit Tablet Home View!',
-  });
-};
+// const handleSocketTest = () => {
+//   console.log('Sending test-popup event...');
+//   socket.emit('test-popup', {
+//     message: 'Dit is een test popup vanuit Tablet Home View!',
+//   });
+// };
 
 const createNewSession = () => {
   // Inform display to go to player list (lobby)
@@ -43,6 +43,20 @@ const formatDate = (dateString) => {
     month: 'numeric',
     year: 'numeric',
   });
+};
+
+const handleSessionReferal = (session) => {
+  sessionStorage.setItem('sessionId', session.id);
+  if (session.status === 'finished') {
+    router.push(`/tablet/sessions/${session.id}`);
+  }
+  else if (session.status === 'in_progress') {
+    router.push(`/tablet/game/players`);
+  }
+  else if (session.status === 'created') {
+    router.push(`/tablet/game/players`);
+
+  }
 };
 
 const getSubtitle = (session) => {
@@ -78,14 +92,14 @@ onMounted(() => {
         </template>
       </Button>
 
-      <Button
+      <!-- <Button
         class="p-tablet-home-view__socket-test-btn"
         button-tekst="Socket.io test"
         variant="secondary"
         :clickable="false"
         @click.prevent="handleSocketTest"
       >
-      </Button>
+      </Button> -->
     </div>
 
     <div class="p-tablet-home-view__body">
@@ -114,7 +128,7 @@ onMounted(() => {
                 :subtitle="getSubtitle(session)"
                 :status="session.status"
                 image-src="/podium_screens/podium_screen_ph.png"
-                :href="`/tablet/sessions/${session.id}`"
+                @click="handleSessionReferal(session)"
               >
                 <!-- Optional: Label for status could act as a slot or overlay if SessionCard supported it -->
                 <!-- For now, we rely on standard card -->

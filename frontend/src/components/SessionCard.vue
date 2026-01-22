@@ -60,7 +60,6 @@ const statusLabel = computed(() => {
       <p v-if="props.subtitle">{{ props.subtitle }}</p>
     </div>
 
-    <a class="c-session-card__link" :href="props.href"></a>
   </div>
 </template>
 
