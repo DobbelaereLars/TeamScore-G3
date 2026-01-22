@@ -402,7 +402,7 @@ router.post('/', async (req, res) => {
 router.put("/:id", (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, sessionName } = req.body;
 
   let fields = [];
   let values = [];
@@ -410,6 +410,11 @@ router.put("/:id", (req, res) => {
   if (status !== undefined) {
     fields.push("status = ?");
     values.push(status);
+  }
+
+  if (sessionName !== undefined) {
+    fields.push("name = ?");
+    values.push(sessionName);
   }
 
   if (fields.length === 0) {
@@ -425,6 +430,187 @@ router.put("/:id", (req, res) => {
     }
     res.json({ success: true, changes: this.changes });
   });
+});
+
+// POST /api/sessions/:id/participants
+// Add new participants to an existing session
+router.post("/:id/participants", async (req, res) => {
+    const db = getDatabase();
+    const { id } = req.params;
+    const { newParticipants, newSubPlayers } = req.body;
+    
+    // Check session validity & modes
+    try {
+        const session = await get(db, "SELECT * FROM Session WHERE id = ?", [id]);
+        if (!session) return res.status(404).json({ error: "Session not found" });
+
+        const games = await all(db, "SELECT id FROM Game WHERE session_id = ?", [id]);
+        if (!games.length) return res.status(400).json({ error: "No games in session" });
+        const gameIds = games.map(g => g.id);
+        const gameMode = session.game_mode;
+        
+        // Helper: Determine target games for a participant
+        // If assignedGameId provided (parallel), use it. Else use ALL games (series/single).
+        const getTargetGameIds = (assignedGameId) => {
+            if (gameMode === 'parallel' && assignedGameId) {
+                // Verify strict validity? Or just trust frontend?
+                // For safety, check if assignedGameId is in our session's games
+                 // Note: assignedGameId from frontend might necessarily match if it was just passed through.
+                 // But newly created participants in parallel mode need an assignment.
+                 // If frontend sends assignedGameId, use it.
+                 return [assignedGameId];
+            }
+            return gameIds;
+        };
+
+        // 1. Handle New Top Level Participants
+        if (newParticipants && newParticipants.length > 0) {
+            for (const p of newParticipants) {
+                const targetGames = getTargetGameIds(p.assignedGameId);
+                if (targetGames.length === 0) continue; // Should not happen if logic correct
+
+                // Create Global Entity
+                let entityId;
+                if (session.participant_mode === 'players') {
+                    const r = await run(db, "INSERT INTO Player (name) VALUES (?)", [p.name]);
+                    entityId = r.lastID;
+                } else {
+                    // teams or teams_with_players
+                    const r = await run(db, "INSERT INTO Team (name) VALUES (?)", [p.name]);
+                    entityId = r.lastID;
+                }
+
+                // If teams_with_players, handle sub-players immediately for this new team
+                let subPlayerIds = [];
+                if (session.participant_mode === 'teams_with_players') {
+                    if (p.players && p.players.length > 0) {
+                        for (const sub of p.players) {
+                            const plRes = await run(db, "INSERT INTO Player (name) VALUES (?)", [sub.name]);
+                            await run(db, "INSERT INTO TeamPlayer (team_id, player_id) VALUES (?, ?)", [entityId, plRes.lastID]);
+                            subPlayerIds.push(plRes.lastID);
+                        }
+                    }
+                }
+
+                // Create Participants & Scores for target games
+                for (const gid of targetGames) {
+                    if (session.participant_mode === 'teams_with_players') {
+                        // Create participant for each sub-player linked to team
+                        for (const pid of subPlayerIds) {
+                            const partRes = await run(db, "INSERT INTO Participant (game_id, type, player_id, team_id) VALUES (?, ?, ?, ?)", [gid, 'player', pid, entityId]);
+                            await run(db, "INSERT INTO Score (game_id, participant_id) VALUES (?, ?)", [gid, partRes.lastID]);
+                            await run(db, "INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)", [id, partRes.lastID]);
+                        }
+                    } else if (session.participant_mode === 'players') {
+                         const partRes = await run(db, "INSERT INTO Participant (game_id, type, player_id) VALUES (?, ?, ?)", [gid, 'player', entityId]);
+                         await run(db, "INSERT INTO Score (game_id, participant_id) VALUES (?, ?)", [gid, partRes.lastID]);
+                         await run(db, "INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)", [id, partRes.lastID]);
+                    } else if (session.participant_mode === 'teams') {
+                         const partRes = await run(db, "INSERT INTO Participant (game_id, type, team_id) VALUES (?, ?, ?)", [gid, 'team', entityId]);
+                         await run(db, "INSERT INTO Score (game_id, participant_id) VALUES (?, ?)", [gid, partRes.lastID]);
+                         await run(db, "INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)", [id, partRes.lastID]);
+                    }
+                }
+            }
+        }
+
+        // 2. Handle New Sub-Players for EXISTING Teams (only teams_with_players)
+        if (newSubPlayers && newSubPlayers.length > 0 && session.participant_mode === 'teams_with_players') {
+            for (const sp of newSubPlayers) {
+                // sp has { teamId, name, assignedGameId }
+                // Create Player
+                const plRes = await run(db, "INSERT INTO Player (name) VALUES (?)", [sp.name]);
+                const newPlayerId = plRes.lastID;
+                
+                // Link TeamPlayer
+                await run(db, "INSERT INTO TeamPlayer (team_id, player_id) VALUES (?, ?)", [sp.teamId, newPlayerId]);
+                
+                // Add as participant to games
+                const targetGames = getTargetGameIds(sp.assignedGameId);
+                for (const gid of targetGames) {
+                     const partRes = await run(db, "INSERT INTO Participant (game_id, type, player_id, team_id) VALUES (?, ?, ?, ?)", [gid, 'player', newPlayerId, sp.teamId]);
+                     await run(db, "INSERT INTO Score (game_id, participant_id) VALUES (?, ?)", [gid, partRes.lastID]);
+                     await run(db, "INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)", [id, partRes.lastID]);
+                }
+            } 
+        }
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error("Error adding participants:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET participants for a session
+router.get('/:id/participants', async (req, res) => {
+  const db = getDatabase();
+  const { id } = req.params;
+
+  try {
+    const session = await get(db, 'SELECT participant_mode FROM Session WHERE id = ?', [id]);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    const mode = session.participant_mode;
+    
+    // Get ALL games for this session
+    const games = await all(db, 'SELECT id FROM Game WHERE session_id = ?', [id]);
+    
+    if (!games || games.length === 0) return res.json([]);
+    
+    const gameIds = games.map(g => g.id);
+    const placeholders = gameIds.map(() => '?').join(',');
+
+    if (mode === 'players') {
+         const query = `
+            SELECT DISTINCT pl.id, pl.name, p.game_id as assignedGameId
+            FROM Participant p
+            JOIN Player pl ON p.player_id = pl.id
+            WHERE p.game_id IN (${placeholders}) AND p.type = 'player'
+         `;
+         const rows = await all(db, query, gameIds);
+         return res.json(rows);
+    } else if (mode === 'teams') {
+         const query = `
+            SELECT DISTINCT t.id, t.name, p.game_id as assignedGameId
+            FROM Participant p
+            JOIN Team t ON p.team_id = t.id
+            WHERE p.game_id IN (${placeholders}) AND p.type = 'team'
+         `;
+         const rows = await all(db, query, gameIds);
+         return res.json(rows);
+    } else if (mode === 'teams_with_players') {
+         // Get distinct teams involved in the games
+         const teamsQuery = `
+            SELECT t.id, t.name, MAX(p.game_id) as assignedGameId
+            FROM Participant p
+            JOIN Team t ON p.team_id = t.id
+            WHERE p.game_id IN (${placeholders})
+            GROUP BY t.id
+         `;
+         const teams = await all(db, teamsQuery, gameIds);
+
+         for (const team of teams) {
+             // Get players for this team that are in these participants
+             // We use the assignedGameId found for the team
+             const playersQuery = `
+                SELECT pl.id, pl.name
+                FROM Participant p
+                JOIN Player pl ON p.player_id = pl.id
+                WHERE p.game_id = ? AND p.team_id = ?
+             `;
+             // If for some reason assignedGameId is null (shouldn't be), fallback ??
+             team.players = await all(db, playersQuery, [team.assignedGameId, team.id]);
+         }
+         return res.json(teams);
+    }
+
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching participants:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;

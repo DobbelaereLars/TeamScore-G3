@@ -73,6 +73,7 @@ const addPlayer = () => {
           {
             id: newPlayerId,
             name: inputValue.value.trim(),
+            isNew: true,
           },
         ],
       };
@@ -87,6 +88,8 @@ const addPlayer = () => {
       {
         id: nextId.value,
         name: inputValue.value.trim(),
+        isNew: true,
+        players: [], // Initialize for potential team-with-players usage
       },
     ];
   }
@@ -231,6 +234,17 @@ watch(
     }
   },
   { immediate: true },
+);
+
+// Watch participants to auto-select first team if needed
+watch(
+  () => participants.value,
+  (newParticipants) => {
+    if (props.playerMode === 'teams-with-players' && newParticipants.length > 0 && !selectedTeamId.value) {
+      selectedTeamId.value = newParticipants[0].id;
+    }
+  },
+  { deep: true, immediate: true }
 );
 
 const fileInput = ref(null);
