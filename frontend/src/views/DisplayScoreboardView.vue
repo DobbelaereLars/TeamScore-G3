@@ -3,6 +3,7 @@ import ScoreboardPlayercard from "../components/ScoreboardPlayercard.vue";
 import { gameRepository, sessionRepository } from "../services/api"; // Import repository
 import logo from "../assets/logo.webp";
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 
 // Initial state can be empty or mock, we'll overwrite it when loadGameData is called
 const players = ref([]);
@@ -143,6 +144,15 @@ const handleSession = (data) => {
   }
 };
 
+const router = useRouter();
+
+const handleNavigate = (data) => {
+  console.log("Received navigate event:", data);
+  if (data.name) {
+    router.push({ name: data.name, query: data.params });
+  }
+};
+
 const handleSelectedGame = (data) => {
   if (data && data.gameId) {
     console.log("Received selected game:", data.gameId);
@@ -161,6 +171,7 @@ onMounted(() => {
   // Listen for game selection from dashboard
   socket.on("display:session", handleSession);
   socket.on("display:selected-game", handleSelectedGame);
+  socket.on("display:navigate", handleNavigate);
 
   // Check URL params first, then sessionStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -196,12 +207,12 @@ onMounted(() => {
 onUnmounted(() => {
   socket.off("display:session", handleSession);
   socket.off("display:selected-game", handleSelectedGame);
+  socket.off("display:navigate", handleNavigate);
   window.removeEventListener("resize", calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
   }
 });
-
 </script>
 
 <template>

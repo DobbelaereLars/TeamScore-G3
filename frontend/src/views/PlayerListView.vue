@@ -504,20 +504,24 @@ const endGame = async () => {
 
       // Navigate display
       socket.emit("display:navigate", {
-        name: "display-scoreboard",
-        params: { sessionId: currentSessionId.value },
+        name: "display-leaderboard-finale",
+        params: { sessionId: currentSessionId },
       });
 
       // Navigate local
       router.push({
         name: "endgame-summary",
-        query: { sessionId: currentSessionId.value },
+        query: { sessionId: currentSessionId },
       });
     } else {
       // Early exit (Pause) -> session is in_progress
       try {
-        await sessionRepository.update(currentSessionId.value, {
+        await sessionRepository.update(currentSessionId, {
           status: "in_progress",
+        });
+        // Navigate display
+        socket.emit("display:navigate", {
+          name: "display-splash",
         });
       } catch (e) {
         console.error("Failed to update session status:", e);

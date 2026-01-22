@@ -3,6 +3,8 @@ import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
 import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
 
 import logo from "../assets/logo.webp";
+import socket from "../utils/socket";
+import { useRouter } from "vue-router";
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 
@@ -12,6 +14,14 @@ const sessionID = sessionStorage.getItem("display_sessionId");
 console.log("Leaderboard view initialized with sessionID:", sessionID);
 
 const players = ref([]);
+const router = useRouter();
+
+const handleNavigate = (data) => {
+  console.log("Received navigate event:", data);
+  if (data.name) {
+    router.push({ name: data.name, query: data.params });
+  }
+};
 
 const loadGameData = async () => {
   if (!sessionID) {
@@ -62,16 +72,17 @@ const remainingPlayers = computed(() => {
   return sortedPlayers.value.slice(3, 8);
 });
 
-
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = "hidden";
   loadGameData();
+  socket.on("display:navigate", handleNavigate);
 });
 
 onUnmounted(() => {
   // Re-enable body scrolling
   document.body.style.overflow = "";
+  socket.off("display:navigate", handleNavigate);
 });
 </script>
 

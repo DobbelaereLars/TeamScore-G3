@@ -216,6 +216,7 @@ const exportData = async () => {
   }
 };
 const goBack = () => {
+  sessionStorage.clear();
   router.push({ name: "tablet-home" });
 };
 
