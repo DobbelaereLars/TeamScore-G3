@@ -23,6 +23,9 @@ const teamToDeleteId = ref(null);
 const deleteTeamModalId = 'delete-team-modal';
 const deleteTeamModalTitle = ref('Team verwijderen?');
 
+const errorModalId = 'error-modal';
+const uploadErrorMessage = ref('');
+
 const nextId = computed(() => {
   if (participants.value.length === 0) return 1;
   const maxId = Math.max(...participants.value.map((p) => p.id));
@@ -243,23 +246,61 @@ const handleFileUpload = (event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     const text = e.target.result;
-    const lines = text.split(/\r?\n/);
+    // Filter empty lines
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+
+    if (lines.length < 2) {
+      event.target.value = '';
+      return;
+    }
+
+    // Seperator en header bekijken
+    const headerLine = lines[0];
+    const separator = headerLine.includes(';') ? ';' : ',';
+    const headers = headerLine
+      .split(separator)
+      .map((h) => h.trim().toLowerCase().replace(/\s/g, ''));
+
+    const allowedHeaders = [
+      'name',
+      'naam',
+      'spelersnaam',
+      'speler',
+      'spelernaam',
+      'playername',
+      'player',
+      'fullname',
+      'volledigenaam',
+    ];
+
+    const nameIndex = headers.findIndex((h) => allowedHeaders.includes(h));
+
+    if (nameIndex === -1) {
+      uploadErrorMessage.value =
+        'Geen geldige header gevonden in het CSV-bestand. Zorg ervoor dat het bestand een kolom bevat met een titel zoals "Naam", "Speler" of "Name".';
+      const dialog = document.getElementById(errorModalId);
+      if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      }
+      event.target.value = '';
+      return;
+    }
+
     const newItems = [];
     let currentId = nextId.value;
 
     // Skip header row
     lines.slice(1).forEach((line) => {
-
-      const parts = line.split(/[;,]/); // Split by comma or semicolon
-      parts.forEach((part) => {
-        const trimmed = part.trim();
+      const parts = line.split(separator);
+      if (parts.length > nameIndex) {
+        const trimmed = parts[nameIndex].trim();
         if (trimmed) {
           newItems.push({
             id: currentId++,
             name: trimmed,
           });
         }
-      });
+      }
     });
 
     if (newItems.length > 0) {
@@ -356,6 +397,9 @@ const handleFileUpload = (event) => {
       text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
       cancel-btn-text="Annuleren" accept-btn-text="Verwijderen" @cancel="cancelDeleteTeam"
       @accept="confirmDeleteTeam" />
+
+    <Modal :modal-id="errorModalId" title="Fout bij importeren" :text="uploadErrorMessage" accept-btn-text="Oké"
+      :show-cancel-btn="false" />
   </div>
 </template>
 
