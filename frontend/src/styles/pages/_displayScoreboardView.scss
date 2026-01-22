@@ -97,3 +97,72 @@
   opacity: 0;
   transform: scale(0.8);
 }
+
+
+/* Round Banner Animation */
+.v-display-scoreboard-round-banner {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100vw;
+  height: 12rem;
+  transform: translateY(-50%);
+  background: #534aff; /* Primary Blue from settings */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  z-index: 9999;
+  box-shadow: 0 0 50px rgba(83, 74, 255, 0.6);
+  border-top: 4px solid #ffffff;
+  border-bottom: 4px solid #ffffff;
+}
+
+.v-display-scoreboard-round-banner__track {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 5s linear infinite;
+  will-change: transform;
+}
+
+.v-display-scoreboard-round-banner__text {
+  font-family: "Inter", sans-serif;
+  font-size: 6rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-right: 4rem;
+  display: flex;
+  align-items: center;
+}
+
+.v-display-scoreboard-round-banner__text .dot {
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 4rem;
+}
+
+/* Banner Entrance/Exit Animations */
+.banner-slide-enter-active,
+.banner-slide-leave-active {
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.banner-slide-enter-from,
+.banner-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0);
+}
+
+.banner-slide-enter-to,
+.banner-slide-leave-from {
+  opacity: 1;
+  transform: translateY(-50%) scaleY(1);
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-20%); /* Move enough to create flow perception */
+  }
+}
