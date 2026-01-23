@@ -137,6 +137,7 @@ onMounted(async () => {
           useSets: g.sets > 1,
           setsCount: g.sets > 1 ? g.sets : 2,
           originalUseSets: g.sets > 1,
+          originalRoundsCount: g.rounds > 1 ? g.rounds : 0,
           currentRound: g.current_round || 1,
           pointsPerAction: config.pointsPerAction || 1,
           useBonusPoints: !!g.bonus_points,
@@ -1009,7 +1010,13 @@ onUnmounted(() => {
                   <ToggleWithDropdown
                     :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
-                    :min="Math.max(2, activeGame.currentRound || 1)"
+                    :min="
+                      Math.max(
+                        2,
+                        activeGame.currentRound || 1,
+                        activeGame.originalRoundsCount || 0,
+                      )
+                    "
                     max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
