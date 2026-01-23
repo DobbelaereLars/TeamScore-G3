@@ -441,10 +441,62 @@ const isLastPhase = computed(() => {
   return currentRound === totalRounds;
 });
 
+const areAllGamesInLastPhase = computed(() => {
+  if (!games.value || games.value.length === 0) return false;
+  return games.value.every((g) => {
+    const totalRounds = g.rounds || 1;
+    const currentRound = g.currentRound || 1;
+
+    if ((g.sets || 1) > 1) {
+      const currentSet = g.currentSet || 1;
+      const totalSets = g.sets;
+      return currentSet === totalSets && currentRound === totalRounds;
+    }
+
+    return currentRound === totalRounds;
+  });
+});
+
+const canFinishParallel = computed(() => {
+  const isParallel =
+    currentSession.value?.game_mode === 'parallel-games' ||
+    currentSession.value?.game_mode === 'parallel';
+
+  if (!isParallel) return true;
+
+  // In parallel, we can only finish (all) if all are in last phase
+  return areAllGamesInLastPhase.value;
+});
+
+const shouldDisableMainButton = computed(() => {
+  if (isTransitioning.value) return true;
+
+  // In parallel mode:
+  if (currentSession.value?.game_mode === 'parallel-games' || currentSession.value?.game_mode === 'parallel') {
+    // If we are in the last phase, we can only finish if ALL games are ready
+    if (isLastPhase.value) {
+      return !canFinishParallel.value;
+    }
+    // If NOT in last phase, this button is "Pause", so it should be ENABLED (disabled=false)
+    return false;
+  }
+
+  // Not parallel: always enabled (unless transitioning)
+  return false;
+});
+
 const endGameButtonText = computed(() => {
   // Explicitly check for parallel mode first
-  if (currentSession.value?.game_mode === 'parallel-games') {
-    return isLastPhase.value ? 'Beëindig alle spelen' : 'Spel pauzeren';
+  if (
+    currentSession.value?.game_mode === 'parallel-games' ||
+    currentSession.value?.game_mode === 'parallel'
+  ) {
+    if (isLastPhase.value) {
+      return canFinishParallel.value
+        ? 'Beëindig alle spelen'
+        : 'Wacht op andere spelen';
+    }
+    return 'Spel pauzeren';
   }
 
   // Als we in de laatste fase zijn
@@ -864,13 +916,13 @@ const endGame = async () => {
               @accept="pauseGame"
             />
             <Button
-              :onclick="isTransitioning ? null : 'endgame.showModal()'"
+              :onclick="shouldDisableMainButton ? null : 'endgame.showModal()'"
               :button-tekst="
                 isTransitioning ? 'Volgend spel start...' : endGameButtonText
               "
               :variant="isLastPhase ? 'primary' : 'secondary'"
-              :clickable="!isTransitioning"
-              :is-disabled="isTransitioning"
+              :clickable="!shouldDisableMainButton"
+              :is-disabled="shouldDisableMainButton"
             >
               <template #c-btn_icon-left v-if="isTransitioning">
                 <Loader2 class="spin" :size="20" />
