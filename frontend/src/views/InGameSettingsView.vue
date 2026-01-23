@@ -620,7 +620,7 @@ const saveAssignmentChanges = () => {
   // Close is handled by modal emit
 };
 
-const toggleParticipantAssignment = (participantId, gameId) => {
+const toggleParticipantAssignment = (event, participantId, gameId) => {
   const currentAssigned = tempAssignments.value[participantId];
 
   if (currentAssigned === gameId) {
@@ -657,6 +657,11 @@ const toggleParticipantAssignment = (participantId, gameId) => {
       String(originalParticipant.assignedGameId) !== String(gameId);
 
     if (isMove) {
+      // Revert checkbox visual state immediately, as we wait for confirmation
+      if (event && event.target) {
+        event.target.checked = !event.target.checked;
+      }
+      
       // It's a move!
       // Trigger warning modal for THIS specific toggle?
       // "popup bij het aanvinken". Yes.
@@ -1563,6 +1568,7 @@ onUnmounted(() => {
                   "
                   @change="
                     toggleParticipantAssignment(
+                      $event,
                       participant.id,
                       assignmentGameId,
                     )
