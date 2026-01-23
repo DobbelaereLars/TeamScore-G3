@@ -1433,6 +1433,7 @@ onUnmounted(() => {
                 <PlayersSetting
                   v-model:participants="participants"
                   :player-mode="selectedParticipantMode"
+                  :require-confirm="true"
                 />
               </div>
             </div>

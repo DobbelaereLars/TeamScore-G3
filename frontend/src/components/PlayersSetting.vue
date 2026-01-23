@@ -14,14 +14,20 @@ const props = defineProps({
     validator: (value) =>
       ['players', 'teams', 'teams-with-players'].includes(value),
   },
+  requireConfirm: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const participants = defineModel('participants', { default: [] });
 const inputValue = ref('');
 const selectedTeamId = ref(null);
 const teamToDeleteId = ref(null);
+const subPlayerToDeleteId = ref(null);
 const deleteTeamModalId = 'delete-team-modal';
 const deleteTeamModalTitle = ref('Team verwijderen?');
+const deleteTeamModalText = ref('');
 
 const errorModalId = 'error-modal';
 const uploadErrorMessage = ref('');
@@ -154,56 +160,32 @@ const addTeam = () => {
   selectedTeamId.value = newTeam.id;
 };
 
-const deleteParticipant = (playerId) => {
-  participants.value = participants.value.filter((p) => p.id !== playerId);
-};
-
-const deletePlayerFromTeam = (playerId) => {
-  if (selectedTeamId.value) {
-    const teamIndex = participants.value.findIndex(
-      (t) => t.id === selectedTeamId.value,
-    );
-    if (teamIndex !== -1) {
-      const team = participants.value[teamIndex];
-      if (team.players) {
-        const updatedPlayers = team.players.filter((p) => p.id !== playerId);
-        const updatedTeam = { ...team, players: updatedPlayers };
-        const newParticipants = [...participants.value];
-        newParticipants[teamIndex] = updatedTeam;
-        participants.value = newParticipants;
-      }
+const performSubPlayerDeletion = (tId, pId) => {
+  if (!tId) return;
+  const teamIndex = participants.value.findIndex((t) => t.id === tId);
+  if (teamIndex !== -1) {
+    const team = participants.value[teamIndex];
+    if (team.players) {
+      const updatedPlayers = team.players.filter((p) => p.id !== pId);
+      const updatedTeam = { ...team, players: updatedPlayers };
+      const newParticipants = [...participants.value];
+      newParticipants[teamIndex] = updatedTeam;
+      participants.value = newParticipants;
     }
   }
 };
 
-const requestDeleteTeam = (teamId) => {
-  teamToDeleteId.value = teamId;
-  const team = participants.value.find((t) => t.id === teamId);
-  deleteTeamModalTitle.value = team
-    ? `${team.name} verwijderen?`
-    : 'Team verwijderen?';
-
-  const dialog = document.getElementById(deleteTeamModalId);
-  if (dialog && typeof dialog.showModal === 'function') {
-    dialog.showModal();
-  }
-};
-
-const confirmDeleteTeam = () => {
-  if (!teamToDeleteId.value) return;
-
-  const index = participants.value.findIndex(
-    (t) => t.id === teamToDeleteId.value,
-  );
+const performParticipantDeletion = (id) => {
+  const index = participants.value.findIndex((t) => t.id === id);
 
   if (index !== -1) {
-    // Remove team
+    // Remove team/participant
     const newParticipants = [...participants.value];
     newParticipants.splice(index, 1);
     participants.value = newParticipants;
 
     // Update selectedTeamId if we removed the selected one
-    if (selectedTeamId.value === teamToDeleteId.value) {
+    if (selectedTeamId.value === id) {
       if (newParticipants.length > 0) {
         // Select previous or first
         const newIndex = Math.max(0, index - 1);
@@ -214,12 +196,99 @@ const confirmDeleteTeam = () => {
       }
     }
   }
+};
 
+const deleteParticipant = (playerId) => {
+  requestDeleteTeam(playerId);
+};
+
+const deletePlayerFromTeam = (playerId) => {
+  if (!props.requireConfirm) {
+    performSubPlayerDeletion(selectedTeamId.value, playerId);
+    return;
+  }
+
+  subPlayerToDeleteId.value = playerId;
+  let playerName = 'Speler';
+  
+  // Try to find the name for the dialog
+  if (selectedTeamId.value) {
+    const team = participants.value.find((t) => t.id === selectedTeamId.value);
+    const p = team?.players?.find((pl) => pl.id === playerId);
+    if (p) playerName = p.name;
+  }
+
+  deleteTeamModalTitle.value = `Speler '${playerName}' verwijderen?`;
+  deleteTeamModalText.value = 'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+  
+  const dialog = document.getElementById(deleteTeamModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const requestDeleteTeam = (teamId) => {
+  // Always confirm if In-Game (requireConfirm) OR if deleting a Team that contains players (teams-with-players)
+  const isComplexTeamDelete = props.playerMode === 'teams-with-players';
+  
+  if (!props.requireConfirm && !isComplexTeamDelete) {
+    performParticipantDeletion(teamId);
+    return;
+  }
+
+  teamToDeleteId.value = teamId;
+  subPlayerToDeleteId.value = null; // Ensure we are not deleting a sub-player
+  
+  const team = participants.value.find((t) => t.id === teamId);
+  const typeLabel = props.playerMode === 'players' ? 'Speler' : 'Team';
+
+  deleteTeamModalTitle.value = team
+    ? `${typeLabel} '${team.name}' verwijderen?`
+    : `${typeLabel} verwijderen?`;
+
+  if (props.requireConfirm) {
+    if (props.playerMode === 'teams-with-players') {
+      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team en hun behaalde punten worden verwijderd. Deze actie kan niet ongedaan worden gemaakt.';
+    } else if (props.playerMode === 'teams') {
+      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+    } else {
+      // players
+      deleteTeamModalText.value = 'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+    }
+  } else {
+    // Game Setup (No points logic yet)
+    if (props.playerMode === 'teams-with-players') {
+      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt.';
+    } else {
+      // Fallback
+      deleteTeamModalText.value = 'Weet je zeker dat je dit wil verwijderen?';
+    }
+  }
+
+  const dialog = document.getElementById(deleteTeamModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const confirmDeleteTeam = () => {
+  // Handle Sub-player deletion
+  if (subPlayerToDeleteId.value) {
+    performSubPlayerDeletion(selectedTeamId.value, subPlayerToDeleteId.value);
+    subPlayerToDeleteId.value = null;
+    return;
+  }
+
+  // Handle Top-level participant deletion
+  if (!teamToDeleteId.value) return;
+
+  performParticipantDeletion(teamToDeleteId.value);
   teamToDeleteId.value = null;
 };
 
 const cancelDeleteTeam = () => {
   teamToDeleteId.value = null;
+  subPlayerToDeleteId.value = null;
 };
 
 const renameTeam = (teamId, newName) => {
@@ -525,7 +594,7 @@ const handleFileUpload = (event) => {
     <Modal
       :modal-id="deleteTeamModalId"
       :title="deleteTeamModalTitle"
-      text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
+      :text="deleteTeamModalText"
       cancel-btn-text="Annuleren"
       accept-btn-text="Verwijderen"
       @cancel="cancelDeleteTeam"
