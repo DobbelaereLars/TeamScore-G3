@@ -681,7 +681,7 @@ const endGame = async () => {
               </p>
             </div>
 
-            <div v-if="currentGame?.score_type === 'points'">
+            <div v-if="currentGame?.score_type === 'points' && bonusAmount > 0">
               <Button
                 onclick="bonusmodal.showModal()"
                 button-tekst="Bonuspunten toekennen"
