@@ -394,4 +394,20 @@ router.put('/:id', (req, res) => {
   }
 });
 
+// DELETE /api/games/:id
+router.delete('/:id', (req, res) => {
+  const db = getDatabase();
+  const { id } = req.params;
+
+  db.run('DELETE FROM Game WHERE id = ?', [id], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    res.json({ success: true });
+  });
+});
+
 module.exports = router;

@@ -69,6 +69,7 @@ const games = ref([
     timeBonusPoints: 1,
   },
 ]);
+const originalGames = ref([]);
 
 const activeGameIndex = ref(0);
 const gameToDeleteId = ref(null);
@@ -150,6 +151,8 @@ onMounted(async () => {
           isFinished: g.is_finished === 1,
         };
       });
+      // Store original games for deletion logic
+      originalGames.value = JSON.parse(JSON.stringify(games.value));
     }
 
     // Set active game based on query param
@@ -196,15 +199,38 @@ const hasValidParticipants = computed(() => {
   return participants.value.length > 0;
 });
 
-const gameSeriesTabBar = computed(() =>
-  games.value.map((game, index) => ({
-    id: game.id,
-    value: game.id,
-    label: getDefaultGameName(game, index),
-    checked: index === activeGameIndex.value,
-    disabled: selectedGameMode.value === 'series-of-games' && game.isFinished,
-  })),
-);
+const gameSeriesTabBar = computed(() => {
+  // Find the first unfinished game for series logic
+  // This is the "current" game in a series sequence
+  const currentSeriesGameId = games.value.find((g) => !g.isFinished)?.id;
+
+  // For parallel, rely on route query if available
+  const contextGameId = route.query.gameId;
+
+  return games.value.map((game, index) => {
+    let isProtected = false;
+
+    if (selectedGameMode.value === 'series-of-games') {
+      // In series: Protect the first unfinished game (the current active one)
+      // Future games remain deletable. Past games are disabled (already handled).
+      isProtected = game.id === currentSeriesGameId;
+    } else if (selectedGameMode.value === 'parallel-games') {
+      // In parallel: Protect the game if it is the one we entered settings from
+      if (contextGameId) {
+        isProtected = String(game.id) === String(contextGameId);
+      }
+    }
+
+    return {
+      id: game.id,
+      value: game.id,
+      label: getDefaultGameName(game, index),
+      checked: index === activeGameIndex.value,
+      disabled: selectedGameMode.value === 'series-of-games' && game.isFinished,
+      closeable: !isProtected, // Prevent deletion if protected
+    };
+  });
+});
 
 const gameOptions = computed(() =>
   games.value.map((game, index) => ({
@@ -672,6 +698,21 @@ const saveChanges = async () => {
     });
 
     await Promise.all(gameUpdatePromises);
+
+    // 2b. Delete Removed Games
+    const currentGameIds = games.value.map((g) => g.id);
+    const removedGames = originalGames.value.filter(
+      (og) => !currentGameIds.includes(og.id),
+    );
+
+    if (removedGames.length > 0) {
+      console.log('Games to delete:', removedGames);
+      const deletePromises = removedGames.map((g) => {
+        console.log(`Deleting game ${g.id} (${g.name})`);
+        return gameRepository.delete(g.id);
+      });
+      await Promise.all(deletePromises);
+    }
 
     // 3. Delete removed participants
     const currentParticipantIds = participants.value.map((p) => p.id);

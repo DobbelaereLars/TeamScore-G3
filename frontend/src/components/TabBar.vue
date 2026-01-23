@@ -57,7 +57,7 @@ const handleChange = (item) => {
         </div>
 
         <button
-          v-if="closeable"
+          v-if="closeable && !item.disabled && item.closeable !== false"
           class="c-tabbar__label__close"
           @click="
             (event) => {
