@@ -22,6 +22,7 @@ export const sessionRepository = {
   delete: (id) => api.delete(`/sessions/${id}`),
   getParticipants: (id) => api.get(`/sessions/${id}/participants`),
   addParticipants: (id, data) => api.post(`/sessions/${id}/participants`, data),
+  updateAssignments: (id, moves) => api.put(`/sessions/${id}/participants/assignment`, { moves }),
   getGames: (id) => api.get(`/sessions/${id}/games`),
   getFinalScores: (id) => api.get(`/sessions/${id}/final-scores`),
 };

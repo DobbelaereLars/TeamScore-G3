@@ -27,8 +27,17 @@ const errorModalId = 'error-modal';
 const uploadErrorMessage = ref('');
 
 const nextId = computed(() => {
-  if (participants.value.length === 0) return 1;
-  const maxId = Math.max(...participants.value.map((p) => p.id));
+  if (!participants.value || participants.value.length === 0) return 1;
+  
+  // Robust ID calculation: parsInt + filter NaN
+  const ids = participants.value
+    .map((p) => parseInt(p.id, 10))
+    .filter((id) => !isNaN(id));
+
+  if (ids.length === 0) return 1;
+  
+  // Use a fallback for Math.max on empty set just in case, though checked above
+  const maxId = Math.max(...ids);
   return maxId + 1;
 });
 
@@ -91,7 +100,7 @@ const addPlayer = () => {
 
       const newPlayerId =
         currentPlayers.length > 0
-          ? Math.max(...currentPlayers.map((p) => p.id)) + 1
+          ? Math.max(...currentPlayers.map((p) => parseInt(p.id, 10) || 0)) + 1
           : 1;
 
       const updatedTeam = {

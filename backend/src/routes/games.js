@@ -143,19 +143,45 @@ router.post('/', async (req, res) => {
 
     // Let's use participantEntities passed from frontend for explicit control.
     let entitiesToAdd = participantEntities;
-
-    if (!entitiesToAdd || entitiesToAdd.length === 0) {
-      // Fallback: Fetch unique players/teams from other games in this session
-      const query = `
-                SELECT DISTINCT 
-                    CASE WHEN p.type = 'player' THEN p.player_id ELSE p.team_id END as id,
-                    p.type
-                FROM Participant p
-                JOIN Game g ON p.game_id = g.id
-                WHERE g.session_id = ?
-             `;
-      const existing = await all(db, query, [sessionId]);
-      entitiesToAdd = existing.map((e) => e.id);
+    
+    // Check if session game mode is parallel. If so, DO NOT auto-add participants from other games.
+    const gameMode = session.game_mode;
+    
+    if (gameMode === 'parallel') {
+        // Only use passed entities. If none passed (or empty array), add NO ONE.
+        // Unless explicit flag says otherwise?
+        // In Game Settings V2, we handle assignments separately.
+        // So `participantEntities` coming from frontend create call should only contain assignments FOR THIS GAME.
+        // But the frontend `performSave` sends ALL participants in `participantEntities`.
+        // This is the bug.
+        
+        // Quick Fix: If parallel mode, Ignore `participantEntities` unless specifically structured for this game?
+        // Or better: Frontend sends assignments separately.
+        // Backend `POST /games` should rely on explicit instruction.
+        
+        // If frontend sends ALL, and backend uses ALL, then everyone is in the new game.
+        // Change logic: In parallel mode, default to EMPTY unless explicitly instructed?
+        
+        // But for "Series" mode, "All" is correct behavior.
+        
+        // For now, if parallel, we force "entitiesToAdd" to be empty unless we want to support direct assignment here.
+        // The frontend does `updateAssignments` separately for parallel distribution.
+        entitiesToAdd = [];
+    } else {
+        // Series or Single: Everyone in session should be in the new game (probably)
+        if (!entitiesToAdd || entitiesToAdd.length === 0) {
+          // Fallback: Fetch unique players/teams from other games in this session
+          const query = `
+                    SELECT DISTINCT 
+                        CASE WHEN p.type = 'player' THEN p.player_id ELSE p.team_id END as id,
+                        p.type
+                    FROM Participant p
+                    JOIN Game g ON p.game_id = g.id
+                    WHERE g.session_id = ?
+                 `;
+          const existing = await all(db, query, [sessionId]);
+          entitiesToAdd = existing.map((e) => e.id);
+        }
     }
 
     for (const entityId of entitiesToAdd) {
