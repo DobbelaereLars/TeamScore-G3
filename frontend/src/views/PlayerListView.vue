@@ -637,11 +637,7 @@ const endGame = async () => {
           <LogoHeader :class="'c-player-list__logo'" />
           <div class="c-player-list__gameround">
             <template v-if="games.length > 1">
-              <CustomSelect
-                v-if="!isSeries"
-                v-model="selectedGameId"
-                :options="gameOptions"
-              />
+              <CustomSelect v-if="!isSeries" v-model="selectedGameId" :options="gameOptions" />
               <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             </template>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
@@ -656,11 +652,7 @@ const endGame = async () => {
             </div>
           </div>
 
-          <Button
-            button-tekst="Spelinstellingen"
-            variant="secondary"
-            :href="'/tablet/game/ingame-settings'"
-          >
+          <Button button-tekst="Spelinstellingen" variant="secondary" href="/tablet/game/settings">
             <template #c-btn_icon-left>
               <Cog :size="18" />
             </template>
@@ -677,61 +669,35 @@ const endGame = async () => {
             </div>
 
             <div v-if="currentGame?.score_type === 'points'">
-              <Button
-                onclick="bonusmodal.showModal()"
-                button-tekst="Bonuspunten toekennen"
-                variant="primary"
-              >
+              <Button onclick="bonusmodal.showModal()" button-tekst="Bonuspunten toekennen" variant="primary">
                 <template #c-btn_icon-left>
                   <Flame :size="18" />
                 </template>
               </Button>
-              <Modal
-                modal-id="bonusmodal"
-                title="Bonuspunten toevoegen"
-                cancel-btn-text="Annuleren"
-                accept-btn-text="Toevoegen"
-                @accept="saveBonus"
-              >
+              <Modal modal-id="bonusmodal" title="Bonuspunten toevoegen" cancel-btn-text="Annuleren"
+                accept-btn-text="Toevoegen" @accept="saveBonus">
                 <p class="c-modal__text">
                   Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers
                 </p>
 
-                <div
-                  v-if="isTeamsWithPlayers"
-                  class="c-player-list__tabs u-mb-sm"
-                >
-                  <TeamTabButton
-                    v-for="team in availableTeams"
-                    :key="team.id"
-                    :label="team.name"
-                    :isActive="activeModalTeamId === team.id"
-                    @click="activeModalTeamId = team.id"
-                  />
+                <div v-if="isTeamsWithPlayers" class="c-player-list__tabs u-mb-sm">
+                  <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
+                    :isActive="activeModalTeamId === team.id" @click="activeModalTeamId = team.id" />
                 </div>
 
                 <div class="c-assignment-modal-list">
                   <div v-if="filteredBonusPlayers.length === 0">
                     Geen deelnemers gevonden.
                   </div>
-                  <label
-                    v-for="player in filteredBonusPlayers"
-                    :key="player.participantId"
-                    class="c-assignment-modal-list__item"
-                    :class="{
+                  <label v-for="player in filteredBonusPlayers" :key="player.participantId"
+                    class="c-assignment-modal-list__item" :class="{
                       'c-assignment-modal-list__item--active':
                         selectedBonusParticipants.includes(
                           player.participantId,
                         ),
-                    }"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="
-                        selectedBonusParticipants.includes(player.participantId)
-                      "
-                      @change="toggleBonusParticipant(player.participantId)"
-                    />
+                    }">
+                    <input type="checkbox" :checked="selectedBonusParticipants.includes(player.participantId)
+                      " @change="toggleBonusParticipant(player.participantId)" />
                     <span class="c-assignment-modal-list__item_name">{{
                       player.name
                     }}</span>
@@ -741,83 +707,39 @@ const endGame = async () => {
             </div>
           </div>
 
-          <div
-            v-if="isTeamsWithPlayers && availableTeams.length > 0"
-            class="c-player-list__tabs"
-          >
-            <TeamTabButton
-              v-for="team in availableTeams"
-              :key="team.id"
-              :label="team.name"
-              :isActive="activeTeamId === team.id"
-              @click="activeTeamId = team.id"
-            />
+          <div v-if="isTeamsWithPlayers && availableTeams.length > 0" class="c-player-list__tabs">
+            <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
+              :isActive="activeTeamId === team.id" @click="activeTeamId = team.id" />
           </div>
 
-          <TransitionGroup
-            :key="`${selectedGameId}-${activeTeamId}`"
-            name="player-list"
-            tag="div"
-            class="c-player-list__players"
-            :class="{
+          <TransitionGroup :key="`${selectedGameId}-${activeTeamId}`" name="player-list" tag="div"
+            class="c-player-list__players" :class="{
               'c-player-list__players--boolean':
                 currentGame?.score_type === 'boolean',
               'c-player-list__players--time':
                 currentGame?.score_type === 'time',
-            }"
-          >
-            <HostPlayerItem
-              v-for="player in filteredSortedPlayers"
-              :key="`${selectedGameId}-${player.participantId}`"
-              :name="player.name"
-              :points="player.points"
-              :value="
-                currentGame?.score_type === 'time'
-                  ? player.time - (accumulatedScores[player.participantId] || 0)
-                  : currentGame?.score_type === 'boolean'
-                    ? player.bool
-                    : player.points
-              "
-              :score-type="currentGame?.score_type || 'points'"
-              :size="playerItemSize"
-              :rank="player.rank"
-              :perClick="currentGame?.perClick || 1"
-              @updateScore="
+            }">
+            <HostPlayerItem v-for="player in filteredSortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
+              :name="player.name" :points="player.points" :value="currentGame?.score_type === 'time'
+                ? player.time - (accumulatedScores[player.participantId] || 0)
+                : currentGame?.score_type === 'boolean'
+                  ? player.bool
+                  : player.points
+                " :score-type="currentGame?.score_type || 'points'" :size="playerItemSize" :rank="player.rank"
+              :perClick="currentGame?.perClick || 1" @updateScore="
                 (newVal) => updatePlayerScore(player.participantId, newVal)
-              "
-            />
+              " />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
-            <Button
-              onclick="endgame.showModal()"
-              :button-tekst="endGameButtonText"
-              variant="secondary"
-              :clickable="false"
-            />
-            <Modal
-              modal-id="endgame"
-              :title="endGameModalTitle"
-              :text="endGameModalText"
-              cancel-btn-text="Terug"
-              :accept-btn-text="endGameButtonText"
-              @accept="endGame"
-            />
-            <Button
-              v-if="hasNextRound || hasNextSet"
-              onclick="nextround.showModal()"
-              :button-tekst="nextButtonLabel"
-              variant="primary"
-              :clickable="false"
-            />
-            <Modal
-              modal-id="nextround"
-              :title="nextModalTitle"
-              :text="nextModalText"
-              cancel-btn-text="Terug"
-              :accept-btn-text="nextButtonLabel"
-              @accept="goToNext"
-            />
+            <Button onclick="endgame.showModal()" :button-tekst="endGameButtonText" variant="secondary"
+              :clickable="false" />
+            <Modal modal-id="endgame" :title="endGameModalTitle" :text="endGameModalText" cancel-btn-text="Terug"
+              :accept-btn-text="endGameButtonText" @accept="endGame" />
+            <Button v-if="hasNextRound || hasNextSet" onclick="nextround.showModal()" :button-tekst="nextButtonLabel"
+              variant="primary" :clickable="false" />
+            <Modal modal-id="nextround" :title="nextModalTitle" :text="nextModalText" cancel-btn-text="Terug"
+              :accept-btn-text="nextButtonLabel" @accept="goToNext" />
           </div>
         </div>
       </div>
