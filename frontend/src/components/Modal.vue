@@ -91,7 +91,12 @@ const handleAccept = (event) => {
 
 <template>
   <dialog :id="modalId" class="c-modal" ref="dialogRef">
-    <button class="c-modal__close-x" type="button" aria-label="close-modal" onclick="this.closest('dialog').close()">
+    <button
+      class="c-modal__close-x"
+      type="button"
+      aria-label="close-modal"
+      onclick="this.closest('dialog').close()"
+    >
       <X :size="18" />
     </button>
 
@@ -103,10 +108,22 @@ const handleAccept = (event) => {
     </div>
 
     <div class="c-modal__btncontainer">
-      <Button v-if="showCancelBtn" @click="handleCancel" :button-tekst="cancelBtnText" :clickable="false"
-        variant="secondary" />
-      <Button @click="handleAccept" :button-tekst="acceptBtnText" :href="acceptBtnLink" :clickable="false"
-        variant="primary" />
+      <slot name="buttons">
+        <Button
+          v-if="showCancelBtn"
+          @click="handleCancel"
+          :button-tekst="cancelBtnText"
+          :clickable="false"
+          variant="secondary"
+        />
+        <Button
+          @click="handleAccept"
+          :button-tekst="acceptBtnText"
+          :href="acceptBtnLink"
+          :clickable="false"
+          variant="primary"
+        />
+      </slot>
     </div>
   </dialog>
 </template>

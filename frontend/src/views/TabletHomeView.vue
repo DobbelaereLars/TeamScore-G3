@@ -4,7 +4,7 @@ import { ref, onMounted, computed } from 'vue';
 import Button from '../components/Button.vue';
 import SessionCard from '../components/SessionCard.vue';
 import Modal from '../components/Modal.vue';
-import { Gamepad2, History, Play, RotateCw } from 'lucide-vue-next';
+import { Gamepad2, History, Play, RotateCw, Trash2 } from 'lucide-vue-next';
 import socket from '../utils/socket';
 import { sessionRepository } from '../services/api';
 
@@ -79,12 +79,10 @@ const confirmStartResume = () => {
 };
 
 const closeModal = () => {
-  // Modal component handles closing via built-in close() method or cancel emit which closes it usually?
-  // Modal.vue handleCancel calls closeDialog(event) then emits 'cancel'.
-  // My handleSessionReferal opens it.
-  // I don't need to manually close simple dialog here if the emit comes from Modal which closes itself.
-  // But wait, Modal.vue `handleAccept` also calls `closeDialog(event)`.
-  // So I just need resets.
+  const dialog = document.getElementById('start-resume-modal');
+  if (dialog && typeof dialog.close === 'function') {
+    dialog.close();
+  }
   selectedSession.value = null;
 };
 
@@ -94,14 +92,14 @@ const modalContent = computed(() => {
   if (selectedSession.value.status === 'created') {
     return {
       title: 'Spel starten',
-      text: `Wil je de sessie "${selectedSession.value.name}" starten?`,
+      text: `Je staat op het punt om de sessie "${selectedSession.value.name}" te starten. Wil je beginnen met het spel, of wil je deze sessie verwijderen?`,
       btn: 'Start spel',
     };
   } else {
     // in_progress
     return {
       title: 'Spel hervatten',
-      text: `Wil je verdergaan met de sessie "${selectedSession.value.name}"?`,
+      text: `Je staat op het punt om de sessie "${selectedSession.value.name}" te hervatten. Wil je verdergaan waar je gebleven was, of wil je deze sessie verwijderen?`,
       btn: 'Hervat spel',
     };
   }
@@ -116,6 +114,44 @@ const getSubtitle = (session) => {
     label = count === 1 ? 'team' : 'teams';
   }
   return `${count} ${label}`;
+};
+
+const deleteSessionModalId = 'delete-session-modal';
+
+const requestDeleteSessionFromModal = () => {
+  // Close the start/resume modal
+  const startModal = document.getElementById('start-resume-modal');
+  if (startModal && typeof startModal.close === 'function') startModal.close();
+
+  // Open the delete confirm modal
+  const deleteModal = document.getElementById(deleteSessionModalId);
+  if (deleteModal && typeof deleteModal.showModal === 'function') {
+    deleteModal.showModal();
+  }
+};
+
+const confirmDeleteSession = async () => {
+  if (!selectedSession.value) return;
+
+  try {
+    await sessionRepository.delete(selectedSession.value.id);
+    selectedSession.value = null;
+    await fetchSessions();
+  } catch (err) {
+    console.error('Failed to delete session', err);
+  }
+};
+
+const cancelDeleteSession = () => {
+  // Re-open start/resume modal if user cancels?
+  // Probably better to just return to list (do nothing special, just close this modal)
+  // But if the user cancels DELETION, maybe they still want to Resume?
+  // Let's just return to list for simplicity, or re-open the first modal.
+  // Re-opening might be intuitive.
+  const dialog = document.getElementById('start-resume-modal');
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
 };
 
 onMounted(() => {
@@ -205,10 +241,36 @@ onMounted(() => {
       :modal-id="'start-resume-modal'"
       :title="modalContent.title"
       :text="modalContent.text"
+    >
+      <template #buttons>
+        <Button
+          variant="secondary"
+          button-tekst="Verwijderen"
+          @click="requestDeleteSessionFromModal"
+          :clickable="false"
+        >
+          <template #c-btn_icon-left>
+            <Trash2 :size="18" />
+          </template>
+        </Button>
+        <Button
+          @click="confirmStartResume"
+          :button-tekst="modalContent.btn"
+          :clickable="false"
+          variant="primary"
+        />
+      </template>
+    </Modal>
+
+    <!-- Modal voor Verwijderen -->
+    <Modal
+      :modal-id="deleteSessionModalId"
+      title="Sessie verwijderen?"
+      text="Ben je zeker dat je deze sessie wilt verwijderen? Dit kan niet ongedaan gemaakt worden."
       cancel-btn-text="Annuleren"
-      :accept-btn-text="modalContent.btn"
-      @cancel="closeModal"
-      @accept="confirmStartResume"
+      accept-btn-text="Verwijderen"
+      @cancel="cancelDeleteSession"
+      @accept="confirmDeleteSession"
     />
   </div>
 </template>
