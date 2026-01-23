@@ -756,19 +756,21 @@ router.get('/:id/participants', async (req, res) => {
 
     if (mode === 'players') {
       const query = `
-            SELECT DISTINCT pl.id, pl.name, p.game_id as assignedGameId
+            SELECT pl.id, pl.name, MAX(p.game_id) as assignedGameId
             FROM Participant p
             JOIN Player pl ON p.player_id = pl.id
             WHERE p.game_id IN (${placeholders}) AND p.type = 'player'
+            GROUP BY pl.id
          `;
       const rows = await all(db, query, gameIds);
       return res.json(rows);
     } else if (mode === 'teams') {
       const query = `
-            SELECT DISTINCT t.id, t.name, p.game_id as assignedGameId
+            SELECT t.id, t.name, MAX(p.game_id) as assignedGameId
             FROM Participant p
             JOIN Team t ON p.team_id = t.id
             WHERE p.game_id IN (${placeholders}) AND p.type = 'team'
+            GROUP BY t.id
          `;
       const rows = await all(db, query, gameIds);
       return res.json(rows);
