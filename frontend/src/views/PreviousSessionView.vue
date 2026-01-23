@@ -2,7 +2,8 @@
 import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
 import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 import Button from '../components/Button.vue';
-import { Download } from 'lucide-vue-next';
+import Modal from '../components/Modal.vue';
+import { Download, Trash2 } from 'lucide-vue-next';
 
 import logo from '../assets/logo.webp';
 
@@ -10,7 +11,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 import { useRoute, useRouter } from 'vue-router';
 
-import { finalScoreRepository } from '../services/api';
+import { finalScoreRepository, sessionRepository } from '../services/api';
 
 const route = useRoute();
 const SessionID = route.params.id;
@@ -222,6 +223,25 @@ const goBack = () => {
   router.push({ name: 'tablet-home' });
 };
 
+const deleteSessionModalId = 'delete-session-modal';
+
+const handleDeleteSession = () => {
+  const dialog = document.getElementById(deleteSessionModalId);
+  if (dialog && typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+};
+
+const confirmDeleteSession = async () => {
+  try {
+    await sessionRepository.delete(SessionID);
+    router.push({ name: 'tablet-home' });
+  } catch (error) {
+    console.error('Failed to delete session:', error);
+    alert('Er is een fout opgetreden bij het verwijderen van de sessie.');
+  }
+};
+
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = 'hidden';
@@ -330,12 +350,32 @@ onUnmounted(() => {
     <div class="c-display-end-game-summary-view__footer">
       <Button buttonTekst="Sluiten" variant="secondary" @click="goBack" />
 
+      <Button
+        variant="secondary"
+        button-tekst="Verwijderen"
+        @click="handleDeleteSession"
+      >
+        <template #c-btn_icon-left>
+          <Trash2 :size="18" />
+        </template>
+      </Button>
+
       <Button buttonTekst="Exporteren" variant="primary" @click="exportData">
         <template #c-btn_icon-left>
           <Download :size="18" />
         </template>
       </Button>
     </div>
+
+    <Modal
+      :modal-id="deleteSessionModalId"
+      title="Sessie verwijderen?"
+      text="Ben je zeker dat je deze sessie wilt verwijderen? Dit kan niet ongedaan gemaakt worden."
+      cancel-btn-text="Annuleren"
+      accept-btn-text="Verwijderen"
+      @cancel="() => {}"
+      @accept="confirmDeleteSession"
+    />
   </div>
 </template>
 
