@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps({
   imageSrc: {
     type: String,
-    default: '/podium_screens/podium_screen_ph.png',
+    default: '/podium_screens/podium_screen_ph.webp',
   },
   imageAlt: {
     type: String,
@@ -59,7 +59,6 @@ const statusLabel = computed(() => {
       <p v-if="props.title" class="u-bold">{{ props.title }}</p>
       <p v-if="props.subtitle">{{ props.subtitle }}</p>
     </div>
-
   </div>
 </template>
 
