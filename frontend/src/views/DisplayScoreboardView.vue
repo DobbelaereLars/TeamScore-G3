@@ -218,8 +218,9 @@ const handleScoreUpdate = (data) => {
 const showRoundOverlay = ref(false);
 const roundBannerText = ref('');
 const setBannerText = ref('');
+let overlayTimeout = null;
 
-const handleGameInfoUpdate = (data) => {
+const handleGameInfoUpdate = async (data) => {
   console.log('Game info update received:', data);
   if (data.gameId) {
     // Only update if it matches current game or we just want to show latest info
@@ -234,22 +235,32 @@ const handleGameInfoUpdate = (data) => {
         data.currentSet && data.currentSet !== gameinfo.value.currentSet;
 
       if (roundChanged || setChanged) {
-        // Reset texts
+        // Clear existing timeout if any, to reset the duration
+        if (overlayTimeout) clearTimeout(overlayTimeout);
+        
+        // Force reset the overlay to trigger re-animation
+        showRoundOverlay.value = false;
+        await nextTick();
+
+        // Update texts
         roundBannerText.value = '';
         setBannerText.value = '';
 
         if (roundChanged) {
           roundBannerText.value = `RONDE ${data.currentRound}`;
         }
-        
+
         if (setChanged) {
           setBannerText.value = `SET ${data.currentSet}`;
         }
-
+        
+        // Show overlay with new text
         showRoundOverlay.value = true;
-        setTimeout(() => {
+        
+        // Set new timeout using the tracked variable
+        overlayTimeout = setTimeout(() => {
           showRoundOverlay.value = false;
-        }, 3000); // Show overlay for 3 seconds
+        }, 3000); 
       }
 
       if (data.currentSet) gameinfo.value.currentSet = data.currentSet;
