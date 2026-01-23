@@ -464,20 +464,11 @@ const handlePointsRankingChange = (value) => {
 };
 
 function addGame() {
-  const maxId = games.value.reduce((max, game) => {
-    const idStr = String(game.id);
-    const match = idStr.match(/^game-(\d+)$/);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      return Math.max(max, num);
-    }
-    if (!isNaN(game.id)) {
-      return Math.max(max, Number(game.id));
-    }
-    return max;
+  const maxNumber = games.value.reduce((max, game) => {
+    return Math.max(max, getGameNumber(game));
   }, 0);
 
-  const newGameNumber = maxId + 1;
+  const newGameNumber = maxNumber + 1;
   const newGameId = `game-${newGameNumber}`;
 
   games.value.push({
@@ -617,28 +608,43 @@ const getAssignedParticipants = (gameId) => {
   return participants.value.filter((p) => p.assignedGameId === gameId);
 };
 
+const getGameNumber = (game) => {
+  // 1. Try to extract logical number from specific patterns (new games)
+  const idStr = String(game.id);
+  const match = idStr.match(/^game-(\d+)$/);
+  if (match) return parseInt(match[1], 10);
+
+  // 2. Check if name contains a number (e.g. "Spel 5")
+  // This is important for saved games that kept their name "Spel X"
+  if (game.name) {
+    const nameMatch = game.name.match(/^Spel (\d+)$/i);
+    if (nameMatch) {
+      return parseInt(nameMatch[1], 10);
+    }
+  }
+
+  // 3. If it's a persistent game (from DB), determine its original position
+  const originalIndex = originalGames.value.findIndex(
+    (og) => og.id === game.id,
+  );
+  if (originalIndex !== -1) return originalIndex + 1;
+
+  // 4. Fallback: Use current index + 1 (less stable but better than 0)
+  const currentIndex = games.value.findIndex((g) => g.id === game.id);
+  if (currentIndex !== -1) return currentIndex + 1;
+
+  return 0;
+};
+
 const getDefaultGameName = (game, index = -1) => {
   if (game.name) return game.name;
 
-  // If index is not provided, try to find it
-  if (index === -1) {
-    index = games.value.findIndex((g) => g.id === game.id);
-  }
+  const number = getGameNumber(game);
+  if (number > 0) return `Spel ${number}`;
 
-  // If found in the list, use its position (1-based)
-  if (index !== -1) {
-    return `Spel ${index + 1}`;
-  }
-
-  // Fallback for games not in the list (should be rare)
-  if (!game.id) return 'Spel ?';
-
-  const idStr = String(game.id);
-  // Try to use ID number or stripped ID if possible
-  const match = idStr.match(/^game-(\d+)$/);
-  if (match) return `Spel ${match[1]}`;
-
-  return `Spel ${idStr}`;
+  // Fallback if number resolution failed (should rarely happen)
+  if (index !== -1) return `Spel ${index + 1}`;
+  return 'Spel ?';
 };
 
 const getGameName = (gameId) => {
@@ -666,6 +672,10 @@ const saveChanges = async () => {
       const isNewGame = String(game.id).startsWith('game-');
 
       const gameName = game.name || getDefaultGameName(game, index);
+      // Persist the generated name back to the local object so it stays stable
+      if (!game.name) {
+        game.name = gameName;
+      }
 
       const gamePayload = {
         name: gameName,
@@ -713,6 +723,9 @@ const saveChanges = async () => {
       });
       await Promise.all(deletePromises);
     }
+
+    // Refresh originalGames baseline after all game ops are done
+    originalGames.value = JSON.parse(JSON.stringify(games.value));
 
     // 3. Delete removed participants
     const currentParticipantIds = participants.value.map((p) => p.id);
