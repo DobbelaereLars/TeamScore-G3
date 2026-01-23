@@ -2,7 +2,7 @@
 import ScoreboardPlayercard from '../components/ScoreboardPlayercard.vue';
 import { gameRepository, sessionRepository } from '../services/api'; // Import repository
 import logo from '../assets/logo.webp';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
 // Initial state can be empty or mock, we'll overwrite it when loadGameData is called
@@ -97,7 +97,7 @@ const sortedPlayers = computed(() => {
 });
 
 const currentPage = ref(0);
-const playersPerPage = ref(8); // Will be calculated dynamically
+const playersPerPage = ref(0); // Initialize at 0 to prevent flash of wrong layout
 const playersContainer = ref(null);
 
 // Calculate how many players fit per page based on screen width
@@ -109,18 +109,23 @@ const calculatePlayersPerPage = () => {
     const columnsPerRow = Math.floor(
       (containerWidth + gap) / (cardWidth + gap),
     );
-    playersPerPage.value = columnsPerRow * 2; // 2 rows
+    // Ensure we have at least one column/row to avoid issues, though 0 is handled below
+    if (columnsPerRow > 0) {
+      playersPerPage.value = columnsPerRow * 2; // 2 rows
+    }
   }
 };
 
 // Paginated players
 const paginatedPlayers = computed(() => {
+  if (playersPerPage.value === 0) return [];
   const start = currentPage.value * playersPerPage.value;
   const end = start + playersPerPage.value;
   return sortedPlayers.value.slice(start, end);
 });
 
 const totalPages = computed(() => {
+  if (playersPerPage.value === 0) return 0;
   return Math.ceil(sortedPlayers.value.length / playersPerPage.value);
 });
 
@@ -263,6 +268,18 @@ onMounted(() => {
   }
 });
 
+// Watch for game name changes to recalculate layout after render
+watch(
+  () => gameinfo.value.gamename,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => {
+        calculatePlayersPerPage();
+      });
+    }
+  },
+);
+
 onUnmounted(() => {
   socket.off('display:session', handleSession);
   socket.off('display:selected-game', handleSelectedGame);
@@ -284,7 +301,10 @@ onUnmounted(() => {
       </div>
       <div class="v-display-scoreboard-info">
         <h2>{{ gameinfo.gamename }}</h2>
-        <p v-if="gameinfo.totalRounds > 1" class="v-display-scoreboard-round h6">
+        <p
+          v-if="gameinfo.totalRounds > 1"
+          class="v-display-scoreboard-round h6"
+        >
           Ronde {{ gameinfo.currentRound }} van {{ gameinfo.totalRounds }}
         </p>
         <div v-if="gameinfo.totalSets > 1" class="v-display-scoreboard-sets">
