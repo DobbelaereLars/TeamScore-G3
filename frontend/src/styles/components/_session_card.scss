@@ -5,6 +5,7 @@
   box-shadow: $box-shadow-lg;
   border-radius: $border-radius-8;
   aspect-ratio: 1 / 1;
+  cursor: pointer;
 
   &:hover {
     .c-session-card__head img {

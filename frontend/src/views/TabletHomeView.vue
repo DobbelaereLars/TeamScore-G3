@@ -135,8 +135,6 @@ onMounted(() => {
                 image-src="/podium_screens/podium_screen_ph.webp"
                 @click="handleSessionReferal(session)"
               >
-                <!-- Optional: Label for status could act as a slot or overlay if SessionCard supported it -->
-                <!-- For now, we rely on standard card -->
               </SessionCard>
             </div>
           </div>
