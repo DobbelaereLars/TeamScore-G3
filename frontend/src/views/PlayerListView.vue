@@ -472,7 +472,10 @@ const shouldDisableMainButton = computed(() => {
   if (isTransitioning.value) return true;
 
   // In parallel mode:
-  if (currentSession.value?.game_mode === 'parallel-games' || currentSession.value?.game_mode === 'parallel') {
+  if (
+    currentSession.value?.game_mode === 'parallel-games' ||
+    currentSession.value?.game_mode === 'parallel'
+  ) {
     // If we are in the last phase, we can only finish if ALL games are ready
     if (isLastPhase.value) {
       return !canFinishParallel.value;
