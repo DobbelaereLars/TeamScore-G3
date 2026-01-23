@@ -20,12 +20,14 @@ import TeamTabButton from '../components/TeamTabButton.vue';
 import LogoHeader from '../components/Logo.vue';
 import Modal from '../components/Modal.vue';
 import CustomSelect from '../components/CustomSelect.vue';
-import { Cog, Flame } from 'lucide-vue-next';
+import { Cog, Flame, Loader2 } from 'lucide-vue-next';
 
 const router = useRouter();
 const currentSessionId = sessionStorage.getItem('sessionId');
 console.log('Current Session ID:', currentSessionId);
 const currentSession = ref(null);
+
+const isTransitioning = ref(false);
 
 // Games from DB
 const games = ref([]);
@@ -489,6 +491,7 @@ const endGameModalText = computed(() => {
 
 const nextGame = async () => {
   // 1. Mark current game as finished
+  isTransitioning.value = true;
   try {
     await gameRepository.update(currentGame.value.id, {
       is_finished: 1,
@@ -535,6 +538,8 @@ const nextGame = async () => {
     if (modal && modal.open) {
       modal.close();
     }
+  } finally {
+    isTransitioning.value = false;
   }
 };
 
@@ -859,11 +864,18 @@ const endGame = async () => {
               @accept="pauseGame"
             />
             <Button
-              onclick="endgame.showModal()"
-              :button-tekst="endGameButtonText"
+              :onclick="isTransitioning ? null : 'endgame.showModal()'"
+              :button-tekst="
+                isTransitioning ? 'Volgend spel start...' : endGameButtonText
+              "
               :variant="isLastPhase ? 'primary' : 'secondary'"
-              :clickable="false"
-            />
+              :clickable="!isTransitioning"
+              :is-disabled="isTransitioning"
+            >
+              <template #c-btn_icon-left v-if="isTransitioning">
+                <Loader2 class="spin" :size="20" />
+              </template>
+            </Button>
             <Modal
               modal-id="endgame"
               :title="endGameModalTitle"
@@ -916,6 +928,19 @@ const endGame = async () => {
 .player-list-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 </style>
 
