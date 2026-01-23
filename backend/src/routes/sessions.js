@@ -517,18 +517,28 @@ router.post("/:id/participants", async (req, res) => {
         // 2. Handle New Sub-Players for EXISTING Teams (only teams_with_players)
         if (newSubPlayers && newSubPlayers.length > 0 && session.participant_mode === 'teams_with_players') {
             for (const sp of newSubPlayers) {
-                // sp has { teamId, name, assignedGameId }
+                // sp has { teamId, teamName, name, assignedGameId }
+                // If teamId is null but teamName is provided, this is a sub-player for a NEW team
+                // Find the newly created team by name
+                let actualTeamId = sp.teamId;
+                if (!actualTeamId && sp.teamName) {
+                    const team = await get(db, "SELECT id FROM Team WHERE name = ? ORDER BY id DESC LIMIT 1", [sp.teamName]);
+                    if (team) actualTeamId = team.id;
+                }
+                
+                if (!actualTeamId) continue; // Skip if we can't find the team
+                
                 // Create Player
                 const plRes = await run(db, "INSERT INTO Player (name) VALUES (?)", [sp.name]);
                 const newPlayerId = plRes.lastID;
                 
                 // Link TeamPlayer
-                await run(db, "INSERT INTO TeamPlayer (team_id, player_id) VALUES (?, ?)", [sp.teamId, newPlayerId]);
+                await run(db, "INSERT INTO TeamPlayer (team_id, player_id) VALUES (?, ?)", [actualTeamId, newPlayerId]);
                 
                 // Add as participant to games
                 const targetGames = getTargetGameIds(sp.assignedGameId);
                 for (const gid of targetGames) {
-                     const partRes = await run(db, "INSERT INTO Participant (game_id, type, player_id, team_id) VALUES (?, ?, ?, ?)", [gid, 'player', newPlayerId, sp.teamId]);
+                     const partRes = await run(db, "INSERT INTO Participant (game_id, type, player_id, team_id) VALUES (?, ?, ?, ?)", [gid, 'player', newPlayerId, actualTeamId]);
                      await run(db, "INSERT INTO Score (game_id, participant_id) VALUES (?, ?)", [gid, partRes.lastID]);
                      await run(db, "INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)", [id, partRes.lastID]);
                 }

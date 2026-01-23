@@ -43,10 +43,12 @@ app.use(express.json());
 
 // API Routes
 const playersRouter = require("./routes/players");
+const teamsRouter = require("./routes/teams");
 const sessionsRouter = require("./routes/sessions");
 const gamesRouter = require("./routes/games");
 
 app.use("/api/players", playersRouter);
+app.use("/api/teams", teamsRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/games", gamesRouter);
 

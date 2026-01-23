@@ -103,6 +103,7 @@ const addTeam = () => {
     id: nextId.value,
     name: `Team ${teamNumber}`,
     players: [],
+    isNew: true,
   };
   participants.value = [...participants.value, newTeam];
   selectedTeamId.value = newTeam.id;

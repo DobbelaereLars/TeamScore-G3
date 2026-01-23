@@ -6,8 +6,6 @@ import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
 import InputSelect from '../components/InputSelect.vue';
 import TabBar from '../components/TabBar.vue';
-import Notice from '../components/Notice.vue';
-import InputRadioCards from '../components/InputRadioCards.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 import PlayersSetting from '../components/PlayersSetting.vue';
 import Modal from '../components/Modal.vue';
@@ -15,20 +13,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Gamepad2,
-  Dices,
   Settings2,
   Users,
-  Route,
-  Workflow,
   Plus,
-  Target,
-  Clock7,
-  SquareCheck,
   LayoutList,
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
 import socket from '../utils/socket';
-import { sessionRepository, gameRepository } from '../services/api';
+import { sessionRepository, gameRepository, participantRepository, playerRepository, teamRepository } from '../services/api';
 
 const router = useRouter();
 const currentSessionId = sessionStorage.getItem("sessionId");
@@ -38,6 +30,7 @@ const sessionName = ref('');
 const selectedParticipantMode = ref('players');
 const selectedGameMode = ref('single-game');
 const participants = ref([]);
+const originalParticipants = ref([]);
 
 // Time notation options
 const timeNotationOptions = [
@@ -54,9 +47,11 @@ const games = ref([
     name: '',
     scoreModel: 'points',
     useRounds: false,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
+    originalUseSets: false,
+    currentRound: 1,
     pointsPerAction: 1,
     pointsRanking: 'highest-first',
     useBonusPoints: false,
@@ -126,9 +121,11 @@ onMounted(async () => {
           name: g.name,
           scoreModel: scoreType,
           useRounds: g.rounds > 1,
-          roundsCount: g.rounds,
+          roundsCount: g.rounds > 1 ? g.rounds : 2,
           useSets: g.sets > 1,
-          setsCount: g.sets,
+          setsCount: g.sets > 1 ? g.sets : 2,
+          originalUseSets: g.sets > 1,
+          currentRound: g.current_round || 1,
           pointsPerAction: config.pointsPerAction || 1,
           useBonusPoints: !!g.bonus_points,
           bonusPoints: g.bonus_points || 1,
@@ -143,6 +140,7 @@ onMounted(async () => {
     const participantsRes = await sessionRepository.getParticipants(currentSessionId);
     if (participantsRes.data) {
       participants.value = participantsRes.data;
+      originalParticipants.value = JSON.parse(JSON.stringify(participantsRes.data));
     }
   } catch (error) {
     console.error('Error loading session settings:', error);
@@ -215,60 +213,6 @@ const pointsRankingTabBar = computed(() => [
   },
 ]);
 
-const scoreModelRadioCards = computed(() => [
-  {
-    id: `points-${activeGameId.value}`,
-    value: 'points',
-    label: 'Puntenscore',
-    description: 'Punten op basis van juiste antwoorden of acties.',
-    icon: Target,
-    checked: activeGame.value?.scoreModel === 'points',
-  },
-  {
-    id: `time-${activeGameId.value}`,
-    value: 'time',
-    label: 'Tijdscore',
-    description: 'Score bepaald door snelheid en tijdslimiet.',
-    icon: Clock7,
-    checked: activeGame.value?.scoreModel === 'time',
-  },
-  {
-    id: `completed-${activeGameId.value}`,
-    value: 'completed',
-    label: 'Voltooid / niet voltooid',
-    description: 'Punten alleen voor afgeronde opdrachten.',
-    icon: SquareCheck,
-    checked: activeGame.value?.scoreModel === 'completed',
-  },
-]);
-
-const gameModusRadioCards = computed(() => [
-  {
-    id: 'single-game',
-    value: 'single-game',
-    label: 'Scoreboard voor één game',
-    description: 'Eén scoreboard voor een enkele game.',
-    icon: Dices,
-    checked: selectedGameMode.value === 'single-game',
-  },
-  {
-    id: 'series-of-games',
-    value: 'series-of-games',
-    label: 'Serie van games',
-    description: 'Meerdere games na elkaar in één reeks.',
-    icon: Route,
-    checked: selectedGameMode.value === 'series-of-games',
-  },
-  {
-    id: 'parallel-games',
-    value: 'parallel-games',
-    label: 'Parallelle games',
-    description: 'Meerdere games tegelijk met verdeelde spelers/teams.',
-    icon: Workflow,
-    checked: selectedGameMode.value === 'parallel-games',
-  },
-]);
-
 const gameSetupTabList = ref([
   {
     id: 'session',
@@ -288,27 +232,6 @@ const gameSetupTabList = ref([
     value: 'participants',
     label: 'Deelnemers',
     icon: Users,
-  },
-]);
-
-const participantModusTabBar = computed(() => [
-  {
-    id: 'players',
-    value: 'players',
-    label: 'Individuele spelers',
-    checked: selectedParticipantMode.value === 'players',
-  },
-  {
-    id: 'teams',
-    value: 'teams',
-    label: 'Teams',
-    checked: selectedParticipantMode.value === 'teams',
-  },
-  {
-    id: 'teams-with-players',
-    value: 'teams-with-players',
-    label: 'Teams met spelers',
-    checked: selectedParticipantMode.value === 'teams-with-players',
   },
 ]);
 
@@ -394,63 +317,27 @@ watch([selectedGameMode, hasValidParticipants], () => {
   updateAssignmentTabVisibility();
 });
 
-// Methods
-const handleParticipantModeChange = (value) => {
-  selectedParticipantMode.value = value;
-};
-
-const handleGameModeChange = (value) => {
-  selectedGameMode.value = value;
-
-  // Tabs update handled by watcher
-
-  // Reset to single game if switching to single-game mode
-  if (value === 'single-game') {
-    if (games.value.length > 0) {
-      // Keep only the first game and reset its ID to game-1
-      const firstGame = { ...games.value[0], id: 'game-1' };
-      // If the name was Default (empty), it will now show "Spel 1" due to ID change.
-      // If it had a custom name, it keeps it.
-      games.value = [firstGame];
-    } else {
-      // Should not happen, but safe fallback
-      games.value = [
-        {
-          id: 'game-1',
-          name: '',
-          scoreModel: 'points',
-          useRounds: false,
-          roundsCount: 1,
-          useSets: false,
-          setsCount: 1,
-          pointsPerAction: 1,
-          pointsRanking: 'highest-first',
-          useBonusPoints: false,
-          bonusPoints: 1,
-          timeNotation: 'mm:ss',
-          timeRanking: 'fastest-first',
-          useTimeBonusPoints: false,
-          timeBonusPoints: 1,
-        },
-      ];
+// Watch for rounds toggle changes
+watch(() => activeGame.value?.useRounds, (newValue, oldValue) => {
+  if (newValue && !oldValue && activeGame.value) {
+    // When toggle is turned on, set to minimum of 2
+    if (activeGame.value.roundsCount < 2) {
+      activeGame.value.roundsCount = 2;
     }
-    activeGameIndex.value = 0;
-  } else if (
-    (value === 'parallel-games' || value === 'series-of-games') &&
-    games.value.length < 2
-  ) {
-    addGame();
-    // Default to first game when switching mode, instead of the newly added one
-    activeGameIndex.value = 0;
   }
-};
+});
 
-const handleScoreModelChange = (value) => {
-  if (activeGame.value) {
-    activeGame.value.scoreModel = value;
+// Watch for sets toggle changes
+watch(() => activeGame.value?.useSets, (newValue, oldValue) => {
+  if (newValue && !oldValue && activeGame.value) {
+    // When toggle is turned on, set to minimum of 2
+    if (activeGame.value.setsCount < 2) {
+      activeGame.value.setsCount = 2;
+    }
   }
-};
+});
 
+// Methods
 const handleGameTabChange = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index !== -1) {
@@ -514,9 +401,11 @@ function addGame() {
     name: '',
     scoreModel: 'points',
     useRounds: false,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
+    originalUseSets: false,
+    currentRound: 1,
     pointsPerAction: 1,
     pointsRanking: 'highest-first',
     useBonusPoints: false,
@@ -559,9 +448,11 @@ const confirmDeleteGame = () => {
       pointsRanking: 'highest-first',
       scoreModel: 'points',
       useRounds: false,
-      roundsCount: 1,
+      roundsCount: 2,
       useSets: false,
-      setsCount: 1,
+      setsCount: 2,
+      originalUseSets: false,
+      currentRound: 1,
       pointsPerAction: 1,
       useBonusPoints: false,
       bonusPoints: 1,
@@ -576,9 +467,6 @@ const confirmDeleteGame = () => {
   } else if (index <= activeGameIndex.value && activeGameIndex.value > 0) {
     activeGameIndex.value = activeGameIndex.value - 1;
   }
-
-  // ID reset handled after delay or next modal open to prevent flicker
-  // gameToDeleteId.value = null;
 };
 
 const cancelDeleteGame = () => {
@@ -663,31 +551,12 @@ const getGameName = (gameId) => {
   return getDefaultGameName(games.value[index]);
 };
 
-const cancelSessionModalId = 'cancel-session-modal';
-
-const handleCancelSession = () => {
-  const dialog = document.getElementById(cancelSessionModalId);
-  if (dialog && typeof dialog.showModal === 'function') {
-    dialog.showModal();
-  }
-};
-
-const confirmCancelSession = () => {
-  socket.emit('session-cancel');
-  router.push('/tablet');
-};
-
-const saveSessionModalId = 'save-session-modal';
-
-const handleFinishSetup = () => {
-  const dialog = document.getElementById(saveSessionModalId);
-  if (dialog && typeof dialog.showModal === 'function') {
-    dialog.showModal();
-  }
-};
-
 const saveChanges = async () => {
   try {
+    console.log('=== SAVING CHANGES ===');
+    console.log('Current participants:', participants.value);
+    console.log('Original participants:', originalParticipants.value);
+
     // 1. Update Session Info
     const sessionPayload = {
       sessionName: sessionName.value,
@@ -714,15 +583,123 @@ const saveChanges = async () => {
 
     await Promise.all(gameUpdatePromises);
 
-    // 3. Add New Participants/Teams if any
-    const newParticipants = participants.value.filter(p => p.isNew);
+    // 3. Delete removed participants
+    const currentParticipantIds = participants.value.map(p => p.id);
+    const removedParticipants = originalParticipants.value.filter(
+      op => !currentParticipantIds.includes(op.id)
+    );
 
-    // For teams-with-players, find existing teams that have new sub-players
-    // (Existing teams have !isNew, but might have children with isNew)
+    console.log('Participants to delete:', removedParticipants);
+
+    // Delete each participant sequentially to handle errors properly
+    for (const p of removedParticipants) {
+      console.log(`Deleting participant ${p.id} (${p.name})`);
+
+      try {
+        // Delete the player or team - participant.id IS the player/team id
+        if (selectedParticipantMode.value === 'players') {
+          // In players mode, p.id is a player ID
+          await playerRepository.delete(p.id);
+        } else if (selectedParticipantMode.value === 'teams') {
+          // In teams mode, p.id is a team ID
+          await teamRepository.delete(p.id);
+        } else if (selectedParticipantMode.value === 'teams-with-players') {
+          // In teams-with-players mode, p.id is a team ID
+          await teamRepository.delete(p.id);
+        }
+        console.log(`Successfully deleted ${p.name}`);
+      } catch (error) {
+        console.error(`Failed to delete participant ${p.id} (${p.name}):`, error);
+        // Continue with other deletions even if one fails
+      }
+    }
+
+    // 3b. For teams-with-players mode, also check for removed sub-players
+    if (selectedParticipantMode.value === 'teams-with-players') {
+      for (const team of participants.value) {
+        const originalTeam = originalParticipants.value.find(ot => ot.id === team.id);
+        if (originalTeam && originalTeam.players && team.players) {
+          const currentPlayerIds = team.players.map(sp => sp.id);
+          const removedSubPlayers = originalTeam.players.filter(
+            osp => !currentPlayerIds.includes(osp.id)
+          );
+
+          for (const subPlayer of removedSubPlayers) {
+            console.log(`Deleting sub-player ${subPlayer.id} (${subPlayer.name}) from team ${team.name}`);
+            try {
+              await playerRepository.delete(subPlayer.id);
+              console.log(`Successfully deleted sub-player ${subPlayer.name}`);
+            } catch (error) {
+              console.error(`Failed to delete sub-player ${subPlayer.id}:`, error);
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Update existing participants (players/teams) that were modified
+    const updatePromises = [];
+    participants.value.forEach(p => {
+      if (!p.isNew) {
+        const original = originalParticipants.value.find(op => op.id === p.id);
+        if (original && original.name !== p.name) {
+          console.log(`Name changed for participant ${p.id}: "${original.name}" -> "${p.name}"`);
+          console.log('Participant data:', p);
+          // Name changed - update the player or team
+          // The participant.id IS the player.id or team.id depending on mode
+          if (selectedParticipantMode.value === 'players') {
+            // Update player name - participant.id is the player.id
+            console.log(`Updating player ${p.id} to name "${p.name}"`);
+            updatePromises.push(playerRepository.update(p.id, { name: p.name }));
+          } else if (selectedParticipantMode.value === 'teams' || selectedParticipantMode.value === 'teams-with-players') {
+            // Update team name - participant.id is the team.id
+            console.log(`Updating team ${p.id} to name "${p.name}"`);
+            updatePromises.push(teamRepository.update(p.id, { name: p.name }));
+          }
+        }
+
+        // For teams-with-players mode, check sub-players
+        if (selectedParticipantMode.value === 'teams-with-players' && p.players) {
+          p.players.forEach(subPlayer => {
+            if (!subPlayer.isNew) {
+              const originalTeam = originalParticipants.value.find(op => op.id === p.id);
+              if (originalTeam && originalTeam.players) {
+                const originalSubPlayer = originalTeam.players.find(osp => osp.id === subPlayer.id);
+                if (originalSubPlayer && originalSubPlayer.name !== subPlayer.name) {
+                  console.log(`Updating sub-player ${subPlayer.id} to name "${subPlayer.name}"`);
+                  updatePromises.push(playerRepository.update(subPlayer.id, { name: subPlayer.name }));
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+
+    console.log(`Total updates to perform: ${updatePromises.length}`);
+    await Promise.all(updatePromises);
+
+    // 5. Add New Participants/Teams if any
+    // For new teams in teams-with-players mode, include the players array so backend can handle it
+    const newParticipants = participants.value
+      .filter(p => p.isNew)
+      .map(p => {
+        if (selectedParticipantMode.value === 'teams-with-players' && p.players) {
+          return {
+            ...p,
+            players: p.players.map(sub => ({ name: sub.name })) // Only send player names
+          };
+        }
+        return p;
+      });
+
+    // For teams-with-players, find ONLY EXISTING teams that have new sub-players
+    // (New teams already have their players included in newParticipants)
     const newSubPlayers = [];
     if (selectedParticipantMode.value === 'teams-with-players') {
       participants.value.forEach(p => {
-        if (!p.isNew && p.players) {
+        // Only process EXISTING teams (!isNew) with new sub-players
+        if (!p.isNew && p.players && p.players.length > 0) {
           p.players.forEach(sub => {
             if (sub.isNew) {
               newSubPlayers.push({
@@ -735,6 +712,9 @@ const saveChanges = async () => {
         }
       });
     }
+
+    console.log('New participants to add:', newParticipants);
+    console.log('New sub-players to add:', newSubPlayers);
 
     if (newParticipants.length > 0 || newSubPlayers.length > 0) {
       await sessionRepository.addParticipants(currentSessionId, {
@@ -817,10 +797,6 @@ onUnmounted(() => {
 
 <template>
   <div class="container p-game-setup-view">
-    <!-- <div class="c-logo-header">
-      <img class="c-logo-header__img" src="../assets/logo.webp" alt="Logo" />
-    </div> -->
-
     <div class="row">
       <div class="col-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
         <form class="p-game-setup-view__settings" @submit.prevent>
@@ -853,32 +829,6 @@ onUnmounted(() => {
                 <h2 class="h6">Sessienaam</h2>
                 <InputField id="session-name" name="sessionName" :label="false" :placeholder="sessionNamePlaceholder"
                   v-model="sessionName" />
-              </div>
-
-              <div class="p-game-setup-view__settings__body__content__participantmodus">
-                <div class="p-game-setup-view__settings__body__content__participantmodus__subtitle">
-                  <h2 class="h6">Deelnemersmodus</h2>
-                  <p>
-                    Kies of je met individuele spelers of in teams zal spelen.
-                  </p>
-                </div>
-
-                <div class="p-game-setup-view__settings__body__content__participantmodus__content">
-                  <TabBar :items="participantModusTabBar" name="participant-modus" :hideIcon="true"
-                    @change="handleParticipantModeChange"></TabBar>
-
-                  <Notice text="Dit kan later niet meer worden gewijzigd"></Notice>
-                </div>
-              </div>
-
-              <div class="p-game-setup-view__settings__body__content__gamemodus">
-                <h2 class="h6">Spelmodus</h2>
-
-                <div class="p-game-setup-view__settings__body__content__gamemodus__content">
-                  <InputRadioCards :items="gameModusRadioCards" name="game-modus" @change="handleGameModeChange" />
-
-                  <Notice text="Dit kan later niet meer worden gewijzigd"></Notice>
-                </div>
               </div>
             </div>
 
@@ -927,31 +877,18 @@ onUnmounted(() => {
                 </div>
 
                 <div class="p-game-setup-view__settings__body__content__gamestructure__content">
-                  <ToggleWithDropdown :inputId="`rounds-toggle-${activeGameId}`" labelTekst="Gebruik van rondes" min="1"
-                    max="100" label="Aantal rondes" :id="`rounds-${activeGameId}`" :name="`rounds-${activeGameId}`"
-                    type="number" v-model:toggled="activeGame.useRounds" v-model="activeGame.roundsCount">
+                  <ToggleWithDropdown :inputId="`rounds-toggle-${activeGameId}`" labelTekst="Gebruik van rondes"
+                    :min="Math.max(2, activeGame.currentRound || 1)" max="100" label="Aantal rondes"
+                    :id="`rounds-${activeGameId}`" :name="`rounds-${activeGameId}`" type="number"
+                    v-model:toggled="activeGame.useRounds" v-model="activeGame.roundsCount">
                   </ToggleWithDropdown>
 
-                  <ToggleWithDropdown :inputId="`sets-toggle-${activeGameId}`" labelTekst="Gebruik van sets" min="1"
-                    max="100" :label="activeGame.useRounds
-                      ? 'Aantal sets per ronde'
-                      : 'Aantal sets per game'
-                      " :id="`sets-${activeGameId}`" :name="`sets-${activeGameId}`" type="number"
-                    v-model:toggled="activeGame.useSets" v-model="activeGame.setsCount"></ToggleWithDropdown>
-                </div>
-              </div>
-
-              <div class="p-game-setup-view__settings__body__content__scoremodel">
-                <div class="p-game-setup-view__settings__body__content__scoremodel__subtitle">
-                  <h2 class="h6">Scoremodel voor deze game</h2>
-                  <p>
-                    Kies het type scoring dat voor deze game gebruikt wordt.
-                  </p>
-                </div>
-
-                <div class="p-game-setup-view__settings__body__content__scoremodel__content">
-                  <InputRadioCards :items="scoreModelRadioCards" :name="`score-model-${activeGameId}`"
-                    @change="handleScoreModelChange" />
+                  <ToggleWithDropdown v-if="!activeGame.originalUseSets" :inputId="`sets-toggle-${activeGameId}`"
+                    labelTekst="Gebruik van sets" min="2" max="100"
+                    :label="activeGame.useRounds ? 'Aantal sets per ronde' : 'Aantal sets per game'"
+                    :id="`sets-${activeGameId}`" :name="`sets-${activeGameId}`" type="number"
+                    v-model:toggled="activeGame.useSets" v-model="activeGame.setsCount">
+                  </ToggleWithDropdown>
                 </div>
               </div>
 
@@ -994,24 +931,6 @@ onUnmounted(() => {
                   <TabBar :items="timerankingTabBar" :name="`time-ranking-${activeGameId}`" :hideIcon="true"
                     @change="handleTimeRankingChange"></TabBar>
                 </div>
-
-                <!-- <div
-                  class="p-game-setup-view__settings__body__content__scoremodel__settings__section"
-                >
-                  <h2 class="h6">Bonuspunten</h2>
-                  <ToggleWithDropdown
-                    :inputId="`time-bonus-toggle-${activeGameId}`"
-                    labelTekst="Bonus punten per actie"
-                    min="1"
-                    max="100"
-                    label="Aantal bonus punten per actie"
-                    :id="`time-bonus-${activeGameId}`"
-                    :name="`timeBonus-${activeGameId}`"
-                    type="number"
-                    v-model:toggled="activeGame.useTimeBonusPoints"
-                    v-model="activeGame.timeBonusPoints"
-                  ></ToggleWithDropdown>
-                </div> -->
               </div>
             </div>
 
