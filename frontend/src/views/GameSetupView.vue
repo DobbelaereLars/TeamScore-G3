@@ -53,9 +53,9 @@ const games = ref([
     name: "",
     scoreModel: "points",
     useRounds: true,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
     pointsPerAction: 1,
     pointsRanking: "highest-first",
     useBonusPoints: false,
@@ -356,9 +356,9 @@ const handleGameModeChange = (value) => {
           name: "",
           scoreModel: "points",
           useRounds: true,
-          roundsCount: 1,
+          roundsCount: 2,
           useSets: false,
-          setsCount: 1,
+          setsCount: 2,
           pointsPerAction: 1,
           pointsRanking: "highest-first",
           useBonusPoints: false,
@@ -446,9 +446,9 @@ function addGame() {
     name: "",
     scoreModel: "points",
     useRounds: true,
-    roundsCount: 1,
+    roundsCount: 2,
     useSets: false,
-    setsCount: 1,
+    setsCount: 2,
     pointsPerAction: 1,
     pointsRanking: "highest-first",
     useBonusPoints: false,
@@ -491,9 +491,9 @@ const confirmDeleteGame = () => {
       pointsRanking: "highest-first",
       scoreModel: "points",
       useRounds: true,
-      roundsCount: 1,
+      roundsCount: 2,
       useSets: false,
-      setsCount: 1,
+      setsCount: 2,
       pointsPerAction: 1,
       useBonusPoints: false,
       bonusPoints: 1,
@@ -930,7 +930,7 @@ onUnmounted(() => {
                   <ToggleWithDropdown
                     :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
-                    min="1"
+                    min="2"
                     max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
@@ -944,7 +944,7 @@ onUnmounted(() => {
                   <ToggleWithDropdown
                     :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
-                    min="1"
+                    min="2"
                     max="100"
                     :label="
                       activeGame.useRounds
