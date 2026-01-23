@@ -95,6 +95,7 @@ onUnmounted(() => {
       <div class="c-display-leaderboard-view-points__podium">
         <LeaderboardPodiumIcon
           v-if="topThreePlayers[1]"
+          class="podium-rank-2"
           color="red"
           :spelersnaam="topThreePlayers[1].spelersnaam"
           :score="topThreePlayers[1].score"
@@ -102,6 +103,7 @@ onUnmounted(() => {
         />
         <LeaderboardPodiumIcon
           v-if="topThreePlayers[0]"
+          class="podium-rank-1"
           color="blue"
           :spelersnaam="topThreePlayers[0].spelersnaam"
           :score="topThreePlayers[0].score"
@@ -109,6 +111,7 @@ onUnmounted(() => {
         />
         <LeaderboardPodiumIcon
           v-if="topThreePlayers[2]"
+          class="podium-rank-3"
           color="orange"
           :spelersnaam="topThreePlayers[2].spelersnaam"
           :score="topThreePlayers[2].score"

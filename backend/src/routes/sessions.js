@@ -164,19 +164,19 @@ router.get('/:id/final-scores', async (req, res) => {
   try {
     const query = `
       SELECT 
-        fs.participant_id,
-        fs.total_points,
-        fs.final_rank,
-        p.id as participant_id,
+        MAX(p.id) as participant_id,
+        SUM(fs.total_points) as total_points,
+        MIN(fs.final_rank) as final_rank,
         p.type as participant_type,
-        pl.name as player_name,
-        tm.name as team_name
+        MAX(pl.name) as player_name,
+        MAX(tm.name) as team_name
       FROM FinalScore fs
       JOIN Participant p ON fs.participant_id = p.id
       LEFT JOIN Player pl ON p.player_id = pl.id
       LEFT JOIN Team tm ON p.team_id = tm.id
       WHERE fs.session_id = ?
-      ORDER BY fs.total_points DESC
+      GROUP BY p.type, COALESCE(pl.id, tm.id)
+      ORDER BY total_points DESC
     `;
 
     const scores = await all(db, query, [id]);

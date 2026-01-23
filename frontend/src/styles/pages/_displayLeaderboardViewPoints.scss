@@ -59,14 +59,14 @@
     }
 
     // 2nd place (red) - bottom left
-    > :nth-child(1) {
+    .podium-rank-2 {
       grid-column: 1;
       grid-row: 2;
       justify-self: center;
     }
 
     // 1st place (blue) - top center
-    > :nth-child(2) {
+    .podium-rank-1 {
       grid-column: 2;
       grid-row: 1 / 3;
       justify-self: center;
@@ -74,7 +74,7 @@
     }
 
     // 3rd place (orange) - bottom right
-    > :nth-child(3) {
+    .podium-rank-3 {
       grid-column: 3;
       grid-row: 2;
       justify-self: center;

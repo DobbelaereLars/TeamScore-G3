@@ -39,6 +39,9 @@ const loadGameData = async () => {
       spelersnaam: p.player_name || p.team_name || "Unknown",
       score: p.total_points || 0,
     }));
+
+    // Start animation only after data is loaded
+    startPodiumAnimation();
   } catch (error) {
     console.error("Failed to load final scores:", error);
   }
@@ -153,70 +156,86 @@ const startPodiumAnimation = () => {
   timeouts.forEach((t) => clearTimeout(t));
   timeouts.length = 0;
 
-  // Sequence: 3rd -> 2nd -> 1st -> Runner Ups -> Logo
-  // 3rd Place appears quickly
-  timeouts.push(
-    setTimeout(() => {
-      showRank3.value = true;
-    }, 1000),
-  );
+  // Calculate dynamic delays based on number of players
+  let currentDelay = 1000;
+  const playerCount = sortedPlayers.value.length;
 
-  // 2nd Place appears after 3rd
-  timeouts.push(
-    setTimeout(() => {
-      showRank2.value = true;
-    }, 4000),
-  ); // 3s delay after 3rd
+  // 3rd Place (Only if we have at least 3 players)
+  if (playerCount >= 3) {
+    timeouts.push(
+      setTimeout(() => {
+        showRank3.value = true;
+      }, currentDelay),
+    );
+    currentDelay += 3000; // Wait 3s before next
+  }
 
-  // Start Drumroll (Building tension)
-  timeouts.push(
-    setTimeout(() => {
-      isDrumrolling.value = true;
-    }, 6000),
-  );
+  // 2nd Place (Only if we have at least 2 players)
+  if (playerCount >= 2) {
+    timeouts.push(
+      setTimeout(() => {
+        showRank2.value = true;
+      }, currentDelay),
+    );
+    currentDelay += 3000; // Wait 3s before next
+  }
 
-  // 1st Place (Winner) appears last with more suspense
-  timeouts.push(
-    setTimeout(() => {
-      // Stop drumroll, start huge shake
-      isDrumrolling.value = false;
+  // Drumroll (Only if we have a winner)
+  if (playerCount >= 1) {
+    timeouts.push(
+      setTimeout(() => {
+        isDrumrolling.value = true;
+      }, currentDelay),
+    );
+    // Determine drumroll duration: full 4s if standard, shorter (2s) if only 1 player for less wait?
+    // User said "super long" for 1 player, so let's keep it relatively quick but tense.
+    const drumrollDuration = playerCount === 1 ? 2000 : 4000;
+    currentDelay += drumrollDuration;
 
-      showRank1.value = true;
+    // 1st Place (Winner)
+    timeouts.push(
+      setTimeout(() => {
+        // Stop drumroll, start huge shake
+        isDrumrolling.value = false;
 
-      // Trigger Screen Shake
-      isShaking.value = true;
-      timeouts.push(
-        setTimeout(() => {
-          isShaking.value = false;
-        }, 500),
-      ); // Duration of shake animation
+        showRank1.value = true;
 
-      // Trigger Confetti
-      if (showRank1.value) {
-        // Safety check
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
-        });
-      }
-    }, 10000),
-  );
+        // Trigger Screen Shake
+        isShaking.value = true;
+        timeouts.push(
+          setTimeout(() => {
+            isShaking.value = false;
+          }, 500),
+        ); // Duration of shake animation
 
-  // Runner Ups appear after the winner
+        // Trigger Confetti
+        if (showRank1.value) {
+          // Safety check
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
+          });
+        }
+      }, currentDelay),
+    );
+    currentDelay += 4000; // Wait before showing runner ups
+  }
+
+  // Runner Ups
   timeouts.push(
     setTimeout(() => {
       showRunnerUps.value = true;
       startAutoScroll(); // Start auto-scroll when runner ups appear
-    }, 14000),
+    }, currentDelay),
   );
 
   // Logo fades in last
   timeouts.push(
     setTimeout(() => {
       showLogo.value = true;
-    }, 15500),
+    }, currentDelay + 1500),
   );
 };
 
@@ -229,8 +248,8 @@ onMounted(() => {
   calculateItemsPerPage();
   window.addEventListener("resize", calculateItemsPerPage);
 
-  // Start animation sequence
-  startPodiumAnimation();
+  // Start animation sequence only AFTER data is loaded (now called in loadGameData)
+  // startPodiumAnimation(); 
   socket.on("display:navigate", handleNavigate);
 });
 
