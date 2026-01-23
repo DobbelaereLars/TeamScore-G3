@@ -824,7 +824,11 @@ router.put('/:id/participants/assignment', async (req, res) => {
   try {
     await run(db, 'BEGIN TRANSACTION');
 
-    const session = await get(db, 'SELECT participant_mode FROM Session WHERE id = ?', [id]);
+    const session = await get(
+      db,
+      'SELECT participant_mode FROM Session WHERE id = ?',
+      [id],
+    );
     if (!session) throw new Error('Session not found');
 
     for (const move of moves) {
@@ -841,9 +845,9 @@ router.put('/:id/participants/assignment', async (req, res) => {
           WHERE g.session_id = ? AND p.player_id = ? AND p.type = 'player'
         `;
         const parts = await all(db, fetchQuery, [id, move.id]);
-        
-        for(const p of parts) {
-           await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
+
+        for (const p of parts) {
+          await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
         }
       } else if (move.type === 'team') {
         const fetchQuery = `
@@ -854,72 +858,102 @@ router.put('/:id/participants/assignment', async (req, res) => {
         `;
         const parts = await all(db, fetchQuery, [id, move.id]);
 
-        for(const p of parts) {
-           await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
+        for (const p of parts) {
+          await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
         }
       } else if (move.type === 'team_with_players') {
-         // Should act like team but needs to handle subplayers? 
-         // Assuming frontend sends the TEAM ID as 'team' or similar. 
-         // Logic handles "teams" mode and "teams_with_players" mode similarly regarding the Team entity itself if it's the anchor.
-         // But wait, in teams_with_players, the PARTICIPANTS are the sub-players.
-         // So if we move a TEAM, we must move all sub-players.
-         
-         // Let's assume the frontend sends individual sub-player moves?
-         // OR frontend sends the Team move, and we handle the cascade.
-         // Let's rely on 'type'. 
-         // If `participant_mode` is `teams_with_players`, we expect `move.id` to be a TEAM ID if the UI manages teams.
-         // BUT the Participant records are for sub-players.
-         
-         if (session.participant_mode === 'teams_with_players' && move.type === 'team') {
-            // Find all participants that belong to this team in this session
-             const fetchQuery = `
+        // Should act like team but needs to handle subplayers?
+        // Assuming frontend sends the TEAM ID as 'team' or similar.
+        // Logic handles "teams" mode and "teams_with_players" mode similarly regarding the Team entity itself if it's the anchor.
+        // But wait, in teams_with_players, the PARTICIPANTS are the sub-players.
+        // So if we move a TEAM, we must move all sub-players.
+
+        // Let's assume the frontend sends individual sub-player moves?
+        // OR frontend sends the Team move, and we handle the cascade.
+        // Let's rely on 'type'.
+        // If `participant_mode` is `teams_with_players`, we expect `move.id` to be a TEAM ID if the UI manages teams.
+        // BUT the Participant records are for sub-players.
+
+        if (
+          session.participant_mode === 'teams_with_players' &&
+          move.type === 'team'
+        ) {
+          // Find all participants that belong to this team in this session
+          const fetchQuery = `
               SELECT p.id 
               FROM Participant p
               JOIN Game g ON p.game_id = g.id
               WHERE g.session_id = ? AND p.team_id = ? AND p.type = 'player'
             `;
-            const parts = await all(db, fetchQuery, [id, move.id]);
-            for(const p of parts) {
-              await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
-            }
-         }
+          const parts = await all(db, fetchQuery, [id, move.id]);
+          for (const p of parts) {
+            await run(db, 'DELETE FROM Participant WHERE id = ?', [p.id]);
+          }
+        }
       }
 
       // 2. Create NEW Participant record(s) in the new Game
       // This implicitly resets the score because the old Score was deleted via Cascade (or we made new ones)
-      
+
       if (session.participant_mode === 'players') {
         const partRes = await run(
-          db, 
+          db,
           'INSERT INTO Participant (game_id, type, player_id) VALUES (?, ?, ?)',
-          [move.newGameId, 'player', move.id]
+          [move.newGameId, 'player', move.id],
         );
-        await run(db, 'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)', [move.newGameId, partRes.lastID]);
-        await run(db, 'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)', [id, partRes.lastID]);
-
+        await run(
+          db,
+          'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)',
+          [move.newGameId, partRes.lastID],
+        );
+        await run(
+          db,
+          'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)',
+          [id, partRes.lastID],
+        );
       } else if (session.participant_mode === 'teams') {
         const partRes = await run(
-          db, 
+          db,
           'INSERT INTO Participant (game_id, type, team_id) VALUES (?, ?, ?)',
-          [move.newGameId, 'team', move.id]
+          [move.newGameId, 'team', move.id],
         );
-        await run(db, 'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)', [move.newGameId, partRes.lastID]);
-        await run(db, 'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)', [id, partRes.lastID]);
-
+        await run(
+          db,
+          'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)',
+          [move.newGameId, partRes.lastID],
+        );
+        await run(
+          db,
+          'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)',
+          [id, partRes.lastID],
+        );
       } else if (session.participant_mode === 'teams_with_players') {
-        if (move.type === 'team') { // Moving a whole team
+        if (move.type === 'team') {
+          // Moving a whole team
           // We need to find the sub-players of this team to re-add them
           // We can find them via TeamPlayer table
-          const subPlayers = await all(db, 'SELECT player_id FROM TeamPlayer WHERE team_id = ?', [move.id]);
-          
-          for(const sub of subPlayers) {
-             const partRes = await run(
-              db, 
+          const subPlayers = await all(
+            db,
+            'SELECT player_id FROM TeamPlayer WHERE team_id = ?',
+            [move.id],
+          );
+
+          for (const sub of subPlayers) {
+            const partRes = await run(
+              db,
               'INSERT INTO Participant (game_id, type, player_id, team_id) VALUES (?, ?, ?, ?)',
-              [move.newGameId, 'player', sub.player_id, move.id]
+              [move.newGameId, 'player', sub.player_id, move.id],
             );
-            await run(db, 'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)', [move.newGameId, partRes.lastID]);
-            await run(db, 'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)', [id, partRes.lastID]);
+            await run(
+              db,
+              'INSERT INTO Score (game_id, participant_id) VALUES (?, ?)',
+              [move.newGameId, partRes.lastID],
+            );
+            await run(
+              db,
+              'INSERT OR IGNORE INTO FinalScore (session_id, participant_id, total_points, final_rank) VALUES (?, ?, 0, 0)',
+              [id, partRes.lastID],
+            );
           }
         }
       }

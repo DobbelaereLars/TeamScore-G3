@@ -561,14 +561,14 @@ const cancelDeleteGame = () => {
 
 // Helper to open modal safely
 const safeOpenModal = (id) => {
-    nextTick(() => {
-        const dialog = document.getElementById(id);
-        if (dialog && typeof dialog.showModal === 'function') {
-            dialog.showModal();
-        } else {
-            console.error(`Failed to open modal ${id}`);
-        }
-    });
+  nextTick(() => {
+    const dialog = document.getElementById(id);
+    if (dialog && typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      console.error(`Failed to open modal ${id}`);
+    }
+  });
 };
 
 const openAssignmentModal = (gameId) => {
@@ -600,14 +600,15 @@ const toggleWarningModalId = 'toggle-warning-modal';
 const pendingToggle = ref(null);
 
 const confirmToggle = () => {
-    if (pendingToggle.value) {
-        tempAssignments.value[pendingToggle.value.participantId] = pendingToggle.value.gameId;
-        pendingToggle.value = null;
-    }
+  if (pendingToggle.value) {
+    tempAssignments.value[pendingToggle.value.participantId] =
+      pendingToggle.value.gameId;
+    pendingToggle.value = null;
+  }
 };
 
 const cancelToggle = () => {
-    pendingToggle.value = null;
+  pendingToggle.value = null;
 };
 
 const saveAssignmentChanges = () => {
@@ -621,7 +622,7 @@ const saveAssignmentChanges = () => {
 
 const toggleParticipantAssignment = (participantId, gameId) => {
   const currentAssigned = tempAssignments.value[participantId];
-  
+
   if (currentAssigned === gameId) {
     // Check if the participant had an original assignment to revert to
     const originalParticipant = participants.value.find(
@@ -636,27 +637,32 @@ const toggleParticipantAssignment = (participantId, gameId) => {
     }
   } else {
     // UX Request: Show warning if this is a "Move" from another game
-    const originalParticipant = originalParticipants.value.find(p => p.id === participantId);
-    
+    const originalParticipant = originalParticipants.value.find(
+      (p) => p.id === participantId,
+    );
+
     // Check if player is ALREADY assigned to another game (and not just unassigned)
     // AND that other game is not null
     // AND that older assignment was saved in "originalParticipants" (so we are modifying persistent state)
-    // If original.assignedGameId is set, and we are assigning to `gameId` (which is different), 
+    // If original.assignedGameId is set, and we are assigning to `gameId` (which is different),
     // it's a move that will reset scores.
-    
+
     // Also consider `currentAssigned` in `tempAssignments`. If I move P1 from G1 to G3.
     // tempAssignments[P1] is 'game-1'. I click 'game-3'.
     // Logic: warn if originalAssigned exists and is different from new target.
-    
-    const isMove = originalParticipant && originalParticipant.assignedGameId && String(originalParticipant.assignedGameId) !== String(gameId);
-    
+
+    const isMove =
+      originalParticipant &&
+      originalParticipant.assignedGameId &&
+      String(originalParticipant.assignedGameId) !== String(gameId);
+
     if (isMove) {
-       // It's a move!
-       // Trigger warning modal for THIS specific toggle?
-       // "popup bij het aanvinken". Yes.
-       pendingToggle.value = { participantId, gameId };
-       safeOpenModal(toggleWarningModalId); // Open the warning modal
-       return; // Don't apply change yet
+      // It's a move!
+      // Trigger warning modal for THIS specific toggle?
+      // "popup bij het aanvinken". Yes.
+      pendingToggle.value = { participantId, gameId };
+      safeOpenModal(toggleWarningModalId); // Open the warning modal
+      return; // Don't apply change yet
     }
 
     tempAssignments.value[participantId] = gameId;
@@ -769,21 +775,24 @@ const performSave = async (assignmentMoves = []) => {
 
     // 3. Process Assignment Moves (Moved after game creation!)
     if (assignmentMoves.length > 0) {
-        console.log('Processing assignment moves:', assignmentMoves);
-        // Translate temp game IDs to real ones
-        const translatedMoves = assignmentMoves.map(move => {
-            const realNewGameId = newGameIdMap[move.newGameId] || move.newGameId;
-            return { ...move, newGameId: realNewGameId };
-        });
-        await sessionRepository.updateAssignments(currentSessionId, translatedMoves);
+      console.log('Processing assignment moves:', assignmentMoves);
+      // Translate temp game IDs to real ones
+      const translatedMoves = assignmentMoves.map((move) => {
+        const realNewGameId = newGameIdMap[move.newGameId] || move.newGameId;
+        return { ...move, newGameId: realNewGameId };
+      });
+      await sessionRepository.updateAssignments(
+        currentSessionId,
+        translatedMoves,
+      );
     }
-    
+
     // 3b. Update assignments for NEW participants that were assigned to NEW games
     // Update participants list with real game IDs before sending 'addParticipants'
-    participants.value.forEach(p => {
-        if (p.isNew && p.assignedGameId && newGameIdMap[p.assignedGameId]) {
-            p.assignedGameId = newGameIdMap[p.assignedGameId];
-        }
+    participants.value.forEach((p) => {
+      if (p.isNew && p.assignedGameId && newGameIdMap[p.assignedGameId]) {
+        p.assignedGameId = newGameIdMap[p.assignedGameId];
+      }
     });
 
     // 2b. Delete Removed Games
@@ -800,10 +809,10 @@ const performSave = async (assignmentMoves = []) => {
       });
       await Promise.all(deletePromises);
     }
-    
+
     // Refresh originalGames baseline after all game ops are done
     originalGames.value = JSON.parse(JSON.stringify(games.value));
-    
+
     // 3. Delete removed participants
     const currentParticipantIds = participants.value.map((p) => p.id);
     const removedParticipants = originalParticipants.value.filter(
@@ -984,10 +993,13 @@ const performSave = async (assignmentMoves = []) => {
 
     // IMPORTANT: Reload participants to sync DB state and clear isNew flags
     // This is useful if the router.push doesn't happen immediately or if we change navigation logic later.
-    const freshParticipants = await sessionRepository.getParticipants(currentSessionId);
+    const freshParticipants =
+      await sessionRepository.getParticipants(currentSessionId);
     if (freshParticipants.data) {
-        participants.value = freshParticipants.data;
-        originalParticipants.value = JSON.parse(JSON.stringify(freshParticipants.data));
+      participants.value = freshParticipants.data;
+      originalParticipants.value = JSON.parse(
+        JSON.stringify(freshParticipants.data),
+      );
     }
 
     router.push({ name: 'tablet-player-list' });
@@ -1001,7 +1013,8 @@ const performSave = async (assignmentMoves = []) => {
 
 const getChangedAssignments = () => {
   const moves = [];
-  if (!originalParticipants.value || originalParticipants.value.length === 0) return [];
+  if (!originalParticipants.value || originalParticipants.value.length === 0)
+    return [];
 
   console.log('Calculating changed assignments...');
   participants.value.forEach((p) => {
@@ -1011,30 +1024,32 @@ const getChangedAssignments = () => {
 
     // Allow move if original had NO assignment, OR if assignment changed
     if (original) {
-        const oldId = original.assignedGameId;
-        const newId = p.assignedGameId;
-        
-        // We only care if:
-        // 1. New ID is set (we are assigning them to something)
-        // 2. New ID is DIFFERENT from Old ID (change)
-        // 3. (Optional) Old ID was null and New ID is set (New Assignment) - handled by case 2 logic usually
-        
-        // Note: newId from tempAssignments might be null if we unassigned them?
-        // If we unassigned them (Checkbox unchecked), newId is null.
-        // But the requirement for 'moves' array in backend usually expects a target game.
-        // Getting 'unassigned' logic is trickier. Currently backend `updateAssignments` assumes moving TO a game.
-        // If we want to support Unassign, we need to handle that.
-        // But user issue is "Added to last game", so they are assigned.
+      const oldId = original.assignedGameId;
+      const newId = p.assignedGameId;
 
-        if (newId && String(newId) !== String(oldId || '')) {
-             console.log(`Detected change for ${p.name} (${p.id}): ${oldId} -> ${newId}`);
-             moves.push({
-                id: p.id,
-                type: selectedParticipantMode.value === 'players' ? 'player' : 'team',
-                oldGameId: oldId, // might be null/undefined
-                newGameId: newId,
-             });
-        }
+      // We only care if:
+      // 1. New ID is set (we are assigning them to something)
+      // 2. New ID is DIFFERENT from Old ID (change)
+      // 3. (Optional) Old ID was null and New ID is set (New Assignment) - handled by case 2 logic usually
+
+      // Note: newId from tempAssignments might be null if we unassigned them?
+      // If we unassigned them (Checkbox unchecked), newId is null.
+      // But the requirement for 'moves' array in backend usually expects a target game.
+      // Getting 'unassigned' logic is trickier. Currently backend `updateAssignments` assumes moving TO a game.
+      // If we want to support Unassign, we need to handle that.
+      // But user issue is "Added to last game", so they are assigned.
+
+      if (newId && String(newId) !== String(oldId || '')) {
+        console.log(
+          `Detected change for ${p.name} (${p.id}): ${oldId} -> ${newId}`,
+        );
+        moves.push({
+          id: p.id,
+          type: selectedParticipantMode.value === 'players' ? 'player' : 'team',
+          oldGameId: oldId, // might be null/undefined
+          newGameId: newId,
+        });
+      }
     }
   });
 
@@ -1043,19 +1058,19 @@ const getChangedAssignments = () => {
 };
 
 const saveChanges = async () => {
-    // With instant toggle warnings, we don't necessarily need the final warning, 
-    // BUT user might have missed it or we double check.
-    // However, if we warn on Toggle, the 'tempAssignments' are committed to 'participants' locally.
-    // The `getChangedAssignments` logic detects changes on save time.
-    // If we want fewer clicks, maybe skip warning here if user already confirmed toggles?
-    // But keeping it is safer. 
-    // User requested "popup bij het aanvinken".
+  // With instant toggle warnings, we don't necessarily need the final warning,
+  // BUT user might have missed it or we double check.
+  // However, if we warn on Toggle, the 'tempAssignments' are committed to 'participants' locally.
+  // The `getChangedAssignments` logic detects changes on save time.
+  // If we want fewer clicks, maybe skip warning here if user already confirmed toggles?
+  // But keeping it is safer.
+  // User requested "popup bij het aanvinken".
   const moves = getChangedAssignments();
   if (moves.length > 0) {
     pendingAssignmentChanges.value = moves;
     // We can conditionally skip this if we assume user saw the toggle warning.
-    // But since `saveAssignmentChanges` commits multiple changes, 
-    // and one toggle warning is per-checkbox, 
+    // But since `saveAssignmentChanges` commits multiple changes,
+    // and one toggle warning is per-checkbox,
     // showing a final summary is good practice (system feedback).
     // But if user says "Opslaan doet niets", maybe they are blocked by a bug here.
     // Let's ensure showAssignmentWarning works.
@@ -1581,15 +1596,16 @@ onUnmounted(() => {
             @accept="confirmToggle"
           >
             <div class="c-modal__content">
-                <p class="c-modal__text">
-                  Deze speler is al toegewezen aan een ander spel.
+              <p class="c-modal__text">
+                Deze speler is al toegewezen aan een ander spel.
+              </p>
+              <div class="c-notice c-notice--danger mb-4">
+                <p>
+                  <strong>Let op:</strong> Als je deze speler verplaatst, worden
+                  de huidige scores verwijderd (reset naar 0).
                 </p>
-                <div class="c-notice c-notice--danger mb-4">
-                     <p><strong>Let op:</strong> Als je deze speler verplaatst, worden de huidige scores verwijderd (reset naar 0).</p>
-                </div>
-                <p class="c-modal__text">
-                Weet je zeker dat je wilt doorgaan?
-                </p>
+              </div>
+              <p class="c-modal__text">Weet je zeker dat je wilt doorgaan?</p>
             </div>
           </Modal>
 
@@ -1602,15 +1618,22 @@ onUnmounted(() => {
             @accept="confirmAssignmentSave"
           >
             <div class="c-modal__content">
-                <p class="c-modal__text">
-                Je hebt de indeling voor {{ pendingAssignmentChanges.length }} deelnemer(s) gewijzigd via de instellingen.
+              <p class="c-modal__text">
+                Je hebt de indeling voor
+                {{ pendingAssignmentChanges.length }} deelnemer(s) gewijzigd via
+                de instellingen.
+              </p>
+              <div class="c-notice c-notice--danger mb-4">
+                <p>
+                  <strong>Let op:</strong> Door de indeling te wijzigen,
+                  beschouwt het systeem dit als een nieuwe deelname. De scores
+                  die deze deelnemer(s) hadden in hun vorige spel worden
+                  hierdoor <strong>gereset</strong> (verwijderd).
                 </p>
-                <div class="c-notice c-notice--danger mb-4">
-                     <p><strong>Let op:</strong> Door de indeling te wijzigen, beschouwt het systeem dit als een nieuwe deelname. De scores die deze deelnemer(s) hadden in hun vorige spel worden hierdoor <strong>gereset</strong> (verwijderd).</p>
-                </div>
-                <p class="c-modal__text">
+              </div>
+              <p class="c-modal__text">
                 Weet je zeker dat je wilt doorgaan en opslaan?
-                </p>
+              </p>
             </div>
           </Modal>
 

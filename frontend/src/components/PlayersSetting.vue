@@ -28,14 +28,14 @@ const uploadErrorMessage = ref('');
 
 const nextId = computed(() => {
   if (!participants.value || participants.value.length === 0) return 1;
-  
+
   // Robust ID calculation: parsInt + filter NaN
   const ids = participants.value
     .map((p) => parseInt(p.id, 10))
     .filter((id) => !isNaN(id));
 
   if (ids.length === 0) return 1;
-  
+
   // Use a fallback for Math.max on empty set just in case, though checked above
   const maxId = Math.max(...ids);
   return maxId + 1;
@@ -286,11 +286,15 @@ watch(
 watch(
   () => participants.value,
   (newParticipants) => {
-    if (props.playerMode === 'teams-with-players' && newParticipants.length > 0 && !selectedTeamId.value) {
+    if (
+      props.playerMode === 'teams-with-players' &&
+      newParticipants.length > 0 &&
+      !selectedTeamId.value
+    ) {
       selectedTeamId.value = newParticipants[0].id;
     }
   },
-  { deep: true, immediate: true }
+  { deep: true, immediate: true },
 );
 
 const fileInput = ref(null);
@@ -384,10 +388,23 @@ const handleFileUpload = (event) => {
         </div>
 
         <!-- Input voor spelers/teams toevoegen -->
-        <div v-if="playerMode !== 'teams-with-players' || selectedTeamId" class="c-players-setting__input">
-          <InputField v-model="inputValue" id="player-add" name="player-add" :label="false" :placeholder="placeholder"
-            @keyup.enter="addPlayer" />
-          <Button :button-tekst="buttonText" :clickable="false" @click="addPlayer">
+        <div
+          v-if="playerMode !== 'teams-with-players' || selectedTeamId"
+          class="c-players-setting__input"
+        >
+          <InputField
+            v-model="inputValue"
+            id="player-add"
+            name="player-add"
+            :label="false"
+            :placeholder="placeholder"
+            @keyup.enter="addPlayer"
+          />
+          <Button
+            :button-tekst="buttonText"
+            :clickable="false"
+            @click="addPlayer"
+          >
             <template #c-btn_icon-left>
               <Plus :size="18" />
             </template>
@@ -396,13 +413,28 @@ const handleFileUpload = (event) => {
       </div>
 
       <!-- Teams tabs (alleen bij teams-with-players mode) -->
-      <div v-if="playerMode === 'teams-with-players'" class="c-players-setting__tabs-wrapper">
+      <div
+        v-if="playerMode === 'teams-with-players'"
+        class="c-players-setting__tabs-wrapper"
+      >
         <div class="c-players-setting__tabs">
-          <TeamTabButton v-for="team in participants" :key="team.id" :label="team.name"
-            :count="team.players?.length || 0" :is-active="selectedTeamId === team.id" :closeable="true"
-            :editable="playerMode === 'teams-with-players'" @click="selectedTeamId = team.id"
-            @close="requestDeleteTeam(team.id)" @rename="(newName) => renameTeam(team.id, newName)" />
-          <button type="button" class="c-players-setting__tab c-players-setting__tab--add" @click="addTeam">
+          <TeamTabButton
+            v-for="team in participants"
+            :key="team.id"
+            :label="team.name"
+            :count="team.players?.length || 0"
+            :is-active="selectedTeamId === team.id"
+            :closeable="true"
+            :editable="playerMode === 'teams-with-players'"
+            @click="selectedTeamId = team.id"
+            @close="requestDeleteTeam(team.id)"
+            @rename="(newName) => renameTeam(team.id, newName)"
+          />
+          <button
+            type="button"
+            class="c-players-setting__tab c-players-setting__tab--add"
+            @click="addTeam"
+          >
             <Plus :size="18" />
             Team toevoegen
           </button>
@@ -410,9 +442,17 @@ const handleFileUpload = (event) => {
 
         <!-- Spelers lijst van geselecteerd team -->
         <div v-if="selectedTeamId" class="c-players-setting__players-list">
-          <PlayersSettingParticipant v-for="player in selectedTeam?.players || []" :key="player.id" :name="player.name"
-            @delete="deletePlayerFromTeam(player.id)" @rename="(newName) => renamePlayerInTeam(player.id, newName)" />
-          <div v-if="!selectedTeam?.players?.length" class="c-players-setting__emptylist">
+          <PlayersSettingParticipant
+            v-for="player in selectedTeam?.players || []"
+            :key="player.id"
+            :name="player.name"
+            @delete="deletePlayerFromTeam(player.id)"
+            @rename="(newName) => renamePlayerInTeam(player.id, newName)"
+          />
+          <div
+            v-if="!selectedTeam?.players?.length"
+            class="c-players-setting__emptylist"
+          >
             <p>
               Er zijn nog geen spelers toegevoegd aan {{ selectedTeam?.name }}
             </p>
@@ -421,19 +461,38 @@ const handleFileUpload = (event) => {
       </div>
 
       <!-- Spelers lijst (bij players mode) -->
-      <div v-if="playerMode === 'players' && participants.length > 0" class="c-players-setting__players-list">
-        <PlayersSettingParticipant v-for="player in participants" :key="player.id" :name="player.name"
-          @delete="deleteParticipant(player.id)" @rename="(newName) => renameParticipant(player.id, newName)" />
+      <div
+        v-if="playerMode === 'players' && participants.length > 0"
+        class="c-players-setting__players-list"
+      >
+        <PlayersSettingParticipant
+          v-for="player in participants"
+          :key="player.id"
+          :name="player.name"
+          @delete="deleteParticipant(player.id)"
+          @rename="(newName) => renameParticipant(player.id, newName)"
+        />
       </div>
 
       <!-- Teams lijst (bij teams mode) -->
-      <div v-if="playerMode === 'teams' && participants.length > 0" class="c-players-setting__players-list">
-        <PlayersSettingParticipant v-for="team in participants" :key="team.id" :name="team.name"
-          @delete="deleteParticipant(team.id)" @rename="(newName) => renameParticipant(team.id, newName)" />
+      <div
+        v-if="playerMode === 'teams' && participants.length > 0"
+        class="c-players-setting__players-list"
+      >
+        <PlayersSettingParticipant
+          v-for="team in participants"
+          :key="team.id"
+          :name="team.name"
+          @delete="deleteParticipant(team.id)"
+          @rename="(newName) => renameParticipant(team.id, newName)"
+        />
       </div>
 
       <!-- Empty state -->
-      <div v-if="participants.length === 0" class="c-players-setting__emptylist">
+      <div
+        v-if="participants.length === 0"
+        class="c-players-setting__emptylist"
+      >
         <Users :size="22" />
         <p v-if="playerMode === 'teams-with-players'">
           Voeg eerst een team toe
@@ -443,23 +502,43 @@ const handleFileUpload = (event) => {
             Er zijn nog geen
             {{ playerMode === 'players' ? 'spelers' : 'teams' }} toegevoegd
           </p>
-          <button v-if="playerMode === 'players'" type="button" class="c-players-setting__csv-upload"
-            @click="triggerFileUpload">
+          <button
+            v-if="playerMode === 'players'"
+            type="button"
+            class="c-players-setting__csv-upload"
+            @click="triggerFileUpload"
+          >
             <Upload :size="18" />
             Voeg een CSV bestand toe
-            <input type="file" ref="fileInput" accept=".csv" style="display: none" @change="handleFileUpload" />
+            <input
+              type="file"
+              ref="fileInput"
+              accept=".csv"
+              style="display: none"
+              @change="handleFileUpload"
+            />
           </button>
         </div>
       </div>
     </div>
 
-    <Modal :modal-id="deleteTeamModalId" :title="deleteTeamModalTitle"
+    <Modal
+      :modal-id="deleteTeamModalId"
+      :title="deleteTeamModalTitle"
       text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
-      cancel-btn-text="Annuleren" accept-btn-text="Verwijderen" @cancel="cancelDeleteTeam"
-      @accept="confirmDeleteTeam" />
+      cancel-btn-text="Annuleren"
+      accept-btn-text="Verwijderen"
+      @cancel="cancelDeleteTeam"
+      @accept="confirmDeleteTeam"
+    />
 
-    <Modal :modal-id="errorModalId" title="Fout bij importeren" :text="uploadErrorMessage" accept-btn-text="Oké"
-      :show-cancel-btn="false" />
+    <Modal
+      :modal-id="errorModalId"
+      title="Fout bij importeren"
+      :text="uploadErrorMessage"
+      accept-btn-text="Oké"
+      :show-cancel-btn="false"
+    />
   </div>
 </template>
 
