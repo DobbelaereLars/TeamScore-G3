@@ -115,3 +115,55 @@
 }
 
 /* Extra styles for bonus modal list */
+// Move this to _playerListView.scss
+/* Extra styles for bonus modal list */
+.c-modal-bonus-badge {
+  display: inline-flex;
+  margin: 0 $spacing-1;
+  vertical-align: middle;
+  transform: translateY(-1px);
+  padding: $spacing-1 $spacing-3;
+  border-radius: $border-radius-5;
+  font-size: var(--font-size-meta);
+  box-shadow: $box-shadow;
+  background-color: $color-primary-blue-75;
+  color: $color-primary-blue-500;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-list-move {
+  transition: transform 0.4s ease-out;
+}
+
+.player-list-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.player-list-leave-active {
+  transition: all 0.3s ease-in;
+  position: absolute;
+}
+
+.player-list-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.player-list-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}

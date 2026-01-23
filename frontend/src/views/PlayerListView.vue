@@ -868,7 +868,9 @@ const endGame = async () => {
                 @accept="saveBonus"
               >
                 <p class="c-modal__text">
-                  Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers
+                  Geef
+                  <span class="c-modal-bonus-badge">+{{ bonusAmount }}</span>
+                  bonuspunten aan de volgende deelnemers
                 </p>
 
                 <div
@@ -1021,44 +1023,4 @@ const endGame = async () => {
   </div>
 </template>
 
-<style scoped>
-.player-list-move {
-  transition: transform 0.4s ease-out;
-}
-
-.player-list-enter-active {
-  transition: all 0.3s ease-out;
-}
-
-.player-list-leave-active {
-  transition: all 0.3s ease-in;
-  position: absolute;
-}
-
-.player-list-enter-from {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.player-list-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-</style>
-
-<style scoped>
-/* Extra styles for bonus modal list */
-</style>
+<style scoped></style>
