@@ -210,7 +210,7 @@ const deletePlayerFromTeam = (playerId) => {
 
   subPlayerToDeleteId.value = playerId;
   let playerName = 'Speler';
-  
+
   // Try to find the name for the dialog
   if (selectedTeamId.value) {
     const team = participants.value.find((t) => t.id === selectedTeamId.value);
@@ -219,8 +219,9 @@ const deletePlayerFromTeam = (playerId) => {
   }
 
   deleteTeamModalTitle.value = `Speler '${playerName}' verwijderen?`;
-  deleteTeamModalText.value = 'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
-  
+  deleteTeamModalText.value =
+    'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+
   const dialog = document.getElementById(deleteTeamModalId);
   if (dialog && typeof dialog.showModal === 'function') {
     dialog.showModal();
@@ -230,7 +231,7 @@ const deletePlayerFromTeam = (playerId) => {
 const requestDeleteTeam = (teamId) => {
   // Always confirm if In-Game (requireConfirm) OR if deleting a Team that contains players (teams-with-players)
   const isComplexTeamDelete = props.playerMode === 'teams-with-players';
-  
+
   if (!props.requireConfirm && !isComplexTeamDelete) {
     performParticipantDeletion(teamId);
     return;
@@ -238,7 +239,7 @@ const requestDeleteTeam = (teamId) => {
 
   teamToDeleteId.value = teamId;
   subPlayerToDeleteId.value = null; // Ensure we are not deleting a sub-player
-  
+
   const team = participants.value.find((t) => t.id === teamId);
   const typeLabel = props.playerMode === 'players' ? 'Speler' : 'Team';
 
@@ -248,17 +249,21 @@ const requestDeleteTeam = (teamId) => {
 
   if (props.requireConfirm) {
     if (props.playerMode === 'teams-with-players') {
-      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team en hun behaalde punten worden verwijderd. Deze actie kan niet ongedaan worden gemaakt.';
+      deleteTeamModalText.value =
+        'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team en hun behaalde punten worden verwijderd. Deze actie kan niet ongedaan worden gemaakt.';
     } else if (props.playerMode === 'teams') {
-      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+      deleteTeamModalText.value =
+        'Weet je zeker dat je dit team wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
     } else {
       // players
-      deleteTeamModalText.value = 'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
+      deleteTeamModalText.value =
+        'Weet je zeker dat je deze speler wil verwijderen? De reeds behaalde punten gaan hierdoor verloren. Deze actie kan niet ongedaan worden gemaakt.';
     }
   } else {
     // Game Setup (No points logic yet)
     if (props.playerMode === 'teams-with-players') {
-      deleteTeamModalText.value = 'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt.';
+      deleteTeamModalText.value =
+        'Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt.';
     } else {
       // Fallback
       deleteTeamModalText.value = 'Weet je zeker dat je dit wil verwijderen?';
