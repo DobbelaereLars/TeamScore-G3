@@ -200,7 +200,7 @@ const gameSeriesTabBar = computed(() =>
   games.value.map((game, index) => ({
     id: game.id,
     value: game.id,
-    label: getDefaultGameName(game),
+    label: getDefaultGameName(game, index),
     checked: index === activeGameIndex.value,
     disabled: selectedGameMode.value === 'series-of-games' && game.isFinished,
   })),
@@ -209,7 +209,7 @@ const gameSeriesTabBar = computed(() =>
 const gameOptions = computed(() =>
   games.value.map((game, index) => ({
     value: game.id,
-    label: getDefaultGameName(game),
+    label: getDefaultGameName(game, index),
   })),
 );
 
@@ -414,8 +414,9 @@ const handleGameTabClose = (gameId) => {
   }
 
   gameToDeleteId.value = gameId;
-  const game = games.value.find((g) => g.id === gameId);
-  const displayName = game ? getDefaultGameName(game) : 'Game';
+  const index = games.value.findIndex((g) => g.id === gameId);
+  const displayName =
+    index !== -1 ? getDefaultGameName(games.value[index], index) : 'Game';
   deleteGameModalTitle.value = `${displayName} verwijderen?`;
 
   const dialog = document.getElementById(deleteGameModalId);
@@ -542,7 +543,7 @@ const openAssignmentModal = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index !== -1) {
     const game = games.value[index];
-    const gameName = getDefaultGameName(game);
+    const gameName = getDefaultGameName(game, index);
     assignmentModalTitle.value = `Deelnemers voor ${gameName}`;
   } else {
     assignmentModalTitle.value = 'Deelnemers toewijzen';
@@ -590,12 +591,24 @@ const getAssignedParticipants = (gameId) => {
   return participants.value.filter((p) => p.assignedGameId === gameId);
 };
 
-const getDefaultGameName = (game) => {
+const getDefaultGameName = (game, index = -1) => {
   if (game.name) return game.name;
+
+  // If index is not provided, try to find it
+  if (index === -1) {
+    index = games.value.findIndex((g) => g.id === game.id);
+  }
+
+  // If found in the list, use its position (1-based)
+  if (index !== -1) {
+    return `Spel ${index + 1}`;
+  }
+
+  // Fallback for games not in the list (should be rare)
   if (!game.id) return 'Spel ?';
 
   const idStr = String(game.id);
-  // Try to use ID number if possible
+  // Try to use ID number or stripped ID if possible
   const match = idStr.match(/^game-(\d+)$/);
   if (match) return `Spel ${match[1]}`;
 
@@ -605,7 +618,7 @@ const getDefaultGameName = (game) => {
 const getGameName = (gameId) => {
   const index = games.value.findIndex((g) => g.id === gameId);
   if (index === -1) return 'ander spel';
-  return getDefaultGameName(games.value[index]);
+  return getDefaultGameName(games.value[index], index);
 };
 
 const saveChanges = async () => {
@@ -622,9 +635,14 @@ const saveChanges = async () => {
     await sessionRepository.update(currentSessionId, sessionPayload);
 
     // 2. Update Each Game Configuration
-    const gameUpdatePromises = games.value.map((game) => {
+    const gameUpdatePromises = games.value.map((game, index) => {
+      // Check if it's a new game (ID starts with 'game-')
+      const isNewGame = String(game.id).startsWith('game-');
+
+      const gameName = game.name || getDefaultGameName(game, index);
+
       const gamePayload = {
-        name: game.name,
+        name: gameName,
         rounds: game.useRounds ? game.roundsCount : 1,
         sets: game.useSets ? game.setsCount : 1,
         points_per_click: game.pointsPerAction,
@@ -634,8 +652,23 @@ const saveChanges = async () => {
         timeRanking: game.timeRanking,
         timeNotation: game.timeNotation,
         useBonusPoints: game.useBonusPoints,
+        sessionId: currentSessionId || sessionStorage.getItem('sessionId'), // Ensure we have a session ID
+        participantEntities: participants.value?.map((p) => p.id) || [], // Pass all current participants
       };
-      return gameRepository.update(game.id, gamePayload);
+
+      if (isNewGame) {
+        console.log(`Creating NEW game: ${game.name}`);
+        return gameRepository.create(gamePayload).then((res) => {
+          // Update local ID with real ID from backend to prevent re-creation
+          if (res.data && res.data.id) {
+            game.id = res.data.id;
+          }
+          return res;
+        });
+      } else {
+        console.log(`Updating existing game: ${game.id}`);
+        return gameRepository.update(game.id, gamePayload);
+      }
     });
 
     await Promise.all(gameUpdatePromises);
@@ -1008,7 +1041,7 @@ onUnmounted(() => {
                   :id="`game-name-${activeGameId}`"
                   :name="`gameName-${activeGameId}`"
                   :label="false"
-                  placeholder="Bv. Tafeltennis"
+                  :placeholder="getDefaultGameName(activeGame, activeGameIndex)"
                   v-model="activeGame.name"
                 />
               </div>
