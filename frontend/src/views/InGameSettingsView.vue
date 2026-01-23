@@ -147,6 +147,7 @@ onMounted(async () => {
           pointsRanking: pointRanking,
           timeRanking: timeRanking,
           timeNotation: config.timeNotation || 'mm:ss',
+          isFinished: g.is_finished === 1,
         };
       });
     }
@@ -201,6 +202,7 @@ const gameSeriesTabBar = computed(() =>
     value: game.id,
     label: getDefaultGameName(game),
     checked: index === activeGameIndex.value,
+    disabled: selectedGameMode.value === 'series-of-games' && game.isFinished,
   })),
 );
 

@@ -42,6 +42,15 @@
         background-color: $color-primary-blue-100;
       }
     }
+
+    &:disabled {
+      & + .c-tabbar__label {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: transparent; // Ensure it looks inactive
+        color: $color-secondary-grey-300;
+      }
+    }
   }
 
   &__label {

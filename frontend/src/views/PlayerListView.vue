@@ -167,7 +167,10 @@ const isTeamsWithPlayers = computed(() => {
 
 const isSeries = computed(() => {
   console.log('Session Mode:', currentSession.value?.game_mode);
-  return currentSession.value?.game_mode === 'series-of-games';
+  return (
+    currentSession.value?.game_mode === 'series-of-games' ||
+    currentSession.value?.game_mode === 'series'
+  );
 });
 
 const availableTeams = computed(() => {
@@ -507,19 +510,25 @@ const nextGame = async () => {
     // 3. Wacht 15 seconden
     await new Promise((resolve) => setTimeout(resolve, 15000));
 
-    // 4. Navigeer Display terug naar Scoreboard
-    socket.emit('display:navigate', {
-      name: 'display-scoreboard',
-      params: { sessionId: currentSessionId },
-    });
-
-    // 5. Selecteer volgend spel (Triggers display update via watcher)
+    // 4. Selecteer volgend spel voor DISPLAY (en onszelf)
     const currentIndex = games.value.findIndex(
       (g) => g.id === currentGame.value.id,
     );
     if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
-      selectedGameId.value = games.value[currentIndex + 1].id;
+      // Zet volgende game id
+      const nextGameId = games.value[currentIndex + 1].id;
+      
+      // Update lokale selectie
+      selectedGameId.value = nextGameId;
+      sessionStorage.setItem('lastSelectedGameId', nextGameId);
+
+      // Forceer navigatie display naar scoreboard van NIEUWE game
+      socket.emit('display:navigate', {
+          name: 'display-scoreboard',
+          params: { sessionId: currentSessionId, gameId: nextGameId },
+      });
     }
+
   } catch (e) {
     console.error('Failed to update game finished status or transition:', e);
     // Fallback: close modal if error occurred before
@@ -532,7 +541,9 @@ const nextGame = async () => {
 
 const endGame = async () => {
   if (currentGame.value) {
-    const isParallel = currentSession.value?.game_mode?.includes('parallel');
+    const isParallel =
+      currentSession.value?.game_mode?.includes('parallel') ||
+      currentSession.value?.game_mode === 'parallel'; // Fix for mode check
 
     // SPECIAAL GEVAL: Volgend spel in serie
     // (Ensure this doesn't run for parallel)

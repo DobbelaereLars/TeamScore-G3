@@ -43,6 +43,7 @@ const handleChange = (item) => {
         :id="getId(item, index)"
         :value="item.value ?? item.id ?? index"
         :checked="item.checked ?? false"
+        :disabled="item.disabled ?? false"
         @change="handleChange(item)"
       />
 
