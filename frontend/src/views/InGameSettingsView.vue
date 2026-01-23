@@ -1,12 +1,5 @@
 <script setup>
-import {
-  ref,
-  computed,
-  nextTick,
-  watch,
-  onMounted,
-  onUnmounted,
-} from 'vue';
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
