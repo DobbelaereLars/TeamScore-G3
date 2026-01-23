@@ -1,23 +1,23 @@
 <script setup>
-import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
-import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 
-import logo from "../assets/logo.webp";
-import socket from "../utils/socket";
-import { useRouter } from "vue-router";
+import logo from '../assets/logo.webp';
+import socket from '../utils/socket';
+import { useRouter } from 'vue-router';
 
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
-import { finalScoreRepository } from "../services/api";
+import { finalScoreRepository } from '../services/api';
 
-const sessionID = sessionStorage.getItem("display_sessionId");
-console.log("Leaderboard view initialized with sessionID:", sessionID);
+const sessionID = sessionStorage.getItem('display_sessionId');
+console.log('Leaderboard view initialized with sessionID:', sessionID);
 
 const players = ref([]);
 const router = useRouter();
 
 const handleNavigate = (data) => {
-  console.log("Received navigate event:", data);
+  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -25,22 +25,22 @@ const handleNavigate = (data) => {
 
 const loadGameData = async () => {
   if (!sessionID) {
-    console.error("No session ID found for leaderboard");
+    console.error('No session ID found for leaderboard');
     return;
   }
 
   try {
     const response = await finalScoreRepository.getBySession(sessionID);
-    console.log("Final scores fetched:", response.data);
+    console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => ({
       id: p.participant_id, // Note: backend returns participant_id
-      spelersnaam: p.player_name || p.team_name || "Unknown",
+      spelersnaam: p.player_name || p.team_name || 'Unknown',
       score: p.total_points || 0,
     }));
   } catch (error) {
-    console.error("Failed to load final scores:", error);
+    console.error('Failed to load final scores:', error);
   }
 };
 
@@ -74,15 +74,15 @@ const remainingPlayers = computed(() => {
 
 onMounted(() => {
   // Disable body scrolling
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = 'hidden';
   loadGameData();
-  socket.on("display:navigate", handleNavigate);
+  socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
   // Re-enable body scrolling
-  document.body.style.overflow = "";
-  socket.off("display:navigate", handleNavigate);
+  document.body.style.overflow = '';
+  socket.off('display:navigate', handleNavigate);
 });
 </script>
 

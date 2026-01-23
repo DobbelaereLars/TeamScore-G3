@@ -1,23 +1,23 @@
 <script setup>
-import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
-import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 
-import logo from "../assets/logo.webp";
-import socket from "../utils/socket";
-import { useRouter } from "vue-router";
+import logo from '../assets/logo.webp';
+import socket from '../utils/socket';
+import { useRouter } from 'vue-router';
 
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
-import { finalScoreRepository } from "../services/api";
+import { finalScoreRepository } from '../services/api';
 
-const sessionID = sessionStorage.getItem("display_sessionId");
-console.log("Leaderboard view initialized with sessionID:", sessionID);
+const sessionID = sessionStorage.getItem('display_sessionId');
+console.log('Leaderboard view initialized with sessionID:', sessionID);
 
 const players = ref([]);
 const router = useRouter();
 
 const handleNavigate = (data) => {
-  console.log("Received navigate event:", data);
+  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -25,25 +25,25 @@ const handleNavigate = (data) => {
 
 const loadGameData = async () => {
   if (!sessionID) {
-    console.error("No session ID found for leaderboard");
+    console.error('No session ID found for leaderboard');
     return;
   }
 
   try {
     const response = await finalScoreRepository.getBySession(sessionID);
-    console.log("Final scores fetched:", response.data);
+    console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => ({
       id: p.participant_id, // Note: backend returns participant_id
-      spelersnaam: p.player_name || p.team_name || "Unknown",
+      spelersnaam: p.player_name || p.team_name || 'Unknown',
       score: p.total_points || 0,
     }));
 
     // Start animation only after data is loaded
     startPodiumAnimation();
   } catch (error) {
-    console.error("Failed to load final scores:", error);
+    console.error('Failed to load final scores:', error);
   }
 };
 
@@ -110,7 +110,7 @@ const displayedPlayers = computed(() => {
   return remainingPlayers.value.slice(start, start + ITEMS_per_PAGE.value);
 });
 
-import confetti from "canvas-confetti";
+import confetti from 'canvas-confetti';
 
 // Visibility states for podium animation
 const showRank1 = ref(false); // 1st Place
@@ -215,7 +215,7 @@ const startPodiumAnimation = () => {
             particleCount: 150,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ["#534aff", "#ff3b30", "#ffd60a"], // Using our theme colors if possible, or defaults
+            colors: ['#534aff', '#ff3b30', '#ffd60a'], // Using our theme colors if possible, or defaults
           });
         }
       }, currentDelay),
@@ -241,24 +241,24 @@ const startPodiumAnimation = () => {
 
 onMounted(() => {
   // Disable body scrolling
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = 'hidden';
   loadGameData();
 
   // Calculate initial items per page
   calculateItemsPerPage();
-  window.addEventListener("resize", calculateItemsPerPage);
+  window.addEventListener('resize', calculateItemsPerPage);
 
   // Start animation sequence only AFTER data is loaded (now called in loadGameData)
-  // startPodiumAnimation(); 
-  socket.on("display:navigate", handleNavigate);
+  // startPodiumAnimation();
+  socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
   // Re-enable body scrolling
-  document.body.style.overflow = "";
-  window.removeEventListener("resize", calculateItemsPerPage);
+  document.body.style.overflow = '';
+  window.removeEventListener('resize', calculateItemsPerPage);
   if (autoScrollInterval) clearInterval(autoScrollInterval);
-  socket.off("display:navigate", handleNavigate);
+  socket.off('display:navigate', handleNavigate);
 
   // Clear all animation timeouts
   timeouts.forEach((t) => clearTimeout(t));
