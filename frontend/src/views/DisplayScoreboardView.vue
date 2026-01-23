@@ -237,7 +237,7 @@ const handleGameInfoUpdate = async (data) => {
       if (roundChanged || setChanged) {
         // Clear existing timeout if any, to reset the duration
         if (overlayTimeout) clearTimeout(overlayTimeout);
-        
+
         // Force reset the overlay to trigger re-animation
         showRoundOverlay.value = false;
         await nextTick();
@@ -253,14 +253,14 @@ const handleGameInfoUpdate = async (data) => {
         if (setChanged) {
           setBannerText.value = `SET ${data.currentSet}`;
         }
-        
+
         // Show overlay with new text
         showRoundOverlay.value = true;
-        
+
         // Set new timeout using the tracked variable
         overlayTimeout = setTimeout(() => {
           showRoundOverlay.value = false;
-        }, 3000); 
+        }, 3000);
       }
 
       if (data.currentSet) gameinfo.value.currentSet = data.currentSet;
