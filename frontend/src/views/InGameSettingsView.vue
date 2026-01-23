@@ -215,9 +215,11 @@ const gameSeriesTabBar = computed(() => {
       // Future games remain deletable. Past games are disabled (already handled).
       isProtected = game.id === currentSeriesGameId;
     } else if (selectedGameMode.value === 'parallel-games') {
-      // In parallel: Protect the game if it is the one we entered settings from
-      if (contextGameId) {
-        isProtected = String(game.id) === String(contextGameId);
+      // In parallel: Protect all existing games (from backend).
+      // Only newly added (local) games can be removed before saving.
+      const isNew = String(game.id).startsWith('game-');
+      if (!isNew) {
+        isProtected = true;
       }
     }
 
