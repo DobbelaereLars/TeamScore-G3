@@ -1,15 +1,19 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Button from '../components/Button.vue';
 import SessionCard from '../components/SessionCard.vue';
-import { Gamepad2, History } from 'lucide-vue-next';
+import Modal from '../components/Modal.vue';
+import { Gamepad2, History, Play, RotateCw } from 'lucide-vue-next';
 import socket from '../utils/socket';
 import { sessionRepository } from '../services/api';
 
 const router = useRouter();
 const sessions = ref([]);
 const loading = ref(true);
+
+const showStartModal = ref(false);
+const selectedSession = ref(null);
 
 // const handleSocketTest = () => {
 //   console.log('Sending test-popup event...');
@@ -46,23 +50,62 @@ const formatDate = (dateString) => {
 };
 
 const handleSessionReferal = (session) => {
-  sessionStorage.setItem('sessionId', session.id);
   if (session.status === 'finished') {
+    sessionStorage.setItem('sessionId', session.id);
     router.push(`/tablet/sessions/${session.id}`);
-  } else if (session.status === 'in_progress') {
-    socket.emit('display:navigate', {
-      name: 'display-scoreboard',
-      params: { sessionId: session.id },
-    });
-    router.push(`/tablet/game/players`);
-  } else if (session.status === 'created') {
-    socket.emit('display:navigate', {
-      name: 'display-scoreboard',
-      params: { sessionId: session.id },
-    });
-    router.push(`/tablet/game/players`);
+  } else {
+    selectedSession.value = session;
+    const dialog = document.getElementById('start-resume-modal');
+    if (dialog && typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    }
   }
 };
+
+const confirmStartResume = () => {
+  if (!selectedSession.value) return;
+
+  const session = selectedSession.value;
+  sessionStorage.setItem('sessionId', session.id);
+
+  socket.emit('display:navigate', {
+    name: 'display-scoreboard',
+    params: { sessionId: session.id },
+  });
+
+  router.push(`/tablet/game/players`);
+
+  closeModal();
+};
+
+const closeModal = () => {
+  // Modal component handles closing via built-in close() method or cancel emit which closes it usually?
+  // Modal.vue handleCancel calls closeDialog(event) then emits 'cancel'.
+  // My handleSessionReferal opens it.
+  // I don't need to manually close simple dialog here if the emit comes from Modal which closes itself.
+  // But wait, Modal.vue `handleAccept` also calls `closeDialog(event)`.
+  // So I just need resets.
+  selectedSession.value = null;
+};
+
+const modalContent = computed(() => {
+  if (!selectedSession.value) return { title: '', text: '', btn: '' };
+
+  if (selectedSession.value.status === 'created') {
+    return {
+      title: 'Spel starten',
+      text: `Wil je de sessie "${selectedSession.value.name}" starten?`,
+      btn: 'Start spel',
+    };
+  } else {
+    // in_progress
+    return {
+      title: 'Spel hervatten',
+      text: `Wil je verdergaan met de sessie "${selectedSession.value.name}"?`,
+      btn: 'Hervat spel',
+    };
+  }
+});
 
 const getSubtitle = (session) => {
   const count = session.participant_count || 0;
@@ -156,6 +199,17 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Modal voor Starten/Hervatten -->
+    <Modal
+      :modal-id="'start-resume-modal'"
+      :title="modalContent.title"
+      :text="modalContent.text"
+      cancel-btn-text="Annuleren"
+      :accept-btn-text="modalContent.btn"
+      @cancel="closeModal"
+      @accept="confirmStartResume"
+    />
   </div>
 </template>
 
