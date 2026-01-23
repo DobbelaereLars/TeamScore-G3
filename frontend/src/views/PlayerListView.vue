@@ -539,21 +539,21 @@ const nextGame = async () => {
 };
 
 const pauseGame = async () => {
-      // Early exit (Pause) -> session is in_progress
-      try {
-        await sessionRepository.update(currentSessionId, {
-          status: 'in_progress',
-        });
-        // Navigate display
-        socket.emit('display:navigate', {
-          name: 'display-splash',
-        });
-      } catch (e) {
-        console.error('Failed to update session status:', e);
-      }
+  // Early exit (Pause) -> session is in_progress
+  try {
+    await sessionRepository.update(currentSessionId, {
+      status: 'in_progress',
+    });
+    // Navigate display
+    socket.emit('display:navigate', {
+      name: 'display-splash',
+    });
+  } catch (e) {
+    console.error('Failed to update session status:', e);
+  }
 
-      // Early exit (Pause) -> Go back to tablet home
-      router.push('/tablet');
+  // Early exit (Pause) -> Go back to tablet home
+  router.push('/tablet');
 };
 
 const endGame = async () => {
