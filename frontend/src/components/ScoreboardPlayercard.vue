@@ -1,18 +1,18 @@
 <script setup>
-import ProgressBar from "./ProgressBar.vue";
-import ProfileIcon from "./ProfileIcon.vue";
-import { computed } from "vue";
-import { Crown, Medal, Trophy } from "lucide-vue-next";
+import ProgressBar from './ProgressBar.vue';
+import ProfileIcon from './ProfileIcon.vue';
+import { computed } from 'vue';
+import { Crown, Medal, Trophy } from 'lucide-vue-next';
 
 const props = defineProps({
   variant: {
     type: String,
-    default: "Px",
-    validator: (value) => ["Px", "P1", "P2", "P3"].includes(value),
+    default: 'Px',
+    validator: (value) => ['Px', 'P1', 'P2', 'P3'].includes(value),
   },
   spelersnaam: {
     type: String,
-    default: "speler 1",
+    default: 'Speler 1',
   },
   score: {
     type: Number,
@@ -77,8 +77,8 @@ const props = defineProps({
       </div>
       <ProgressBar
         :current-value="score"
-        :max-value="`${maxValue}`"
-        :variant="`${variant}`"
+        :max-value="maxValue"
+        :variant="variant"
       />
     </div>
   </div>

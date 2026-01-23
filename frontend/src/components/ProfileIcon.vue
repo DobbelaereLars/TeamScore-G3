@@ -1,22 +1,26 @@
 <script setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 const props = defineProps({
   playerName: {
     type: String,
-    default: "Naam",
+    default: 'Naam',
   },
   variant: {
     type: String,
-    default: "default",
+    default: 'default',
     validator: (value) =>
-      ["default", "scoreboard-P1", "scoreboard-P2", "scoreboard-P3"].includes(
-        value
-      ),
+      [
+        'default',
+        'scoreboard-P1',
+        'scoreboard-P2',
+        'scoreboard-P3',
+        'scoreboard-Px',
+      ].includes(value),
   },
   size: {
     type: String,
-    default: "default",
-    validator: (value) => ["default", "large", "extra-large"].includes(value),
+    default: 'default',
+    validator: (value) => ['default', 'large', 'extra-large'].includes(value),
   },
   color: {
     type: String,
@@ -31,9 +35,9 @@ const props = defineProps({
 const profileInitials = computed(() => {
   const nameParts = props.playerName
     .trim()
-    .split(" ")
+    .split(' ')
     .filter((part) => part.length > 0);
-  if (nameParts.length === 0) return "S";
+  if (nameParts.length === 0) return 'S';
   if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
   return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
 });
