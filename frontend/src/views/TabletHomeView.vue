@@ -49,21 +49,18 @@ const handleSessionReferal = (session) => {
   sessionStorage.setItem('sessionId', session.id);
   if (session.status === 'finished') {
     router.push(`/tablet/sessions/${session.id}`);
-  }
-  else if (session.status === 'in_progress') {
+  } else if (session.status === 'in_progress') {
     socket.emit('display:navigate', {
       name: 'display-scoreboard',
       params: { sessionId: session.id },
     });
     router.push(`/tablet/game/players`);
-  }
-  else if (session.status === 'created') {
+  } else if (session.status === 'created') {
     socket.emit('display:navigate', {
       name: 'display-scoreboard',
       params: { sessionId: session.id },
     });
     router.push(`/tablet/game/players`);
-
   }
 };
 
@@ -135,7 +132,7 @@ onMounted(() => {
                 :title="`${session.name} - ${formatDate(session.created_at)}`"
                 :subtitle="getSubtitle(session)"
                 :status="session.status"
-                image-src="/podium_screens/podium_screen_ph.png"
+                image-src="/podium_screens/podium_screen_ph.webp"
                 @click="handleSessionReferal(session)"
               >
                 <!-- Optional: Label for status could act as a slot or overlay if SessionCard supported it -->
@@ -151,7 +148,7 @@ onMounted(() => {
               <SessionCard
                 title="Standaardspel - 6/01/2026"
                 subtitle="6 teams"
-                image-src="/podium_screens/podium_screen_ph.png"
+                image-src="/podium_screens/podium_screen_ph.webp"
                 href="#"
               />
             </div>
