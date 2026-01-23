@@ -158,6 +158,11 @@ const isTeamsWithPlayers = computed(() => {
   return currentSession.value?.participant_mode === "teams_with_players";
 });
 
+const isSeries = computed(() => {
+  console.log("Session Mode:", currentSession.value?.game_mode);
+  return currentSession.value?.game_mode === "series-of-games";
+});
+
 const availableTeams = computed(() => {
   if (!currentGame.value?.players) return [];
 
@@ -416,10 +421,15 @@ const isLastPhase = computed(() => {
 });
 
 const endGameButtonText = computed(() => {
+  // Explicitly check for parallel mode first
+  if (currentSession.value?.game_mode === "parallel-games") {
+    return isLastPhase.value ? "Beëindig alle spelen" : "Spel pauzeren";
+  }
+
   // Als we in de laatste fase zijn
   if (isLastPhase.value) {
     // En er is nog een volgend spel in de serie
-    if (hasNextGame.value) {
+    if (hasNextGame.value && isSeries.value) {
       return "Volgend spel";
     }
     // Anders is dit echt het einde van alles
@@ -430,16 +440,27 @@ const endGameButtonText = computed(() => {
 });
 
 const endGameModalTitle = computed(() => {
+  if (currentSession.value?.game_mode === "parallel-games") {
+    return isLastPhase.value ? "Alle spelen voltooien?" : "Spel pauzeren?";
+  }
+
   if (isLastPhase.value) {
-    if (hasNextGame.value) return "Naar volgend spel?";
+    if (hasNextGame.value && isSeries.value) return "Naar volgend spel?";
     return "Spel voltooien?";
   }
   return "Spel pauzeren?";
 });
 
 const endGameModalText = computed(() => {
+  if (currentSession.value?.game_mode === "parallel-games") {
+    if (isLastPhase.value) {
+      return "Weet je zeker dat je ALLE parallelle spelen wilt beëindigen? De scores van alle games worden opgeslagen als eindresultaat.";
+    }
+    return "Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.";
+  }
+
   if (isLastPhase.value) {
-    if (hasNextGame.value) {
+    if (hasNextGame.value && isSeries.value) {
       return "Je staat op het punt dit spel af te ronden en door te gaan naar het volgende spel in de reeks.";
     }
     return "Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. De scores worden opgeslagen als eindresultaat.";
@@ -495,52 +516,93 @@ const nextGame = async () => {
 
 const endGame = async () => {
   if (currentGame.value) {
+    const isParallel = currentSession.value?.game_mode?.includes("parallel");
+
     // SPECIAAL GEVAL: Volgend spel in serie
-    if (isLastPhase.value && hasNextGame.value) {
+    // (Ensure this doesn't run for parallel)
+    if (
+      isLastPhase.value &&
+      hasNextGame.value &&
+      isSeries.value &&
+      !isParallel
+    ) {
       await nextGame();
       return;
     }
 
     const isFinished = isLastPhase.value ? 1 : 0;
+    let finishSessionNow = false;
 
     // 1. Update Game Status
     try {
-      await gameRepository.update(currentGame.value.id, {
-        is_finished: isFinished,
-      });
-      currentGame.value.is_finished = isFinished;
+      if (isParallel && isFinished) {
+        // Check if we really want to finish all games
+        // Use sequential loop to avoid potential parallel write issues (SQLite locks etc)
+        console.log("Finishing all parallel games...");
+        for (const g of games.value) {
+          g.is_finished = 1;
+          try {
+            // Use dedicated finish endpoint for better reliability
+            await gameRepository.finish(g.id);
+            console.log(`Game ${g.id} finished.`);
+          } catch (err) {
+            console.error(`Failed to finish game ${g.id}:`, err);
+          }
+        }
+        finishSessionNow = true;
+      } else {
+        await gameRepository.update(currentGame.value.id, {
+          is_finished: isFinished,
+        });
+        currentGame.value.is_finished = isFinished;
+      }
     } catch (e) {
       console.error("Failed to update game finished status:", e);
     }
 
     // 2. Check Session Status based on ALL games
     if (isLastPhase.value) {
-      const allFinished = games.value.every((g) => {
-        if (g.id === currentGame.value.id) return isFinished === 1;
-        return g.is_finished === 1;
-      });
+      let allFinished = false;
+
+      if (finishSessionNow) {
+        // If we just forced finish all parallel games, assume true
+        allFinished = true;
+      } else {
+        allFinished = games.value.every((g) => {
+          if (g.id === currentGame.value.id) return isFinished === 1;
+          return g.is_finished === 1;
+        });
+      }
+
+      console.log("All finished check:", allFinished);
 
       const newSessionStatus = allFinished ? "finished" : "in_progress";
 
-      try {
-        await sessionRepository.update(currentSessionId, {
-          status: newSessionStatus,
+      if (newSessionStatus === "finished") {
+        try {
+          await sessionRepository.update(currentSessionId, {
+            status: "finished",
+          });
+          console.log("Session updated to finished.");
+        } catch (e) {
+          console.error("Failed to update session status:", e);
+        }
+
+        // Navigate display
+        socket.emit("display:navigate", {
+          name: "display-leaderboard-finale",
+          params: { sessionId: currentSessionId },
         });
-      } catch (e) {
-        console.error("Failed to update session status:", e);
+
+        // Navigate local
+        router.push({
+          name: "endgame-summary",
+          query: { sessionId: currentSessionId },
+        });
+      } else {
+        // Not all finished (series specific logic usually falls here if series not done)
+        // Or if parallel logic failed
       }
-
-      // Navigate display
-      socket.emit("display:navigate", {
-        name: "display-leaderboard-finale",
-        params: { sessionId: currentSessionId },
-      });
-
-      // Navigate local
-      router.push({
-        name: "endgame-summary",
-        query: { sessionId: currentSessionId },
-      });
     } else {
       // Early exit (Pause) -> session is in_progress
       try {
@@ -576,7 +638,7 @@ const endGame = async () => {
           <div class="c-player-list__gameround">
             <template v-if="games.length > 1">
               <CustomSelect
-                v-if="currentSession?.game_mode !== 'series'"
+                v-if="!isSeries"
                 v-model="selectedGameId"
                 :options="gameOptions"
               />
