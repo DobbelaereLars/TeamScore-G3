@@ -66,6 +66,7 @@ const stopEditing = () => {
 
 <template>
   <button
+    type="button"
     class="c-players-setting__tab"
     :class="{ 'c-players-setting__tab--active': isActive }"
     @click="handleClick"
