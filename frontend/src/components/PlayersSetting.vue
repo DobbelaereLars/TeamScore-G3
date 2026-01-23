@@ -48,8 +48,31 @@ const buttonText = computed(() => {
   return 'Speler toevoegen';
 });
 
+const getNextDefaultName = (prefix, list) => {
+  let maxIndex = 0;
+  const regex = new RegExp(`^${prefix} (\\d+)$`);
+
+  for (const item of list) {
+    const match = item.name.match(regex);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > maxIndex) {
+        maxIndex = num;
+      }
+    }
+  }
+
+  // Als er nog geen genummerde namen zijn, kijken we naar de lengte voor een logische start
+  // Bijv: heb je al 3 spelers met custom namen, dan is "Speler 4" logischer dan "Speler 1"
+  if (maxIndex === 0 && list.length > 0) {
+    return `${prefix} ${list.length + 1}`;
+  }
+
+  return `${prefix} ${maxIndex + 1}`;
+};
+
 const addPlayer = () => {
-  if (!inputValue.value.trim()) return;
+  let nameToAdd = inputValue.value.trim();
 
   if (props.playerMode === 'teams-with-players') {
     if (!selectedTeamId.value) return;
@@ -61,6 +84,11 @@ const addPlayer = () => {
     if (teamIndex !== -1) {
       const team = participants.value[teamIndex];
       const currentPlayers = team.players || [];
+
+      if (!nameToAdd) {
+        nameToAdd = getNextDefaultName('Speler', currentPlayers);
+      }
+
       const newPlayerId =
         currentPlayers.length > 0
           ? Math.max(...currentPlayers.map((p) => p.id)) + 1
@@ -72,7 +100,7 @@ const addPlayer = () => {
           ...currentPlayers,
           {
             id: newPlayerId,
-            name: inputValue.value.trim(),
+            name: nameToAdd,
           },
         ],
       };
@@ -82,11 +110,19 @@ const addPlayer = () => {
       participants.value = newParticipants;
     }
   } else {
+    if (!nameToAdd) {
+      if (props.playerMode === 'teams') {
+        nameToAdd = getNextDefaultName('Team', participants.value);
+      } else {
+        nameToAdd = getNextDefaultName('Speler', participants.value);
+      }
+    }
+
     participants.value = [
       ...participants.value,
       {
         id: nextId.value,
-        name: inputValue.value.trim(),
+        name: nameToAdd,
       },
     ];
   }
@@ -95,10 +131,10 @@ const addPlayer = () => {
 };
 
 const addTeam = () => {
-  const teamNumber = participants.value.length + 1;
+  const newRefName = getNextDefaultName('Team', participants.value);
   const newTeam = {
     id: nextId.value,
-    name: `Team ${teamNumber}`,
+    name: newRefName,
     players: [],
   };
   participants.value = [...participants.value, newTeam];
@@ -324,10 +360,23 @@ const handleFileUpload = (event) => {
         </div>
 
         <!-- Input voor spelers/teams toevoegen -->
-        <div v-if="playerMode !== 'teams-with-players' || selectedTeamId" class="c-players-setting__input">
-          <InputField v-model="inputValue" id="player-add" name="player-add" :label="false" :placeholder="placeholder"
-            @keyup.enter="addPlayer" />
-          <Button :button-tekst="buttonText" :clickable="false" @click="addPlayer">
+        <div
+          v-if="playerMode !== 'teams-with-players' || selectedTeamId"
+          class="c-players-setting__input"
+        >
+          <InputField
+            v-model="inputValue"
+            id="player-add"
+            name="player-add"
+            :label="false"
+            :placeholder="placeholder"
+            @keyup.enter="addPlayer"
+          />
+          <Button
+            :button-tekst="buttonText"
+            :clickable="false"
+            @click="addPlayer"
+          >
             <template #c-btn_icon-left>
               <Plus :size="18" />
             </template>
@@ -336,13 +385,28 @@ const handleFileUpload = (event) => {
       </div>
 
       <!-- Teams tabs (alleen bij teams-with-players mode) -->
-      <div v-if="playerMode === 'teams-with-players'" class="c-players-setting__tabs-wrapper">
+      <div
+        v-if="playerMode === 'teams-with-players'"
+        class="c-players-setting__tabs-wrapper"
+      >
         <div class="c-players-setting__tabs">
-          <TeamTabButton v-for="team in participants" :key="team.id" :label="team.name"
-            :count="team.players?.length || 0" :is-active="selectedTeamId === team.id" :closeable="true"
-            :editable="playerMode === 'teams-with-players'" @click="selectedTeamId = team.id"
-            @close="requestDeleteTeam(team.id)" @rename="(newName) => renameTeam(team.id, newName)" />
-          <button type="button" class="c-players-setting__tab c-players-setting__tab--add" @click="addTeam">
+          <TeamTabButton
+            v-for="team in participants"
+            :key="team.id"
+            :label="team.name"
+            :count="team.players?.length || 0"
+            :is-active="selectedTeamId === team.id"
+            :closeable="true"
+            :editable="playerMode === 'teams-with-players'"
+            @click="selectedTeamId = team.id"
+            @close="requestDeleteTeam(team.id)"
+            @rename="(newName) => renameTeam(team.id, newName)"
+          />
+          <button
+            type="button"
+            class="c-players-setting__tab c-players-setting__tab--add"
+            @click="addTeam"
+          >
             <Plus :size="18" />
             Team toevoegen
           </button>
@@ -350,9 +414,17 @@ const handleFileUpload = (event) => {
 
         <!-- Spelers lijst van geselecteerd team -->
         <div v-if="selectedTeamId" class="c-players-setting__players-list">
-          <PlayersSettingParticipant v-for="player in selectedTeam?.players || []" :key="player.id" :name="player.name"
-            @delete="deletePlayerFromTeam(player.id)" @rename="(newName) => renamePlayerInTeam(player.id, newName)" />
-          <div v-if="!selectedTeam?.players?.length" class="c-players-setting__emptylist">
+          <PlayersSettingParticipant
+            v-for="player in selectedTeam?.players || []"
+            :key="player.id"
+            :name="player.name"
+            @delete="deletePlayerFromTeam(player.id)"
+            @rename="(newName) => renamePlayerInTeam(player.id, newName)"
+          />
+          <div
+            v-if="!selectedTeam?.players?.length"
+            class="c-players-setting__emptylist"
+          >
             <p>
               Er zijn nog geen spelers toegevoegd aan {{ selectedTeam?.name }}
             </p>
@@ -361,19 +433,38 @@ const handleFileUpload = (event) => {
       </div>
 
       <!-- Spelers lijst (bij players mode) -->
-      <div v-if="playerMode === 'players' && participants.length > 0" class="c-players-setting__players-list">
-        <PlayersSettingParticipant v-for="player in participants" :key="player.id" :name="player.name"
-          @delete="deleteParticipant(player.id)" @rename="(newName) => renameParticipant(player.id, newName)" />
+      <div
+        v-if="playerMode === 'players' && participants.length > 0"
+        class="c-players-setting__players-list"
+      >
+        <PlayersSettingParticipant
+          v-for="player in participants"
+          :key="player.id"
+          :name="player.name"
+          @delete="deleteParticipant(player.id)"
+          @rename="(newName) => renameParticipant(player.id, newName)"
+        />
       </div>
 
       <!-- Teams lijst (bij teams mode) -->
-      <div v-if="playerMode === 'teams' && participants.length > 0" class="c-players-setting__players-list">
-        <PlayersSettingParticipant v-for="team in participants" :key="team.id" :name="team.name"
-          @delete="deleteParticipant(team.id)" @rename="(newName) => renameParticipant(team.id, newName)" />
+      <div
+        v-if="playerMode === 'teams' && participants.length > 0"
+        class="c-players-setting__players-list"
+      >
+        <PlayersSettingParticipant
+          v-for="team in participants"
+          :key="team.id"
+          :name="team.name"
+          @delete="deleteParticipant(team.id)"
+          @rename="(newName) => renameParticipant(team.id, newName)"
+        />
       </div>
 
       <!-- Empty state -->
-      <div v-if="participants.length === 0" class="c-players-setting__emptylist">
+      <div
+        v-if="participants.length === 0"
+        class="c-players-setting__emptylist"
+      >
         <Users :size="22" />
         <p v-if="playerMode === 'teams-with-players'">
           Voeg eerst een team toe
@@ -383,23 +474,43 @@ const handleFileUpload = (event) => {
             Er zijn nog geen
             {{ playerMode === 'players' ? 'spelers' : 'teams' }} toegevoegd
           </p>
-          <button v-if="playerMode === 'players'" type="button" class="c-players-setting__csv-upload"
-            @click="triggerFileUpload">
+          <button
+            v-if="playerMode === 'players'"
+            type="button"
+            class="c-players-setting__csv-upload"
+            @click="triggerFileUpload"
+          >
             <Upload :size="18" />
             Voeg een CSV bestand toe
-            <input type="file" ref="fileInput" accept=".csv" style="display: none;" @change="handleFileUpload" />
+            <input
+              type="file"
+              ref="fileInput"
+              accept=".csv"
+              style="display: none"
+              @change="handleFileUpload"
+            />
           </button>
         </div>
       </div>
     </div>
 
-    <Modal :modal-id="deleteTeamModalId" :title="deleteTeamModalTitle"
+    <Modal
+      :modal-id="deleteTeamModalId"
+      :title="deleteTeamModalTitle"
       text="Weet je zeker dat je dit team wil verwijderen? Alle spelers in dit team zullen ook verwijderd worden. Deze actie kan niet ongedaan worden gemaakt."
-      cancel-btn-text="Annuleren" accept-btn-text="Verwijderen" @cancel="cancelDeleteTeam"
-      @accept="confirmDeleteTeam" />
+      cancel-btn-text="Annuleren"
+      accept-btn-text="Verwijderen"
+      @cancel="cancelDeleteTeam"
+      @accept="confirmDeleteTeam"
+    />
 
-    <Modal :modal-id="errorModalId" title="Fout bij importeren" :text="uploadErrorMessage" accept-btn-text="Oké"
-      :show-cancel-btn="false" />
+    <Modal
+      :modal-id="errorModalId"
+      title="Fout bij importeren"
+      :text="uploadErrorMessage"
+      accept-btn-text="Oké"
+      :show-cancel-btn="false"
+    />
   </div>
 </template>
 
