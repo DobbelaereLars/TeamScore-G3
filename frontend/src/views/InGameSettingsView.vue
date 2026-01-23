@@ -129,6 +129,7 @@ onMounted(async () => {
         }
 
         return {
+          ...config,
           id: g.id,
           name: g.name,
           scoreModel: scoreType,
@@ -145,7 +146,6 @@ onMounted(async () => {
           pointsRanking: pointRanking,
           timeRanking: timeRanking,
           timeNotation: config.timeNotation || 'mm:ss',
-          ...config,
         };
       });
     }
@@ -350,6 +350,14 @@ watch(
 watch(
   () => activeGame.value?.useSets,
   (newValue, oldValue) => {
+    // If trying to turn OFF, but originalUseSets is true -> revert to ON
+    if (!newValue && oldValue && activeGame.value?.originalUseSets) {
+      nextTick(() => {
+        if (activeGame.value) activeGame.value.useSets = true;
+      });
+      return;
+    }
+
     if (newValue && !oldValue && activeGame.value) {
       // When toggle is turned on, set to minimum of 2
       if (activeGame.value.setsCount < 2) {
@@ -1020,7 +1028,6 @@ onUnmounted(() => {
                     max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
-                    :name="`rounds-${activeGameId}`"
                     type="number"
                     v-model:toggled="activeGame.useRounds"
                     v-model="activeGame.roundsCount"

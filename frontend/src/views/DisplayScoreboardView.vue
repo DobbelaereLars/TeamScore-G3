@@ -53,9 +53,9 @@ const players = ref([
 */
 
 const gameinfo = ref({
-  currentRound: 1,
-  totalRounds: 5,
-  gamename: "Game 1",
+  currentRound: 0,
+  totalRounds: 0,
+  gamename: "",
 });
 
 // Calculate the highest score among all players
@@ -271,14 +271,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="v-display-scoreboard">
+  <div class="v-display-scoreboard" v-if="gameinfo.gamename">
     <div class="v-display-scoreboard-header">
       <div class="v-display-scoreboard-logo">
         <img :src="logo" alt="TeamScore Logo" style="height: 8rem" />
       </div>
       <div class="v-display-scoreboard-info">
         <h2>{{ gameinfo.gamename }}</h2>
-        <p class="v-display-scoreboard-round">
+        <p
+          v-if="gameinfo.totalRounds > 1"
+          class="v-display-scoreboard-round"
+        >
           Ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}
         </p>
       </div>

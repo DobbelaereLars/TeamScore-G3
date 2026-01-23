@@ -649,7 +649,10 @@ const endGame = async () => {
               <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             </template>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
-            <p class="c-player-list--greytext h6">
+            <p
+              v-if="(currentGame?.rounds || 1) > 1"
+              class="c-player-list--greytext h6"
+            >
               Ronde {{ currentGame?.currentRound }} van
               {{ currentGame?.rounds }}
             </p>
