@@ -279,7 +279,7 @@ onUnmounted(() => {
       <div class="v-display-scoreboard-info">
         <h2>{{ gameinfo.gamename }}</h2>
         <p class="v-display-scoreboard-round">
-          ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}
+          Ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}
         </p>
       </div>
     </div>
