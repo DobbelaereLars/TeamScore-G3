@@ -614,13 +614,20 @@ const getGameNumber = (game) => {
   const match = idStr.match(/^game-(\d+)$/);
   if (match) return parseInt(match[1], 10);
 
-  // 2. If it's a persistent game (from DB), determine its original position
-  const originalIndex = originalGames.value.findIndex(
-    (og) => og.id === game.id,
-  );
-  if (originalIndex !== -1) return originalIndex + 1;
+  // 2. If it's a persistent game (from DB), look at its ORIGINAL name (at load time)
+  // This preserves the number for "Spel 6" after reload, but ignores "Spel 5" if just renamed from "Spel 2"
+  const originalGame = originalGames.value.find((og) => og.id === game.id);
+  if (originalGame) {
+    const nameMatch = originalGame.name.match(/^Spel (\d+)$/i);
+    if (nameMatch) {
+      return parseInt(nameMatch[1], 10);
+    }
+    // If original name didn't have a number, fallback to index
+    const index = originalGames.value.indexOf(originalGame);
+    return index + 1;
+  }
 
-  // 3. Fallback: Use current index + 1 (less stable but better than 0)
+  // 3. Fallback: Use current index + 1
   const currentIndex = games.value.findIndex((g) => g.id === game.id);
   if (currentIndex !== -1) return currentIndex + 1;
 
