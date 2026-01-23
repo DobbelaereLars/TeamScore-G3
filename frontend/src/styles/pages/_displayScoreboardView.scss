@@ -114,7 +114,8 @@
   top: 50%;
   left: 0;
   width: 100vw;
-  height: 12rem;
+  height: auto;
+  min-height: 12rem;
   transform: translateY(-50%);
   background: #534aff; /* Primary Blue from settings */
   display: flex;
@@ -124,6 +125,21 @@
   box-shadow: 0 0 50px rgba(83, 74, 255, 0.6);
   border-top: 4px solid #ffffff;
   border-bottom: 4px solid #ffffff;
+  padding: 1rem 0;
+
+  &.is-stacked {
+    .v-display-scoreboard-round-banner__text {
+      font-size: 5rem;
+      line-height: 1.1;
+    }
+  }
+}
+
+.v-display-scoreboard-round-banner__content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .v-display-scoreboard-round-banner__track {
