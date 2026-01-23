@@ -1,9 +1,9 @@
 <script setup>
-import ScoreboardPlayercard from "../components/ScoreboardPlayercard.vue";
-import { gameRepository, sessionRepository } from "../services/api"; // Import repository
-import logo from "../assets/logo.webp";
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
+import ScoreboardPlayercard from '../components/ScoreboardPlayercard.vue';
+import { gameRepository, sessionRepository } from '../services/api'; // Import repository
+import logo from '../assets/logo.webp';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 // Initial state can be empty or mock, we'll overwrite it when loadGameData is called
 const players = ref([]);
@@ -13,7 +13,7 @@ const loadGameData = async (gameId) => {
   try {
     console.log(`Loading game data for gameId: ${gameId}`);
     const response = await gameRepository.getScores(gameId);
-    console.log("Scores fetched:", response.data);
+    console.log('Scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => ({
@@ -26,13 +26,15 @@ const loadGameData = async (gameId) => {
     // Optional: Fetch game details to update header
     const gameResponse = await gameRepository.getById(gameId);
     if (gameResponse.data) {
-      console.log("Game details fetched:", gameResponse.data);
+      console.log('Game details fetched:', gameResponse.data);
       gameinfo.value.gamename = gameResponse.data.name;
       gameinfo.value.totalRounds = gameResponse.data.rounds;
       gameinfo.value.currentRound = gameResponse.data.current_round;
+      gameinfo.value.totalSets = gameResponse.data.sets;
+      gameinfo.value.currentSet = gameResponse.data.current_set;
     }
   } catch (error) {
-    console.error("Failed to load game data:", error);
+    console.error('Failed to load game data:', error);
   }
 };
 
@@ -55,7 +57,9 @@ const players = ref([
 const gameinfo = ref({
   currentRound: 0,
   totalRounds: 0,
-  gamename: "",
+  currentSet: 0,
+  totalSets: 0,
+  gamename: '',
 });
 
 // Calculate the highest score among all players
@@ -74,13 +78,13 @@ const sortedPlayers = computed(() => {
       let variant;
 
       if (position === 1) {
-        variant = "P1";
+        variant = 'P1';
       } else if (position === 2) {
-        variant = "P2";
+        variant = 'P2';
       } else if (position === 3) {
-        variant = "P3";
+        variant = 'P3';
       } else {
-        variant = "Px";
+        variant = 'Px';
       }
 
       return {
@@ -120,19 +124,19 @@ const totalPages = computed(() => {
   return Math.ceil(sortedPlayers.value.length / playersPerPage.value);
 });
 
-import socket from "../utils/socket";
+import socket from '../utils/socket';
 
 let pageInterval = null;
 
 const handleSession = (data) => {
   if (data && data.sessionId) {
-    console.log("Received session:", data.sessionId);
+    console.log('Received session:', data.sessionId);
     // Persist to URL
     const url = new URL(window.location);
-    url.searchParams.set("sessionId", data.sessionId);
-    window.history.pushState({}, "", url);
+    url.searchParams.set('sessionId', data.sessionId);
+    window.history.pushState({}, '', url);
     // Persist to storage
-    sessionStorage.setItem("display_sessionId", data.sessionId);
+    sessionStorage.setItem('display_sessionId', data.sessionId);
 
     sessionRepository.getGames(data.sessionId).then((response) => {
       if (response.data && response.data.length > 0) {
@@ -147,7 +151,7 @@ const handleSession = (data) => {
 const router = useRouter();
 
 const handleNavigate = (data) => {
-  console.log("Received navigate event:", data);
+  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -155,24 +159,24 @@ const handleNavigate = (data) => {
 
 const handleSelectedGame = (data) => {
   if (data && data.gameId) {
-    console.log("Received selected game:", data.gameId);
+    console.log('Received selected game:', data.gameId);
     // Persist to URL
     const url = new URL(window.location);
-    url.searchParams.set("gameId", data.gameId);
-    window.history.pushState({}, "", url);
+    url.searchParams.set('gameId', data.gameId);
+    window.history.pushState({}, '', url);
     // Persist to storage
-    sessionStorage.setItem("display_gameId", data.gameId);
+    sessionStorage.setItem('display_gameId', data.gameId);
 
     loadGameData(data.gameId);
   }
 };
 
 const handleScoreUpdate = (data) => {
-  console.log("Score update received:", data);
+  console.log('Score update received:', data);
   // data = { gameId, participantId, score, scoreType }
 
   // Verify if update belongs to current game (if we know the current game ID)
-  const currentGameId = sessionStorage.getItem("display_gameId");
+  const currentGameId = sessionStorage.getItem('display_gameId');
   if (currentGameId && String(data.gameId) !== String(currentGameId)) {
     return;
   }
@@ -194,10 +198,10 @@ const handleScoreUpdate = (data) => {
 const showRoundOverlay = ref(false);
 
 const handleGameInfoUpdate = (data) => {
-  console.log("Game info update received:", data);
+  console.log('Game info update received:', data);
   if (data.gameId) {
     // Only update if it matches current game or we just want to show latest info
-    const currentGameId = sessionStorage.getItem("display_gameId");
+    const currentGameId = sessionStorage.getItem('display_gameId');
     if (!currentGameId || String(data.gameId) === String(currentGameId)) {
       if (data.gameName) gameinfo.value.gamename = data.gameName;
 
@@ -212,6 +216,8 @@ const handleGameInfoUpdate = (data) => {
         }, 3000); // Show overlay for 3 seconds
       }
 
+      if (data.currentSet) gameinfo.value.currentSet = data.currentSet;
+      if (data.totalSets) gameinfo.value.totalSets = data.totalSets;
       if (data.currentRound) gameinfo.value.currentRound = data.currentRound;
       if (data.totalRounds) gameinfo.value.totalRounds = data.totalRounds;
     }
@@ -220,19 +226,19 @@ const handleGameInfoUpdate = (data) => {
 
 onMounted(() => {
   // Listen for game selection from dashboard
-  socket.on("display:session", handleSession);
-  socket.on("display:selected-game", handleSelectedGame);
-  socket.on("display:navigate", handleNavigate);
-  socket.on("score:update", handleScoreUpdate);
-  socket.on("display:update-game-info", handleGameInfoUpdate);
+  socket.on('display:session', handleSession);
+  socket.on('display:selected-game', handleSelectedGame);
+  socket.on('display:navigate', handleNavigate);
+  socket.on('score:update', handleScoreUpdate);
+  socket.on('display:update-game-info', handleGameInfoUpdate);
 
   // Check URL params first, then sessionStorage
   const urlParams = new URLSearchParams(window.location.search);
-  const urlGameId = urlParams.get("gameId");
-  const urlSessionId = urlParams.get("sessionId");
+  const urlGameId = urlParams.get('gameId');
+  const urlSessionId = urlParams.get('sessionId');
 
-  const storedGameId = sessionStorage.getItem("display_gameId");
-  const storedSessionId = sessionStorage.getItem("display_sessionId");
+  const storedGameId = sessionStorage.getItem('display_gameId');
+  const storedSessionId = sessionStorage.getItem('display_sessionId');
 
   const gameIdToLoad = urlGameId || storedGameId;
   const sessionIdToLoad = urlSessionId || storedSessionId;
@@ -247,7 +253,7 @@ onMounted(() => {
   calculatePlayersPerPage();
 
   // Add resize listener to recalculate on window resize
-  window.addEventListener("resize", calculatePlayersPerPage);
+  window.addEventListener('resize', calculatePlayersPerPage);
 
   // Only start auto-scroll if there are multiple pages
   if (totalPages.value > 1) {
@@ -258,12 +264,12 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  socket.off("display:session", handleSession);
-  socket.off("display:selected-game", handleSelectedGame);
-  socket.off("display:navigate", handleNavigate);
-  socket.off("score:update", handleScoreUpdate);
-  socket.off("display:update-game-info", handleGameInfoUpdate);
-  window.removeEventListener("resize", calculatePlayersPerPage);
+  socket.off('display:session', handleSession);
+  socket.off('display:selected-game', handleSelectedGame);
+  socket.off('display:navigate', handleNavigate);
+  socket.off('score:update', handleScoreUpdate);
+  socket.off('display:update-game-info', handleGameInfoUpdate);
+  window.removeEventListener('resize', calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);
   }
@@ -278,12 +284,12 @@ onUnmounted(() => {
       </div>
       <div class="v-display-scoreboard-info">
         <h2>{{ gameinfo.gamename }}</h2>
-        <p
-          v-if="gameinfo.totalRounds > 1"
-          class="v-display-scoreboard-round"
-        >
-          Ronde {{ gameinfo.currentRound }} van de {{ gameinfo.totalRounds }}
+        <p v-if="gameinfo.totalRounds > 1" class="v-display-scoreboard-round h6">
+          Ronde {{ gameinfo.currentRound }} van {{ gameinfo.totalRounds }}
         </p>
+        <div v-if="gameinfo.totalSets > 1" class="v-display-scoreboard-sets">
+          <p>Set {{ gameinfo.currentSet }} van {{ gameinfo.totalSets }}</p>
+        </div>
       </div>
     </div>
     <div class="v-display-scoreboard-players-wrapper" ref="playersContainer">
@@ -329,6 +335,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

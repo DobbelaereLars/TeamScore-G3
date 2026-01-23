@@ -382,6 +382,8 @@ const goToNext = async () => {
       gameName: currentGame.value.name,
       currentRound: currentGame.value.currentRound,
       totalRounds: currentGame.value.rounds,
+      currentSet: currentGame.value.currentSet,
+      totalSets: currentGame.value.sets,
     });
   } catch (error) {
     console.error('Failed to update game state:', error);
