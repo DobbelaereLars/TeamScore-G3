@@ -6,25 +6,25 @@ import {
   onUnmounted,
   watch,
   TransitionGroup,
-} from "vue";
-import { useRouter } from "vue-router";
+} from 'vue';
+import { useRouter } from 'vue-router';
 import {
   sessionRepository,
   scoreRepository,
   gameRepository,
-} from "../services/api";
-import socket from "../utils/socket";
-import HostPlayerItem from "../components/HostPlayerItem.vue";
-import Button from "../components/Button.vue";
-import TeamTabButton from "../components/TeamTabButton.vue";
-import LogoHeader from "../components/Logo.vue";
-import Modal from "../components/Modal.vue";
-import CustomSelect from "../components/CustomSelect.vue";
-import { Cog, Flame } from "lucide-vue-next";
+} from '../services/api';
+import socket from '../utils/socket';
+import HostPlayerItem from '../components/HostPlayerItem.vue';
+import Button from '../components/Button.vue';
+import TeamTabButton from '../components/TeamTabButton.vue';
+import LogoHeader from '../components/Logo.vue';
+import Modal from '../components/Modal.vue';
+import CustomSelect from '../components/CustomSelect.vue';
+import { Cog, Flame } from 'lucide-vue-next';
 
 const router = useRouter();
-const currentSessionId = sessionStorage.getItem("sessionId");
-console.log("Current Session ID:", currentSessionId);
+const currentSessionId = sessionStorage.getItem('sessionId');
+console.log('Current Session ID:', currentSessionId);
 const currentSession = ref(null);
 
 // Games from DB
@@ -39,8 +39,8 @@ const activeModalTeamId = ref(null);
 
 watch(selectedGameId, (newId) => {
   if (newId) {
-    console.log("Sending selected game to display:", newId);
-    socket.emit("display:selected-game", {
+    console.log('Sending selected game to display:', newId);
+    socket.emit('display:selected-game', {
       gameId: newId,
       sessionId: currentSessionId,
     });
@@ -50,8 +50,8 @@ watch(selectedGameId, (newId) => {
 // Responsive breakpoint voor size
 const windowWidth = ref(window.innerWidth);
 const playerItemSize = computed(() => {
-  if (windowWidth.value >= 768) return "large";
-  return "default";
+  if (windowWidth.value >= 768) return 'large';
+  return 'default';
 });
 
 const handleResize = () => {
@@ -59,13 +59,13 @@ const handleResize = () => {
 };
 
 onMounted(async () => {
-  window.addEventListener("resize", handleResize);
+  window.addEventListener('resize', handleResize);
 
-  socket.on("score:update", handleScoreUpdate);
+  socket.on('score:update', handleScoreUpdate);
 
   try {
     const sessionResponse = await sessionRepository.getById(currentSessionId);
-    console.log("Current Session:", sessionResponse.data);
+    console.log('Current Session:', sessionResponse.data);
     currentSession.value = sessionResponse.data;
 
     const response = await sessionRepository.getGames(currentSessionId);
@@ -74,13 +74,13 @@ onMounted(async () => {
       selectedGameId.value = games.value[0].id;
     }
   } catch (error) {
-    console.error("Failed to fetch games for session 1:", error);
+    console.error('Failed to fetch games for session 1:', error);
   }
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
-  socket.off("score:update", handleScoreUpdate);
+  window.removeEventListener('resize', handleResize);
+  socket.off('score:update', handleScoreUpdate);
 });
 
 // Huidige geselecteerde game
@@ -98,7 +98,7 @@ watch(
   ([gameId, currentSet, currentRound]) => {
     if (!gameId) return;
 
-    if (currentGame.value?.score_type === "time") {
+    if (currentGame.value?.score_type === 'time') {
       const key = `offsets_${gameId}_${currentSet || 1}_${currentRound || 1}`;
       try {
         const stored = localStorage.getItem(key);
@@ -108,7 +108,7 @@ watch(
           accumulatedScores.value = {};
         }
       } catch (e) {
-        console.error("Error loading offsets:", e);
+        console.error('Error loading offsets:', e);
         accumulatedScores.value = {};
       }
     } else {
@@ -155,12 +155,12 @@ const hasNextRound = computed(() => {
 });
 
 const isTeamsWithPlayers = computed(() => {
-  return currentSession.value?.participant_mode === "teams_with_players";
+  return currentSession.value?.participant_mode === 'teams_with_players';
 });
 
 const isSeries = computed(() => {
-  console.log("Session Mode:", currentSession.value?.game_mode);
-  return currentSession.value?.game_mode === "series-of-games";
+  console.log('Session Mode:', currentSession.value?.game_mode);
+  return currentSession.value?.game_mode === 'series-of-games';
 });
 
 const availableTeams = computed(() => {
@@ -218,20 +218,20 @@ const filteredBonusPlayers = computed(() => {
 });
 
 const nextButtonLabel = computed(() => {
-  if (hasNextSet.value) return "Volgende set";
-  if (hasNextRound.value) return "Volgende ronde";
-  return "";
+  if (hasNextSet.value) return 'Volgende set';
+  if (hasNextRound.value) return 'Volgende ronde';
+  return '';
 });
 
 const nextModalTitle = computed(() => {
-  if (hasNextSet.value) return "Naar de volgende set?";
-  return "Naar de volgende ronde?";
+  if (hasNextSet.value) return 'Naar de volgende set?';
+  return 'Naar de volgende ronde?';
 });
 
 const nextModalText = computed(() => {
   if (hasNextSet.value)
-    return "Ben je zeker dat je naar de volgende set wilt gaan? Scores blijven behouden.";
-  return "Ben je zeker dat je naar de volgende ronde wilt gaan? Je kunt later nog steeds terugkeren om scores aan te passen.";
+    return 'Ben je zeker dat je naar de volgende set wilt gaan? Scores blijven behouden.';
+  return 'Ben je zeker dat je naar de volgende ronde wilt gaan? Je kunt later nog steeds terugkeren om scores aan te passen.';
 });
 
 const handleScoreUpdate = (data) => {
@@ -241,9 +241,9 @@ const handleScoreUpdate = (data) => {
     (p) => p.participantId === data.participantId,
   );
   if (player) {
-    if (data.scoreType === "points") player.points = data.score;
-    else if (data.scoreType === "time") player.time = data.score;
-    else if (data.scoreType === "boolean" || data.scoreType === "bool")
+    if (data.scoreType === 'points') player.points = data.score;
+    else if (data.scoreType === 'time') player.time = data.score;
+    else if (data.scoreType === 'boolean' || data.scoreType === 'bool')
       player.bool = data.score;
   }
 };
@@ -257,7 +257,7 @@ const updatePlayerScore = async (participantId, newVal) => {
   );
 
   if (player) {
-    const scoreType = currentGame.value.score_type || "points";
+    const scoreType = currentGame.value.score_type || 'points';
 
     // Save old values
     const oldPoints = player.points;
@@ -265,16 +265,16 @@ const updatePlayerScore = async (participantId, newVal) => {
     const oldBool = player.bool;
 
     // Apply new value
-    if (scoreType === "points") player.points = newVal;
-    else if (scoreType === "time") {
+    if (scoreType === 'points') player.points = newVal;
+    else if (scoreType === 'time') {
       // For time, the input sends the RELATIVE value (current round time).
       // We need to add the accumulated offset to get the absolute Total to store in DB.
       const offset = accumulatedScores.value[participantId] || 0;
       player.time = newVal + offset;
-    } else if (scoreType === "boolean") player.bool = newVal;
+    } else if (scoreType === 'boolean') player.bool = newVal;
 
     // Stuur naar backend
-    const valueToSend = scoreType === "time" ? player.time : newVal;
+    const valueToSend = scoreType === 'time' ? player.time : newVal;
 
     try {
       await scoreRepository.updateScore(
@@ -287,11 +287,11 @@ const updatePlayerScore = async (participantId, newVal) => {
         `Updated score for participant ${participantId} to ${valueToSend}`,
       );
     } catch (error) {
-      console.error("Failed to update score:", error);
+      console.error('Failed to update score:', error);
       // Rollback bij error
-      if (scoreType === "points") player.points = oldPoints;
-      else if (scoreType === "time") player.time = oldTime;
-      else if (scoreType === "boolean") player.bool = oldBool;
+      if (scoreType === 'points') player.points = oldPoints;
+      else if (scoreType === 'time') player.time = oldTime;
+      else if (scoreType === 'boolean') player.bool = oldBool;
     }
   }
 };
@@ -317,7 +317,7 @@ const saveBonus = async () => {
     selectedBonusParticipants.value.length === 0 ||
     bonusAmount.value === 0
   ) {
-    document.getElementById("bonusmodal")?.close();
+    document.getElementById('bonusmodal')?.close();
     return;
   }
 
@@ -335,7 +335,11 @@ const saveBonus = async () => {
   await Promise.all(promises);
 
   selectedBonusParticipants.value = [];
-  document.getElementById("bonusmodal")?.close();
+  document.getElementById('bonusmodal')?.close();
+};
+
+const goToSettings = () => {
+  router.push({ name: 'ingame-settings' });
 };
 
 const goToNext = async () => {
@@ -343,7 +347,7 @@ const goToNext = async () => {
 
   // 1. Capture current totals (BEFORE update) to use as offsets for the next round
   const newOffsets = {};
-  if (currentGame.value.score_type === "time") {
+  if (currentGame.value.score_type === 'time') {
     currentGame.value.players.forEach((p) => {
       newOffsets[p.participantId] = p.time || 0;
     });
@@ -359,7 +363,7 @@ const goToNext = async () => {
   }
 
   // 2. Save offsets for the NEW state (so round 2 starts at 0 input)
-  if (currentGame.value.score_type === "time") {
+  if (currentGame.value.score_type === 'time') {
     const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet}_${currentGame.value.currentRound}`;
     localStorage.setItem(key, JSON.stringify(newOffsets));
     accumulatedScores.value = newOffsets;
@@ -373,18 +377,18 @@ const goToNext = async () => {
     });
 
     // Notify display of round change
-    socket.emit("display:update-game-info", {
+    socket.emit('display:update-game-info', {
       gameId: currentGame.value.id,
       gameName: currentGame.value.name,
       currentRound: currentGame.value.currentRound,
       totalRounds: currentGame.value.rounds,
     });
   } catch (error) {
-    console.error("Failed to update game state:", error);
+    console.error('Failed to update game state:', error);
   }
 
   // Sluit de modal
-  const modal = document.getElementById("nextround");
+  const modal = document.getElementById('nextround');
   if (modal) {
     modal.close();
   }
@@ -422,50 +426,50 @@ const isLastPhase = computed(() => {
 
 const endGameButtonText = computed(() => {
   // Explicitly check for parallel mode first
-  if (currentSession.value?.game_mode === "parallel-games") {
-    return isLastPhase.value ? "Beëindig alle spelen" : "Spel pauzeren";
+  if (currentSession.value?.game_mode === 'parallel-games') {
+    return isLastPhase.value ? 'Beëindig alle spelen' : 'Spel pauzeren';
   }
 
   // Als we in de laatste fase zijn
   if (isLastPhase.value) {
     // En er is nog een volgend spel in de serie
     if (hasNextGame.value && isSeries.value) {
-      return "Volgend spel";
+      return 'Volgend spel';
     }
     // Anders is dit echt het einde van alles
-    return "Beëindig spel";
+    return 'Beëindig spel';
   }
   // Als we niet in de laatste fase zijn
-  return "Spel pauzeren";
+  return 'Spel pauzeren';
 });
 
 const endGameModalTitle = computed(() => {
-  if (currentSession.value?.game_mode === "parallel-games") {
-    return isLastPhase.value ? "Alle spelen voltooien?" : "Spel pauzeren?";
+  if (currentSession.value?.game_mode === 'parallel-games') {
+    return isLastPhase.value ? 'Alle spelen voltooien?' : 'Spel pauzeren?';
   }
 
   if (isLastPhase.value) {
-    if (hasNextGame.value && isSeries.value) return "Naar volgend spel?";
-    return "Spel voltooien?";
+    if (hasNextGame.value && isSeries.value) return 'Naar volgend spel?';
+    return 'Spel voltooien?';
   }
-  return "Spel pauzeren?";
+  return 'Spel pauzeren?';
 });
 
 const endGameModalText = computed(() => {
-  if (currentSession.value?.game_mode === "parallel-games") {
+  if (currentSession.value?.game_mode === 'parallel-games') {
     if (isLastPhase.value) {
-      return "Weet je zeker dat je ALLE parallelle spelen wilt beëindigen? De scores van alle games worden opgeslagen als eindresultaat.";
+      return 'Weet je zeker dat je ALLE parallelle spelen wilt beëindigen? De scores van alle games worden opgeslagen als eindresultaat.';
     }
-    return "Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.";
+    return 'Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.';
   }
 
   if (isLastPhase.value) {
     if (hasNextGame.value && isSeries.value) {
-      return "Je staat op het punt dit spel af te ronden en door te gaan naar het volgende spel in de reeks.";
+      return 'Je staat op het punt dit spel af te ronden en door te gaan naar het volgende spel in de reeks.';
     }
-    return "Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. De scores worden opgeslagen als eindresultaat.";
+    return 'Weet je zeker dat je het spel wilt beëindigen? Hierna kun je geen scores meer wijzigen of rondes toevoegen. De scores worden opgeslagen als eindresultaat.';
   }
-  return "Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.";
+  return 'Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.';
 });
 
 const nextGame = async () => {
@@ -477,14 +481,14 @@ const nextGame = async () => {
     currentGame.value.is_finished = 1;
 
     // Sluit modal meteen (UX)
-    const modal = document.getElementById("endgame");
+    const modal = document.getElementById('endgame');
     if (modal) {
       modal.close();
     }
 
     // 2. Toon tussenstand (Leaderboard) op Display
-    socket.emit("display:navigate", {
-      name: "display-leaderboard",
+    socket.emit('display:navigate', {
+      name: 'display-leaderboard',
       params: { sessionId: currentSessionId },
     });
 
@@ -492,8 +496,8 @@ const nextGame = async () => {
     await new Promise((resolve) => setTimeout(resolve, 15000));
 
     // 4. Navigeer Display terug naar Scoreboard
-    socket.emit("display:navigate", {
-      name: "display-scoreboard",
+    socket.emit('display:navigate', {
+      name: 'display-scoreboard',
       params: { sessionId: currentSessionId },
     });
 
@@ -505,9 +509,9 @@ const nextGame = async () => {
       selectedGameId.value = games.value[currentIndex + 1].id;
     }
   } catch (e) {
-    console.error("Failed to update game finished status or transition:", e);
+    console.error('Failed to update game finished status or transition:', e);
     // Fallback: close modal if error occurred before
-    const modal = document.getElementById("endgame");
+    const modal = document.getElementById('endgame');
     if (modal && modal.open) {
       modal.close();
     }
@@ -516,7 +520,7 @@ const nextGame = async () => {
 
 const endGame = async () => {
   if (currentGame.value) {
-    const isParallel = currentSession.value?.game_mode?.includes("parallel");
+    const isParallel = currentSession.value?.game_mode?.includes('parallel');
 
     // SPECIAAL GEVAL: Volgend spel in serie
     // (Ensure this doesn't run for parallel)
@@ -538,7 +542,7 @@ const endGame = async () => {
       if (isParallel && isFinished) {
         // Check if we really want to finish all games
         // Use sequential loop to avoid potential parallel write issues (SQLite locks etc)
-        console.log("Finishing all parallel games...");
+        console.log('Finishing all parallel games...');
         for (const g of games.value) {
           g.is_finished = 1;
           try {
@@ -557,7 +561,7 @@ const endGame = async () => {
         currentGame.value.is_finished = isFinished;
       }
     } catch (e) {
-      console.error("Failed to update game finished status:", e);
+      console.error('Failed to update game finished status:', e);
     }
 
     // 2. Check Session Status based on ALL games
@@ -574,29 +578,29 @@ const endGame = async () => {
         });
       }
 
-      console.log("All finished check:", allFinished);
+      console.log('All finished check:', allFinished);
 
-      const newSessionStatus = allFinished ? "finished" : "in_progress";
+      const newSessionStatus = allFinished ? 'finished' : 'in_progress';
 
-      if (newSessionStatus === "finished") {
+      if (newSessionStatus === 'finished') {
         try {
           await sessionRepository.update(currentSessionId, {
-            status: "finished",
+            status: 'finished',
           });
-          console.log("Session updated to finished.");
+          console.log('Session updated to finished.');
         } catch (e) {
-          console.error("Failed to update session status:", e);
+          console.error('Failed to update session status:', e);
         }
 
         // Navigate display
-        socket.emit("display:navigate", {
-          name: "display-leaderboard-finale",
+        socket.emit('display:navigate', {
+          name: 'display-leaderboard-finale',
           params: { sessionId: currentSessionId },
         });
 
         // Navigate local
         router.push({
-          name: "endgame-summary",
+          name: 'endgame-summary',
           query: { sessionId: currentSessionId },
         });
       } else {
@@ -607,22 +611,22 @@ const endGame = async () => {
       // Early exit (Pause) -> session is in_progress
       try {
         await sessionRepository.update(currentSessionId, {
-          status: "in_progress",
+          status: 'in_progress',
         });
         // Navigate display
-        socket.emit("display:navigate", {
-          name: "display-splash",
+        socket.emit('display:navigate', {
+          name: 'display-splash',
         });
       } catch (e) {
-        console.error("Failed to update session status:", e);
+        console.error('Failed to update session status:', e);
       }
 
       // Early exit (Pause) -> Go back to tablet home
-      router.push("/tablet");
+      router.push('/tablet');
     }
   }
 
-  const modal = document.getElementById("endgame");
+  const modal = document.getElementById('endgame');
   if (modal) {
     modal.close();
   }
@@ -637,7 +641,11 @@ const endGame = async () => {
           <LogoHeader :class="'c-player-list__logo'" />
           <div class="c-player-list__gameround">
             <template v-if="games.length > 1">
-              <CustomSelect v-if="!isSeries" v-model="selectedGameId" :options="gameOptions" />
+              <CustomSelect
+                v-if="!isSeries"
+                v-model="selectedGameId"
+                :options="gameOptions"
+              />
               <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             </template>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
@@ -652,7 +660,12 @@ const endGame = async () => {
             </div>
           </div>
 
-          <Button button-tekst="Spelinstellingen" variant="secondary" href="/tablet/game/settings">
+          <Button
+            button-tekst="Spelinstellingen"
+            variant="secondary"
+            :clickable="false"
+            @click="goToSettings"
+          >
             <template #c-btn_icon-left>
               <Cog :size="18" />
             </template>
@@ -669,35 +682,61 @@ const endGame = async () => {
             </div>
 
             <div v-if="currentGame?.score_type === 'points'">
-              <Button onclick="bonusmodal.showModal()" button-tekst="Bonuspunten toekennen" variant="primary">
+              <Button
+                onclick="bonusmodal.showModal()"
+                button-tekst="Bonuspunten toekennen"
+                variant="primary"
+              >
                 <template #c-btn_icon-left>
                   <Flame :size="18" />
                 </template>
               </Button>
-              <Modal modal-id="bonusmodal" title="Bonuspunten toevoegen" cancel-btn-text="Annuleren"
-                accept-btn-text="Toevoegen" @accept="saveBonus">
+              <Modal
+                modal-id="bonusmodal"
+                title="Bonuspunten toevoegen"
+                cancel-btn-text="Annuleren"
+                accept-btn-text="Toevoegen"
+                @accept="saveBonus"
+              >
                 <p class="c-modal__text">
                   Geef {{ bonusAmount }} bonuspunten aan de volgende deelnemers
                 </p>
 
-                <div v-if="isTeamsWithPlayers" class="c-player-list__tabs u-mb-sm">
-                  <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
-                    :isActive="activeModalTeamId === team.id" @click="activeModalTeamId = team.id" />
+                <div
+                  v-if="isTeamsWithPlayers"
+                  class="c-player-list__tabs u-mb-sm"
+                >
+                  <TeamTabButton
+                    v-for="team in availableTeams"
+                    :key="team.id"
+                    :label="team.name"
+                    :isActive="activeModalTeamId === team.id"
+                    @click="activeModalTeamId = team.id"
+                  />
                 </div>
 
                 <div class="c-assignment-modal-list">
                   <div v-if="filteredBonusPlayers.length === 0">
                     Geen deelnemers gevonden.
                   </div>
-                  <label v-for="player in filteredBonusPlayers" :key="player.participantId"
-                    class="c-assignment-modal-list__item" :class="{
+                  <label
+                    v-for="player in filteredBonusPlayers"
+                    :key="player.participantId"
+                    class="c-assignment-modal-list__item"
+                    :class="{
                       'c-assignment-modal-list__item--active':
                         selectedBonusParticipants.includes(
                           player.participantId,
                         ),
-                    }">
-                    <input type="checkbox" :checked="selectedBonusParticipants.includes(player.participantId)
-                      " @change="toggleBonusParticipant(player.participantId)" />
+                    }"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="
+                        selectedBonusParticipants.includes(player.participantId)
+                      "
+                      @change="toggleBonusParticipant(player.participantId)"
+                    />
                     <span class="c-assignment-modal-list__item_name">{{
                       player.name
                     }}</span>
@@ -707,39 +746,83 @@ const endGame = async () => {
             </div>
           </div>
 
-          <div v-if="isTeamsWithPlayers && availableTeams.length > 0" class="c-player-list__tabs">
-            <TeamTabButton v-for="team in availableTeams" :key="team.id" :label="team.name"
-              :isActive="activeTeamId === team.id" @click="activeTeamId = team.id" />
+          <div
+            v-if="isTeamsWithPlayers && availableTeams.length > 0"
+            class="c-player-list__tabs"
+          >
+            <TeamTabButton
+              v-for="team in availableTeams"
+              :key="team.id"
+              :label="team.name"
+              :isActive="activeTeamId === team.id"
+              @click="activeTeamId = team.id"
+            />
           </div>
 
-          <TransitionGroup :key="`${selectedGameId}-${activeTeamId}`" name="player-list" tag="div"
-            class="c-player-list__players" :class="{
+          <TransitionGroup
+            :key="`${selectedGameId}-${activeTeamId}`"
+            name="player-list"
+            tag="div"
+            class="c-player-list__players"
+            :class="{
               'c-player-list__players--boolean':
                 currentGame?.score_type === 'boolean',
               'c-player-list__players--time':
                 currentGame?.score_type === 'time',
-            }">
-            <HostPlayerItem v-for="player in filteredSortedPlayers" :key="`${selectedGameId}-${player.participantId}`"
-              :name="player.name" :points="player.points" :value="currentGame?.score_type === 'time'
-                ? player.time - (accumulatedScores[player.participantId] || 0)
-                : currentGame?.score_type === 'boolean'
-                  ? player.bool
-                  : player.points
-                " :score-type="currentGame?.score_type || 'points'" :size="playerItemSize" :rank="player.rank"
-              :perClick="currentGame?.perClick || 1" @updateScore="
+            }"
+          >
+            <HostPlayerItem
+              v-for="player in filteredSortedPlayers"
+              :key="`${selectedGameId}-${player.participantId}`"
+              :name="player.name"
+              :points="player.points"
+              :value="
+                currentGame?.score_type === 'time'
+                  ? player.time - (accumulatedScores[player.participantId] || 0)
+                  : currentGame?.score_type === 'boolean'
+                    ? player.bool
+                    : player.points
+              "
+              :score-type="currentGame?.score_type || 'points'"
+              :size="playerItemSize"
+              :rank="player.rank"
+              :perClick="currentGame?.perClick || 1"
+              @updateScore="
                 (newVal) => updatePlayerScore(player.participantId, newVal)
-              " />
+              "
+            />
           </TransitionGroup>
 
           <div class="c-player-list__buttons">
-            <Button onclick="endgame.showModal()" :button-tekst="endGameButtonText" variant="secondary"
-              :clickable="false" />
-            <Modal modal-id="endgame" :title="endGameModalTitle" :text="endGameModalText" cancel-btn-text="Terug"
-              :accept-btn-text="endGameButtonText" @accept="endGame" />
-            <Button v-if="hasNextRound || hasNextSet" onclick="nextround.showModal()" :button-tekst="nextButtonLabel"
-              variant="primary" :clickable="false" />
-            <Modal modal-id="nextround" :title="nextModalTitle" :text="nextModalText" cancel-btn-text="Terug"
-              :accept-btn-text="nextButtonLabel" @accept="goToNext" />
+            <Button
+              onclick="endgame.showModal()"
+              :button-tekst="endGameButtonText"
+              variant="secondary"
+              :clickable="false"
+            />
+            <Modal
+              modal-id="endgame"
+              :title="endGameModalTitle"
+              :text="endGameModalText"
+              cancel-btn-text="Terug"
+              :accept-btn-text="endGameButtonText"
+              @accept="endGame"
+            />
+            <Button
+              v-if="hasNextRound || hasNextSet"
+              onclick="nextround.showModal()"
+              :button-tekst="nextButtonLabel"
+              variant="primary"
+              :clickable="false"
+            />
+            <Modal
+              modal-id="nextround"
+              :title="nextModalTitle"
+              :text="nextModalText"
+              cancel-btn-text="Terug"
+              :accept-btn-text="nextButtonLabel"
+              @accept="goToNext"
+            />
           </div>
         </div>
       </div>
