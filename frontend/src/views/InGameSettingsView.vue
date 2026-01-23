@@ -614,22 +614,13 @@ const getGameNumber = (game) => {
   const match = idStr.match(/^game-(\d+)$/);
   if (match) return parseInt(match[1], 10);
 
-  // 2. Check if name contains a number (e.g. "Spel 5")
-  // This is important for saved games that kept their name "Spel X"
-  if (game.name) {
-    const nameMatch = game.name.match(/^Spel (\d+)$/i);
-    if (nameMatch) {
-      return parseInt(nameMatch[1], 10);
-    }
-  }
-
-  // 3. If it's a persistent game (from DB), determine its original position
+  // 2. If it's a persistent game (from DB), determine its original position
   const originalIndex = originalGames.value.findIndex(
     (og) => og.id === game.id,
   );
   if (originalIndex !== -1) return originalIndex + 1;
 
-  // 4. Fallback: Use current index + 1 (less stable but better than 0)
+  // 3. Fallback: Use current index + 1 (less stable but better than 0)
   const currentIndex = games.value.findIndex((g) => g.id === game.id);
   if (currentIndex !== -1) return currentIndex + 1;
 
@@ -666,8 +657,8 @@ const saveChanges = async () => {
     };
     await sessionRepository.update(currentSessionId, sessionPayload);
 
-    // 2. Update Each Game Configuration
-    const gameUpdatePromises = games.value.map((game, index) => {
+    // 2. Update Each Game Configuration (Sequentially to avoid DB transaction deadlocks)
+    for (const [index, game] of games.value.entries()) {
       // Check if it's a new game (ID starts with 'game-')
       const isNewGame = String(game.id).startsWith('game-');
 
@@ -694,20 +685,16 @@ const saveChanges = async () => {
 
       if (isNewGame) {
         console.log(`Creating NEW game: ${game.name}`);
-        return gameRepository.create(gamePayload).then((res) => {
-          // Update local ID with real ID from backend to prevent re-creation
-          if (res.data && res.data.id) {
-            game.id = res.data.id;
-          }
-          return res;
-        });
+        const res = await gameRepository.create(gamePayload);
+        // Update local ID with real ID from backend to prevent re-creation
+        if (res.data && res.data.id) {
+          game.id = res.data.id;
+        }
       } else {
         console.log(`Updating existing game: ${game.id}`);
-        return gameRepository.update(game.id, gamePayload);
+        await gameRepository.update(game.id, gamePayload);
       }
-    });
-
-    await Promise.all(gameUpdatePromises);
+    }
 
     // 2b. Delete Removed Games
     const currentGameIds = games.value.map((g) => g.id);
