@@ -81,7 +81,7 @@ onMounted(async () => {
       } else {
         selectedGameId.value = games.value[0].id;
       }
-      
+
       // Check for pending transition recovery
       const pendingTransition = sessionStorage.getItem('gameTransition');
       if (pendingTransition) {
@@ -89,31 +89,34 @@ onMounted(async () => {
           const { gameId, startTime } = JSON.parse(pendingTransition);
           // Only if this matches the currently active (finished) game
           if (selectedGameId.value === gameId) {
-             const elapsed = Date.now() - startTime;
-             const remaining = 15000 - elapsed;
-             
-             // Check if we should preserve the timer (e.g. came from settings)
-             const shouldPreserveTimer = sessionStorage.getItem('preserve_transition_timer') === 'true';
-             sessionStorage.removeItem('preserve_transition_timer');
+            const elapsed = Date.now() - startTime;
+            const remaining = 15000 - elapsed;
 
-             if (remaining > 0 && shouldPreserveTimer) {
-               console.log(`Recovering transition: ${remaining}ms remaining`);
-               isTransitioning.value = true;
-               // Resume the timer
-               setTimeout(() => {
-                 performGameSwitch(gameId);
-                 sessionStorage.removeItem('gameTransition');
-                 isTransitioning.value = false;
-               }, remaining);
-             } else {
-               // Time exhausted OR user broke flow (Pause) -> switch immediately
-               console.log('Recovering transition: Switching immediately (Time exhausted or Flow interrupted)');
-               performGameSwitch(gameId);
-               sessionStorage.removeItem('gameTransition');
-             }
+            // Check if we should preserve the timer (e.g. came from settings)
+            const shouldPreserveTimer =
+              sessionStorage.getItem('preserve_transition_timer') === 'true';
+            sessionStorage.removeItem('preserve_transition_timer');
+
+            if (remaining > 0 && shouldPreserveTimer) {
+              console.log(`Recovering transition: ${remaining}ms remaining`);
+              isTransitioning.value = true;
+              // Resume the timer
+              setTimeout(() => {
+                performGameSwitch(gameId);
+                sessionStorage.removeItem('gameTransition');
+                isTransitioning.value = false;
+              }, remaining);
+            } else {
+              // Time exhausted OR user broke flow (Pause) -> switch immediately
+              console.log(
+                'Recovering transition: Switching immediately (Time exhausted or Flow interrupted)',
+              );
+              performGameSwitch(gameId);
+              sessionStorage.removeItem('gameTransition');
+            }
           }
-        } catch(e) {
-          console.error("Invalid transition data", e);
+        } catch (e) {
+          console.error('Invalid transition data', e);
           sessionStorage.removeItem('gameTransition');
         }
       }
@@ -618,11 +621,11 @@ const nextGame = async () => {
         name: 'display-leaderboard',
         params: { sessionId: currentSessionId },
       });
-      
+
       // Save transition state for recovery
       const transitionData = {
         gameId: currentGame.value.id,
-        startTime: Date.now()
+        startTime: Date.now(),
       };
       sessionStorage.setItem('gameTransition', JSON.stringify(transitionData));
     }
@@ -640,10 +643,9 @@ const nextGame = async () => {
 
     // 4. Selecteer volgend spel voor DISPLAY (en onszelf)
     performGameSwitch(currentGame.value.id);
-    
+
     // Clear transition state on success
     sessionStorage.removeItem('gameTransition');
-
   } catch (e) {
     console.error('Failed to update game finished status or transition:', e);
     // Fallback: close modal if error occurred before
