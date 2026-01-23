@@ -1,6 +1,13 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import {
+  ref,
+  computed,
+  nextTick,
+  watch,
+  onMounted,
+  onUnmounted,
+} from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import Button from '../components/Button.vue';
 import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
@@ -29,6 +36,7 @@ import {
 } from '../services/api';
 
 const router = useRouter();
+const route = useRoute();
 const currentSessionId = sessionStorage.getItem('sessionId');
 
 // Form state
@@ -148,6 +156,17 @@ onMounted(async () => {
           timeNotation: config.timeNotation || 'mm:ss',
         };
       });
+    }
+
+    // Set active game based on query param
+    const queryGameId = route.query.gameId;
+    if (queryGameId) {
+      const gameIndex = games.value.findIndex(
+        (g) => String(g.id) === String(queryGameId),
+      );
+      if (gameIndex !== -1) {
+        activeGameIndex.value = gameIndex;
+      }
     }
 
     const participantsRes =

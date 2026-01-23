@@ -44,6 +44,7 @@ watch(selectedGameId, (newId) => {
       gameId: newId,
       sessionId: currentSessionId,
     });
+    sessionStorage.setItem('lastSelectedGameId', newId);
   }
 });
 
@@ -71,7 +72,13 @@ onMounted(async () => {
     const response = await sessionRepository.getGames(currentSessionId);
     games.value = response.data;
     if (games.value.length > 0) {
-      selectedGameId.value = games.value[0].id;
+      // Check for persisted selection
+      const lastId = sessionStorage.getItem('lastSelectedGameId');
+      if (lastId && games.value.find((g) => g.id == lastId)) {
+        selectedGameId.value = Number(lastId);
+      } else {
+        selectedGameId.value = games.value[0].id;
+      }
     }
   } catch (error) {
     console.error('Failed to fetch games for session 1:', error);
@@ -339,7 +346,10 @@ const saveBonus = async () => {
 };
 
 const goToSettings = () => {
-  router.push({ name: 'ingame-settings' });
+  router.push({
+    name: 'ingame-settings',
+    query: { gameId: selectedGameId.value },
+  });
 };
 
 const goToNext = async () => {
