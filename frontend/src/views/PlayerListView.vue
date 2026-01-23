@@ -81,6 +81,42 @@ onMounted(async () => {
       } else {
         selectedGameId.value = games.value[0].id;
       }
+      
+      // Check for pending transition recovery
+      const pendingTransition = sessionStorage.getItem('gameTransition');
+      if (pendingTransition) {
+        try {
+          const { gameId, startTime } = JSON.parse(pendingTransition);
+          // Only if this matches the currently active (finished) game
+          if (selectedGameId.value === gameId) {
+             const elapsed = Date.now() - startTime;
+             const remaining = 15000 - elapsed;
+             
+             // Check if we should preserve the timer (e.g. came from settings)
+             const shouldPreserveTimer = sessionStorage.getItem('preserve_transition_timer') === 'true';
+             sessionStorage.removeItem('preserve_transition_timer');
+
+             if (remaining > 0 && shouldPreserveTimer) {
+               console.log(`Recovering transition: ${remaining}ms remaining`);
+               isTransitioning.value = true;
+               // Resume the timer
+               setTimeout(() => {
+                 performGameSwitch(gameId);
+                 sessionStorage.removeItem('gameTransition');
+                 isTransitioning.value = false;
+               }, remaining);
+             } else {
+               // Time exhausted OR user broke flow (Pause) -> switch immediately
+               console.log('Recovering transition: Switching immediately (Time exhausted or Flow interrupted)');
+               performGameSwitch(gameId);
+               sessionStorage.removeItem('gameTransition');
+             }
+          }
+        } catch(e) {
+          console.error("Invalid transition data", e);
+          sessionStorage.removeItem('gameTransition');
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to fetch games for session 1:', error);
@@ -351,6 +387,8 @@ const saveBonus = async () => {
 };
 
 const goToSettings = () => {
+  // Flag that we are intentionally navigating to settings, so transition timer should be preserved
+  sessionStorage.setItem('preserve_transition_timer', 'true');
   router.push({
     name: 'ingame-settings',
     query: { gameId: selectedGameId.value },
@@ -544,14 +582,50 @@ const endGameModalText = computed(() => {
   return 'Je staat op het punt het spel te stoppen/pauzeren voordat alle rondes of sets gespeeld zijn. De huidige scores worden opgeslagen en het spel kan later hervat worden.';
 });
 
+const performGameSwitch = (currentGameId) => {
+  const currentIndex = games.value.findIndex((g) => g.id === currentGameId);
+  if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
+    // Zet volgende game id
+    const nextGameId = games.value[currentIndex + 1].id;
+
+    // Update lokale selectie
+    selectedGameId.value = nextGameId;
+    sessionStorage.setItem('lastSelectedGameId', nextGameId);
+
+    // Forceer navigatie display naar scoreboard van NIEUWE game
+    socket.emit('display:navigate', {
+      name: 'display-scoreboard',
+      params: { sessionId: currentSessionId, gameId: nextGameId },
+    });
+  }
+};
+
 const nextGame = async () => {
+  // Check if ALREADY finished (recovery from reload/nav)
+  const isAlreadyFinished = currentGame.value.is_finished === 1;
+
   // 1. Mark current game as finished
   isTransitioning.value = true;
   try {
-    await gameRepository.update(currentGame.value.id, {
-      is_finished: 1,
-    });
-    currentGame.value.is_finished = 1;
+    if (!isAlreadyFinished) {
+      await gameRepository.update(currentGame.value.id, {
+        is_finished: 1,
+      });
+      currentGame.value.is_finished = 1;
+
+      // Toon tussenstand (Leaderboard) op Display
+      socket.emit('display:navigate', {
+        name: 'display-leaderboard',
+        params: { sessionId: currentSessionId },
+      });
+      
+      // Save transition state for recovery
+      const transitionData = {
+        gameId: currentGame.value.id,
+        startTime: Date.now()
+      };
+      sessionStorage.setItem('gameTransition', JSON.stringify(transitionData));
+    }
 
     // Sluit modal meteen (UX)
     const modal = document.getElementById('endgame');
@@ -559,33 +633,17 @@ const nextGame = async () => {
       modal.close();
     }
 
-    // 2. Toon tussenstand (Leaderboard) op Display
-    socket.emit('display:navigate', {
-      name: 'display-leaderboard',
-      params: { sessionId: currentSessionId },
-    });
-
-    // 3. Wacht 15 seconden
-    await new Promise((resolve) => setTimeout(resolve, 15000));
+    // 3. Wacht 15 seconden (alleen als het net is afgerond)
+    if (!isAlreadyFinished) {
+      await new Promise((resolve) => setTimeout(resolve, 15000));
+    }
 
     // 4. Selecteer volgend spel voor DISPLAY (en onszelf)
-    const currentIndex = games.value.findIndex(
-      (g) => g.id === currentGame.value.id,
-    );
-    if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
-      // Zet volgende game id
-      const nextGameId = games.value[currentIndex + 1].id;
+    performGameSwitch(currentGame.value.id);
+    
+    // Clear transition state on success
+    sessionStorage.removeItem('gameTransition');
 
-      // Update lokale selectie
-      selectedGameId.value = nextGameId;
-      sessionStorage.setItem('lastSelectedGameId', nextGameId);
-
-      // Forceer navigatie display naar scoreboard van NIEUWE game
-      socket.emit('display:navigate', {
-        name: 'display-scoreboard',
-        params: { sessionId: currentSessionId, gameId: nextGameId },
-      });
-    }
   } catch (e) {
     console.error('Failed to update game finished status or transition:', e);
     // Fallback: close modal if error occurred before
