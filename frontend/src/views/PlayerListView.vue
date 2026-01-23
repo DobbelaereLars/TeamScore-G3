@@ -517,18 +517,17 @@ const nextGame = async () => {
     if (currentIndex !== -1 && currentIndex < games.value.length - 1) {
       // Zet volgende game id
       const nextGameId = games.value[currentIndex + 1].id;
-      
+
       // Update lokale selectie
       selectedGameId.value = nextGameId;
       sessionStorage.setItem('lastSelectedGameId', nextGameId);
 
       // Forceer navigatie display naar scoreboard van NIEUWE game
       socket.emit('display:navigate', {
-          name: 'display-scoreboard',
-          params: { sessionId: currentSessionId, gameId: nextGameId },
+        name: 'display-scoreboard',
+        params: { sessionId: currentSessionId, gameId: nextGameId },
       });
     }
-
   } catch (e) {
     console.error('Failed to update game finished status or transition:', e);
     // Fallback: close modal if error occurred before
