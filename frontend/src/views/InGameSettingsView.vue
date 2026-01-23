@@ -661,7 +661,7 @@ const toggleParticipantAssignment = (event, participantId, gameId) => {
       if (event && event.target) {
         event.target.checked = !event.target.checked;
       }
-      
+
       // It's a move!
       // Trigger warning modal for THIS specific toggle?
       // "popup bij het aanvinken". Yes.
@@ -1461,19 +1461,6 @@ onUnmounted(() => {
                 >
                   <template v-if="hasValidParticipants">
                     <div
-                      v-if="unassignedParticipants.length > 0"
-                      class="c-notice c-notice--warning mb-4"
-                    >
-                      <div class="c-notice__content">
-                        <strong>Let op:</strong> Er zijn nog deelnemers niet
-                        toegewezen:
-                        {{
-                          unassignedParticipants.map((p) => p.name).join(', ')
-                        }}. Wijs ze toe aan een spel om verder te gaan.
-                      </div>
-                    </div>
-
-                    <div
                       v-for="(game, index) in games"
                       :key="game.id"
                       class="p-game-setup-view__settings__body__content__assignment__list__game-card"
@@ -1603,14 +1590,11 @@ onUnmounted(() => {
           >
             <div class="c-modal__content">
               <p class="c-modal__text">
-                Deze speler is al toegewezen aan een ander spel.
+                Deze speler is al toegewezen aan een ander spel.<br /><br />Let
+                op: Als je deze speler verplaatst, worden de huidige scores
+                verwijderd.
               </p>
-              <div class="c-notice c-notice--danger mb-4">
-                <p>
-                  <strong>Let op:</strong> Als je deze speler verplaatst, worden
-                  de huidige scores verwijderd (reset naar 0).
-                </p>
-              </div>
+              <br />
               <p class="c-modal__text">Weet je zeker dat je wilt doorgaan?</p>
             </div>
           </Modal>
@@ -1627,16 +1611,12 @@ onUnmounted(() => {
               <p class="c-modal__text">
                 Je hebt de indeling voor
                 {{ pendingAssignmentChanges.length }} deelnemer(s) gewijzigd via
-                de instellingen.
+                de instellingen.<br /><br />Let op: Door de indeling te
+                wijzigen, beschouwt het systeem dit als een nieuwe deelname. De
+                scores die deze deelnemer(s) hadden in hun vorige spel worden
+                hierdoor gereset.
               </p>
-              <div class="c-notice c-notice--danger mb-4">
-                <p>
-                  <strong>Let op:</strong> Door de indeling te wijzigen,
-                  beschouwt het systeem dit als een nieuwe deelname. De scores
-                  die deze deelnemer(s) hadden in hun vorige spel worden
-                  hierdoor <strong>gereset</strong> (verwijderd).
-                </p>
-              </div>
+              <br />
               <p class="c-modal__text">
                 Weet je zeker dat je wilt doorgaan en opslaan?
               </p>
