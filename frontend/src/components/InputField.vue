@@ -45,6 +45,7 @@ const labelText = computed(() => {
 const emit = defineEmits(["update:modelValue"]); //nodig voor v-model
 
 const onChange = (e) => {
+  if (props.type !== 'number') return;
   let v = Number(e.target.value);
   if (Number.isNaN(v)) return;
 
