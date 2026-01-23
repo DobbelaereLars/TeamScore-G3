@@ -538,6 +538,24 @@ const nextGame = async () => {
   }
 };
 
+const pauseGame = async () => {
+      // Early exit (Pause) -> session is in_progress
+      try {
+        await sessionRepository.update(currentSessionId, {
+          status: 'in_progress',
+        });
+        // Navigate display
+        socket.emit('display:navigate', {
+          name: 'display-splash',
+        });
+      } catch (e) {
+        console.error('Failed to update session status:', e);
+      }
+
+      // Early exit (Pause) -> Go back to tablet home
+      router.push('/tablet');
+};
+
 const endGame = async () => {
   if (currentGame.value) {
     const isParallel =
@@ -826,9 +844,24 @@ const endGame = async () => {
 
           <div class="c-player-list__buttons">
             <Button
+              v-if="isLastPhase"
+              onclick="pausegame.showModal()"
+              button-tekst="Spel pauzeren"
+              variant="secondary"
+              :clickable="false"
+            />
+            <Modal
+              modal-id="pausegame"
+              title="Spel pauzeren?"
+              text="Je staat op het punt het spel te pauzeren. De scores worden opgeslagen en je kan later hervatten."
+              cancel-btn-text="Terug"
+              accept-btn-text="Pauzeren"
+              @accept="pauseGame"
+            />
+            <Button
               onclick="endgame.showModal()"
               :button-tekst="endGameButtonText"
-              variant="secondary"
+              :variant="isLastPhase ? 'primary' : 'secondary'"
               :clickable="false"
             />
             <Modal
