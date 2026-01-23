@@ -1,16 +1,16 @@
 <script setup>
-import LeaderboardPodiumIcon from "../components/LeaderboardPodiumIcon.vue";
-import LeaderboardPlayerCard from "../components/LeaderboardPlayercard.vue";
-import Button from "../components/Button.vue";
-import { Download } from "lucide-vue-next";
+import LeaderboardPodiumIcon from '../components/LeaderboardPodiumIcon.vue';
+import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
+import Button from '../components/Button.vue';
+import { Download } from 'lucide-vue-next';
 
-import logo from "../assets/logo.webp";
+import logo from '../assets/logo.webp';
 
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from 'vue-router';
 
-import { finalScoreRepository } from "../services/api";
+import { finalScoreRepository } from '../services/api';
 
 const route = useRoute();
 const SessionID = route.params.id;
@@ -19,22 +19,22 @@ const players = ref([]);
 
 const loadGameData = async () => {
   if (!SessionID) {
-    console.error("No session ID found for leaderboard");
+    console.error('No session ID found for leaderboard');
     return;
   }
 
   try {
     const response = await finalScoreRepository.getBySession(SessionID);
-    console.log("Final scores fetched:", response.data);
+    console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => ({
       id: p.participant_id, // Note: backend returns participant_id
-      spelersnaam: p.player_name || p.team_name || "Unknown",
+      spelersnaam: p.player_name || p.team_name || 'Unknown',
       score: p.total_points || 0,
     }));
   } catch (error) {
-    console.error("Failed to load final scores:", error);
+    console.error('Failed to load final scores:', error);
   }
 };
 
@@ -101,7 +101,7 @@ const displayedPlayers = computed(() => {
   return remainingPlayers.value.slice(start, start + ITEMS_per_PAGE.value);
 });
 
-import confetti from "canvas-confetti";
+import confetti from 'canvas-confetti';
 
 // Visibility states
 const showRank1 = ref(false); // 1st Place
@@ -156,25 +156,25 @@ const startPodiumAnimation = () => {
     particleCount: 150,
     spread: 70,
     origin: { y: 0.6 },
-    colors: ["#534aff", "#ff3b30", "#ffd60a"],
+    colors: ['#534aff', '#ff3b30', '#ffd60a'],
   });
 };
 
 const exportData = async () => {
   // 1. Generate CSV content
-  const headers = ["Rank", "Name", "Score"];
+  const headers = ['Rank', 'Name', 'Score'];
   const rows = sortedPlayers.value.map((player, index) => {
     // Escape quotes if necessary and handle commas in names
     const name = `"${player.spelersnaam.replace(/"/g, '""')}"`;
-    return [index + 1, name, player.score].join(",");
+    return [index + 1, name, player.score].join(',');
   });
 
-  const csvContent = [headers.join(","), ...rows].join("\n");
+  const csvContent = [headers.join(','), ...rows].join('\n');
 
   // 2. Create File/Blob
   const filename = `leaderboard_session_${SessionID}.csv`;
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const file = new File([blob], filename, { type: "text/csv" });
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const file = new File([blob], filename, { type: 'text/csv' });
 
   // 3. Share or Download
   // Detect if mobile device to prefer native share, otherwise force download for PC
@@ -193,20 +193,20 @@ const exportData = async () => {
     try {
       await navigator.share({
         files: [file],
-        title: "Leaderboard Resultaten",
-        text: "Hier zijn de eindresultaten van de sessie.",
+        title: 'Leaderboard Resultaten',
+        text: 'Hier zijn de eindresultaten van de sessie.',
       });
     } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error("Error sharing:", error);
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
       }
     }
   } else {
     // Fallback: Download via anchor tag (PC default)
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-    link.setAttribute("download", filename);
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
 
@@ -219,17 +219,17 @@ const exportData = async () => {
 const router = useRouter(); // Ensure router is available
 
 const goBack = () => {
-  router.push({ name: "tablet-home" });
+  router.push({ name: 'tablet-home' });
 };
 
 onMounted(() => {
   // Disable body scrolling
-  document.body.style.overflow = "hidden";
+  document.body.style.overflow = 'hidden';
   loadGameData();
 
   // Calculate initial items per page
   calculateItemsPerPage();
-  window.addEventListener("resize", calculateItemsPerPage);
+  window.addEventListener('resize', calculateItemsPerPage);
 
   // Start animation sequence
   startPodiumAnimation();
@@ -237,8 +237,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   // Re-enable body scrolling
-  document.body.style.overflow = "";
-  window.removeEventListener("resize", calculateItemsPerPage);
+  document.body.style.overflow = '';
+  window.removeEventListener('resize', calculateItemsPerPage);
+  confetti.reset();
 });
 </script>
 
