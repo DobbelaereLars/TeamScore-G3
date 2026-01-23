@@ -648,8 +648,14 @@ const endGame = async () => {
                 v-model="selectedGameId"
                 :options="gameOptions"
               />
+              <h2 v-else-if="currentSession?.game_mode === 'single'" class="h2">
+                {{ currentSession?.name }}
+              </h2>
               <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             </template>
+            <h2 v-else-if="currentSession?.game_mode === 'single'" class="h2">
+              {{ currentSession?.name }}
+            </h2>
             <h2 v-else class="h2">{{ currentGame?.name }}</h2>
             <p
               v-if="(currentGame?.rounds || 1) > 1"

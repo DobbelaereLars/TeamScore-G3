@@ -23,7 +23,7 @@ const loadGameData = async (gameId) => {
       rank: p.rank,
     }));
 
-    // Optional: Fetch game details to update header
+    // Optional: Fetch game and session details to update header
     const gameResponse = await gameRepository.getById(gameId);
     if (gameResponse.data) {
       console.log('Game details fetched:', gameResponse.data);
@@ -32,6 +32,19 @@ const loadGameData = async (gameId) => {
       gameinfo.value.currentRound = gameResponse.data.current_round;
       gameinfo.value.totalSets = gameResponse.data.sets;
       gameinfo.value.currentSet = gameResponse.data.current_set;
+
+      // Also get session to check mode
+      if (gameResponse.data.session_id) {
+        try {
+          const sessionRes = await sessionRepository.getById(
+            gameResponse.data.session_id,
+          );
+          gameinfo.value.sessionName = sessionRes.data.name;
+          gameinfo.value.gameMode = sessionRes.data.game_mode;
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to load game data:', error);
@@ -60,6 +73,8 @@ const gameinfo = ref({
   currentSet: 0,
   totalSets: 0,
   gamename: '',
+  sessionName: '',
+  gameMode: '',
 });
 
 // Calculate the highest score among all players
@@ -300,7 +315,10 @@ onUnmounted(() => {
         <img :src="logo" alt="TeamScore Logo" style="height: 8rem" />
       </div>
       <div class="v-display-scoreboard-info">
-        <h2>{{ gameinfo.gamename }}</h2>
+        <h2 v-if="gameinfo.gameMode === 'single'">
+          {{ gameinfo.sessionName }}
+        </h2>
+        <h2 v-else>{{ gameinfo.gamename }}</h2>
         <p
           v-if="gameinfo.totalRounds > 1"
           class="v-display-scoreboard-round h6"
