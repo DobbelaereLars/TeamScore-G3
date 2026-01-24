@@ -355,7 +355,7 @@ router.get('/:id/final-scores', async (req, res) => {
     // Initialize map with all participants found in scores
     scores.forEach((s) => {
       // Use entity_id to aggregate across games
-      const key = s.entity_id; 
+      const key = s.entity_id;
       if (!participantFinalScores[key]) {
         participantFinalScores[key] = {
           id: s.participant_id, // Keep one participant ID reference

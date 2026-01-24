@@ -50,10 +50,10 @@ const loadGameData = async () => {
           const seconds = Math.floor(totalSeconds % 60);
           // Simple mm:ss formatting for leaderboard, can be enhanced to match user preference if we fetched config
           displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          scoreLabel = 'tijd';
+          scoreLabel = '';
         } else if (p.score_type === 'boolean') {
           displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-          scoreLabel = 'status';
+          scoreLabel = '';
         }
       }
 
@@ -174,6 +174,8 @@ onUnmounted(() => {
             :playerName="player.spelersnaam"
             :maxValue="maxScore"
             :score="player.score"
+            :display-score="player.displayScore"
+            :score-label="player.scoreLabel"
           />
         </div>
       </TransitionGroup>

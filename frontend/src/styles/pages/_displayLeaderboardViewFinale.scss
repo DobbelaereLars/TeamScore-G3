@@ -49,7 +49,7 @@
     // Then replace the animation block at the end
     height: 26rem;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: 1fr 1fr;
     gap: $spacing-8;
     position: relative;

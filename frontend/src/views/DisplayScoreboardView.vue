@@ -118,8 +118,8 @@ const formatScore = (val, type, config) => {
 };
 
 const getScoreLabel = (type) => {
-  if (type === 'boolean') return 'status';
-  if (type === 'time') return 'tijd';
+  if (type === 'boolean') return '';
+  if (type === 'time') return '';
   return 'punten';
 };
 

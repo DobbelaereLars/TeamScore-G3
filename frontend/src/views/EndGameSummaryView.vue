@@ -39,10 +39,10 @@ const loadGameData = async () => {
           const minutes = Math.floor(totalSeconds / 60);
           const seconds = Math.floor(totalSeconds % 60);
           displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          scoreLabel = 'tijd';
+          scoreLabel = '';
         } else if (p.score_type === 'boolean') {
           displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-          scoreLabel = 'status';
+          scoreLabel = '';
         }
       }
 

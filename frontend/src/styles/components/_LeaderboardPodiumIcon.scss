@@ -129,6 +129,8 @@
   justify-content: center;
   align-items: center;
   width: fit-content;
+  max-width: 100%; /* Ensure it doesn't overflow parent unnecessarily */
   gap: $spacing-3;
   white-space: nowrap; // Prevent name from wrapping
+  text-align: center;
 }
