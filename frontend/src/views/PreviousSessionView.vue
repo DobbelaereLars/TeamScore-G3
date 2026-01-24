@@ -376,7 +376,12 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="c-display-end-game-summary-view__footer">
-      <Button buttonTekst="Sluiten" variant="secondary" @click="goBack" :clickable="false" />
+      <Button
+        buttonTekst="Sluiten"
+        variant="secondary"
+        @click="goBack"
+        :clickable="false"
+      />
 
       <Button
         variant="secondary"
@@ -389,7 +394,12 @@ onUnmounted(() => {
         </template>
       </Button>
 
-      <Button buttonTekst="Exporteren" variant="primary" @click="exportData" :clickable="false">
+      <Button
+        buttonTekst="Exporteren"
+        variant="primary"
+        @click="exportData"
+        :clickable="false"
+      >
         <template #c-btn_icon-left>
           <Download :size="18" />
         </template>
