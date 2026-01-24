@@ -20,6 +20,14 @@ const props = defineProps({
     type: Number,
     default: 70,
   },
+  displayScore: {
+    type: String,
+    default: '',
+  },
+  scoreLabel: {
+    type: String,
+    default: 'punten',
+  },
 });
 </script>
 
@@ -37,13 +45,15 @@ const props = defineProps({
     </div>
     <div class="c-leaderboard-playercard__points">
       <p class="h3">
+        <span v-if="displayScore">{{ displayScore }}</span>
         <RollingNumber
+          v-else
           :value="props.score"
           :duration="800"
           :disableInitialAnimation="true"
         />
       </p>
-      <p class="h6">punten</p>
+      <p class="h6">{{ scoreLabel }}</p>
     </div>
   </div>
 </template>

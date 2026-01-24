@@ -31,14 +31,34 @@ const loadGameData = async () => {
 
   try {
     const response = await finalScoreRepository.getBySession(sessionID);
-    console.log('Final scores fetched:', response.data);
-
-    // Map backend data to frontend structure
-    players.value = response.data.map((p) => ({
-      id: p.participant_id, // Note: backend returns participant_id
-      spelersnaam: p.player_name || p.team_name || 'Unknown',
-      score: p.total_points || 0,
-    }));
+    const resData = response.data;
+    const rawPlayers = resData.map((p) => {
+        let displayScore = '';
+        let scoreLabel = 'punten';
+        
+        if (p.is_single_game) {
+            if (p.score_type === 'time') {
+                const totalSeconds = Number(p.total_points) || 0;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                scoreLabel = 'tijd';
+            } else if (p.score_type === 'boolean') {
+                displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
+                scoreLabel = 'status';
+            }
+        }
+        return {
+           id: p.participant_id, // Note: backend returns participant_id
+           spelersnaam: p.player_name || p.team_name || 'Unknown',
+           score: p.total_points || 0,
+           displayScore,
+           scoreLabel,
+           rank: p.final_rank
+        };
+    });
+    
+    players.value = rawPlayers;
 
     // Start animation only after data is loaded
     startPodiumAnimation();
@@ -50,6 +70,9 @@ const loadGameData = async () => {
 // Sort players by score (highest first)
 const sortedPlayers = computed(() => {
   return [...players.value].sort((a, b) => {
+    // Trust backend rank
+    if (a.rank && b.rank) return a.rank - b.rank;
+    
     if (b.score !== a.score) {
       return b.score - a.score;
     }
@@ -297,6 +320,8 @@ onUnmounted(() => {
           color="red"
           :spelersnaam="topThreePlayers[1].spelersnaam"
           :score="topThreePlayers[1].score"
+          :display-score="topThreePlayers[1].displayScore"
+          :score-label="topThreePlayers[1].scoreLabel"
         />
         <!-- Rank 1 (Top in DOM order per grid styles) -->
         <LeaderboardPodiumIcon
@@ -307,6 +332,8 @@ onUnmounted(() => {
           color="blue"
           :spelersnaam="topThreePlayers[0].spelersnaam"
           :score="topThreePlayers[0].score"
+          :display-score="topThreePlayers[0].displayScore"
+          :score-label="topThreePlayers[0].scoreLabel"
         />
         <!-- Rank 3 (Third in DOM order per grid styles) -->
         <LeaderboardPodiumIcon
@@ -317,6 +344,8 @@ onUnmounted(() => {
           color="orange"
           :spelersnaam="topThreePlayers[2].spelersnaam"
           :score="topThreePlayers[2].score"
+          :display-score="topThreePlayers[2].displayScore"
+          :score-label="topThreePlayers[2].scoreLabel"
         />
       </div>
     </div>
@@ -333,6 +362,8 @@ onUnmounted(() => {
           :playerName="player.spelersnaam"
           :maxValue="maxScore"
           :score="player.score"
+          :display-score="player.displayScore"
+          :score-label="player.scoreLabel"
         />
       </div>
 

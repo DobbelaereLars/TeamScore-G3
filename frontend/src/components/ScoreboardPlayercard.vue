@@ -18,6 +18,14 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  displayScore: {
+    type: String,
+    default: '',
+  },
+  scoreLabel: {
+    type: String,
+    default: 'punten',
+  },
   maxValue: {
     type: Number,
     default: 100,
@@ -70,9 +78,9 @@ const props = defineProps({
             class="c-player-card-score-value h4 u-bold"
             :class="[`c-player-card-score-value--${variant}`, $attrs.class]"
           >
-            {{ score }}
+            {{ displayScore || score }}
           </p>
-          <p class="c-player-card-score-label">punten</p>
+          <p class="c-player-card-score-label">{{ scoreLabel }}</p>
         </div>
       </div>
       <ProgressBar

@@ -18,6 +18,10 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  displayScore: {
+    type: String,
+    default: '',
+  },
   visible: {
     type: Boolean,
     default: true,
@@ -88,7 +92,9 @@ const profileInitials = computed(() => {
     <div class="c-leaderboard-podium-icon__details">
       <p class="h5">{{ spelersnaam }}</p>
       <p class="h3">
+        <span v-if="displayScore">{{ displayScore }}</span>
         <RollingNumber
+          v-else
           :value="score"
           :duration="800"
           :trigger="visible"

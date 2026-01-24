@@ -96,6 +96,24 @@ function initDatabase() {
         // 1. Run basic migrations (creates tables IF NOT EXISTS)
         const migrationsSql = fs.readFileSync(migrationsPath, 'utf8');
 
+        // Create RoundScore table manually if not exists (as it might not be in older migrations.sql)
+        await runQuery(db, `
+          CREATE TABLE IF NOT EXISTS RoundScore (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_id INTEGER NOT NULL,
+            participant_id INTEGER NOT NULL,
+            round INTEGER NOT NULL,
+            set_number INTEGER DEFAULT 1,
+            value_number REAL,
+            value_time REAL,
+            value_bool INTEGER,
+            bonus REAL DEFAULT 0,
+            recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (game_id) REFERENCES Game(id) ON DELETE CASCADE,
+            FOREIGN KEY (participant_id) REFERENCES Participant(id) ON DELETE CASCADE
+          );
+        `);
+
         // Split op puntkomma voor betere error reporting, maar db.exec is sneller.
         // We gebruiken exec omdat splitsen op ; soms fout gaat bij triggers/blocks.
         await new Promise((res, rej) => {

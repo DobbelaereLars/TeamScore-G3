@@ -156,31 +156,303 @@ router.get('/:id/games', async (req, res) => {
   }
 });
 
-// GET final scores for a session (Leaderboard)
+// GET final scores for a session (Leaderboard) with robust Z-score normalization
 router.get('/:id/final-scores', async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
 
   try {
-    const query = `
-      SELECT 
-        MAX(p.id) as participant_id,
-        SUM(fs.total_points) as total_points,
-        MIN(fs.final_rank) as final_rank,
-        p.type as participant_type,
-        MAX(pl.name) as player_name,
-        MAX(tm.name) as team_name
-      FROM FinalScore fs
-      JOIN Participant p ON fs.participant_id = p.id
-      LEFT JOIN Player pl ON p.player_id = pl.id
-      LEFT JOIN Team tm ON p.team_id = tm.id
-      WHERE fs.session_id = ?
-      GROUP BY p.type, COALESCE(pl.id, tm.id)
-      ORDER BY total_points DESC
-    `;
+    // 1. Fetch Session to check mode (optional, but good for context)
+    const session = await get(db, 'SELECT * FROM Session WHERE id = ?', [id]);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    const scores = await all(db, query, [id]);
-    res.json(scores);
+    // 2. Fetch All Games for Session
+    const games = await all(
+      db,
+      `
+      SELECT g.*, sm.type as score_type, sm.ranking_rule
+      FROM Game g
+      JOIN ScoreModel sm ON g.score_model_id = sm.id
+      WHERE g.session_id = ?
+    `,
+      [id],
+    );
+
+    if (games.length === 0) return res.json([]);
+
+    const gameIds = games.map((g) => g.id);
+
+    // 3. Fetch Scores
+     const scores = await all(
+      db,
+      `
+            SELECT
+                s.game_id,
+                s.participant_id,
+                s.value_number,
+                s.value_time,
+                s.value_bool,
+                s.bonus,
+                p.type as participant_type,
+                COALESCE(pl.name, tm.name) as participant_name,
+                COALESCE(pl.id, tm.id) as entity_id
+            FROM Score s
+            JOIN Participant p ON s.participant_id = p.id
+            LEFT JOIN Player pl ON p.player_id = pl.id
+            LEFT JOIN Team tm ON p.team_id = tm.id
+            WHERE s.game_id IN (${gameIds.map(() => '?').join(',')})
+        `,
+      gameIds,
+    );
+
+    // *** SPECIAL HANDLING FOR SINGLE GAME MODE (OR SINGLE GAME IN SERIES) ***
+    // Checks if the session is explicitly 'single' OR if there is only 1 game total.
+    // In both cases, showing raw scores (Time, Boolean, Points) is preferred over normalization.
+    if ((session.game_mode === 'single' || games.length === 1) && games.length > 0) {
+        const game = games[0];
+        const scoreType = game.score_type;
+        const rankingRule = game.ranking_rule;
+
+        const singleGameScores = scores
+            .filter(s => s.game_id === game.id)
+            .map(s => {
+                let rawScore = 0;
+                // For Single Game used in Leaderboard, we want to show the ACTUAL score.
+                // Not normalized. 
+                if (scoreType === 'points') {
+                    rawScore = (s.value_number || 0) + (s.bonus || 0);
+                } else if (scoreType === 'time') {
+                     // Time usually doesn't add bonus like points. 
+                    rawScore = s.value_time || 0; 
+                } else if (scoreType === 'boolean') {
+                    rawScore = s.value_bool ? 1 : 0;
+                }
+
+                return {
+                    participant_id: s.participant_id,
+                    participant_type: s.participant_type,
+                    participant_name: s.participant_name,
+                    player_name: s.participant_type === 'player' ? s.participant_name : null,
+                    team_name: s.participant_type === 'team' ? s.participant_name : null,
+                    total_points: rawScore, // Raw value
+                    score_type: scoreType,
+                    is_single_game: true,
+                    // Pass ranking rule to help frontend if needed, though we sort here
+                    ranking_rule: rankingRule
+                };
+            });
+        
+         // *** Multi-Round Logic for Single Game (Boolean Majority) ***
+         if (scoreType === 'boolean' || scoreType === 'bool') {
+             // We need to fetch history if available
+             const roundScores = await all(db, `
+                SELECT participant_id, value_bool 
+                FROM RoundScore 
+                WHERE game_id = ?
+             `, [game.id]);
+             
+             // Merge with current `scores` (which represents the latest round)
+             // We want: For each participant, Count(Completed) vs Count(Not Completed)
+             // across ALL rounds (history + current).
+             
+             // 1. Map history
+             const stats = {}; 
+             // Init with participants
+             singleGameScores.forEach(p => {
+                 stats[p.participant_id] = { completed: 0, total: 0 };
+             });
+
+             // Add history
+             roundScores.forEach(rs => {
+                 if (stats[rs.participant_id]) {
+                     if (rs.value_bool) stats[rs.participant_id].completed++;
+                     stats[rs.participant_id].total++;
+                 }
+             });
+
+             // Add current round (from `scores`)
+             scores.filter(s => s.game_id === game.id).forEach(s => {
+                  if (stats[s.participant_id]) {
+                     if (s.value_bool) stats[s.participant_id].completed++;
+                     stats[s.participant_id].total++;
+                  }
+             });
+
+             // Calculate Majority
+             singleGameScores.forEach(p => {
+                 const s = stats[p.participant_id];
+                 if (!s || s.total === 0) {
+                     p.total_points = 0; // Default
+                     return;
+                 }
+                 // Majority Rule:
+                 // "meerderheid van voltooid is voltooid"
+                 // "als het gelijk is ... (2 vs 2) is het ook gelijk" -> "is het ook voltooid" (User said: "is het ook voltooid")
+                 
+                 const required = Math.ceil(s.total / 2);
+                 // If total is 4 (even), half is 2. 2 completed >= 2 -> Completed. Correct.
+                 // If total is 3 (odd), half is 1.5 -> ceil 2. 2 completed >= 2 -> Completed. Correct.
+                 
+                 // User specific: "2 niet voltooid en 3 keer wel dan is eindstand wel voltooid" (3 > 2.5 -> Yes)
+                 // User specific: "als het gelijk is ... is het ook voltooid" (2 vs 2 -> Yes)
+                 
+                 // So logic: completed >= total / 2
+                 if (s.completed >= s.total / 2) {
+                     p.total_points = 1; // Completed
+                 } else {
+                     p.total_points = 0; // Not Completed
+                 }
+             });
+         }
+
+        // Sort based on rules
+         singleGameScores.sort((a, b) => {
+             if (scoreType === 'boolean') return b.total_points - a.total_points; // 1 > 0
+             if (rankingRule === 'lowest_wins') return a.total_points - b.total_points; // Lower is better
+             return b.total_points - a.total_points; // Higher is better
+        });
+
+        // Assign Rank
+        singleGameScores.forEach((r, idx) => r.final_rank = idx + 1);
+
+        res.json(singleGameScores);
+        return;
+    }
+
+     // Helper: Calculate Mean and StdDev
+    const calculateStats = (values) => {
+        const n = values.length;
+        if (n === 0) return { mean: 0, stdDev: 0 };
+        const mean = values.reduce((a, b) => a + b, 0) / n;
+        const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n > 1 ? n - 1 : 1); // Sample StdDev
+        // Or Population StdDev? Sample usually better for small groups. 
+        // If n=1, variance is 0 (handled by division rules later or logic)
+        return { mean, stdDev: Math.sqrt(variance) };
+    };
+
+    // 4. Process Scores Per Game
+    const participantFinalScores = {}; // Map: participant_id -> { totalZ, count, name, type }
+
+    // Initialize map with all participants found in scores
+    scores.forEach(s => {
+        if (!participantFinalScores[s.participant_id]) {
+            participantFinalScores[s.participant_id] = {
+                id: s.participant_id,
+                name: s.participant_name,
+                type: s.participant_type,
+                sumZ: 0,
+                gamesPlayed: 0
+            };
+        }
+    });
+
+    for (const game of games) {
+        // Filter scores for this game
+        const gameScores = scores.filter(s => s.game_id === game.id);
+        if (gameScores.length === 0) continue;
+
+        const scoreType = game.score_type;
+        const rankingRule = game.ranking_rule; // 'highest_wins' or 'lowest_wins'
+
+        if (scoreType === 'points') {
+            // Points: Raw = value + bonus
+            const rawValues = gameScores.map(s => (s.value_number || 0) + (s.bonus || 0));
+            const { mean, stdDev } = calculateStats(rawValues);
+
+            gameScores.forEach((s, idx) => {
+                const raw = rawValues[idx];
+                let z = 0;
+                if (stdDev !== 0) {
+                    z = (raw - mean) / stdDev;
+                }
+                // Direction: Highest wins (Points). 
+                // If rankingRule is lowest_wins (e.g. golf), invert.
+                if (rankingRule === 'lowest_wins') z = -z;
+                
+                participantFinalScores[s.participant_id].sumZ += z;
+                participantFinalScores[s.participant_id].gamesPlayed += 1;
+            });
+
+        } else if (scoreType === 'time') {
+            // Time: Raw = value_time - bonus (Assuming bonus improves time)
+            // Or typically bonus is separate. Let's assume raw = time - bonus is good logic for "Bonus".
+            const rawValues = gameScores.map(s => (s.value_time || 0) - (s.bonus || 0));
+            const { mean, stdDev } = calculateStats(rawValues);
+
+            gameScores.forEach((s, idx) => {
+                const raw = rawValues[idx];
+                let z = 0;
+                if (stdDev !== 0) {
+                    z = (raw - mean) / stdDev;
+                }
+                // Direction: Lowest wins (Time).
+                // Standard Z: (x - mean)/std. If x > mean (slower), Z > 0. Bad.
+                // We want Better Time (Lower) -> Higher Score.
+                // So Invert Z.
+                if (rankingRule === 'lowest_wins') z = -z;
+                // If it was highest_wins (longest time?), keep Z.
+
+                participantFinalScores[s.participant_id].sumZ += z;
+                participantFinalScores[s.participant_id].gamesPlayed += 1;
+            });
+
+        } else if (scoreType === 'boolean') {
+             // Boolean: 1 or 0. No Z-Score normalization requested.
+             gameScores.forEach(s => {
+                const val = s.value_bool ? 1 : 0;
+                // Bonus for boolean? Maybe? 
+                // "Bonus: Tel op bij ruwe score" -> 1 + bonus?
+                const finalVal = val + (s.bonus || 0); 
+                
+                participantFinalScores[s.participant_id].sumZ += finalVal;
+                participantFinalScores[s.participant_id].gamesPlayed += 1;
+             });
+        }
+    }
+
+    // 5. Finalize Scores
+    const result = Object.values(participantFinalScores).map(p => {
+        // Average Z-Score (or Sum?)
+        // "Som genormaliseerde waarden over games, deel door aantal games voor gemiddelde."
+        // We use total games in session or games played? 
+        // "deel door aantal games". Usually implies games played or total games.
+        // Let's use games.length (Total Games in Session) to penalize missing games?
+        // Or p.gamesPlayed?
+        // If I miss a game, do I get 0? 0 Z-score is "Average".
+        // It's safer to divide by Total Games in Session if we want fairness across all.
+        // But if `parallel`, maybe different people play different games?
+        // Let's divide by `games.length` for Series/Single.
+        // For Parallel, implies all run at same time?
+        // Let's stick to "gamesPlayed" to be safe for now, or games.length if generic.
+        // User said: "deel door aantal games voor gemiddelde". 
+        // Let's use `games.length` to normalize against the full set.
+        
+        const count = games.length || 1; 
+        const avgZ = p.sumZ / count;
+
+        // Multiply to remove decimals
+        // Using 100 as multiplier
+        const finalScore = Math.round(avgZ * 100);
+
+        return {
+            participant_id: p.id,
+            participant_type: p.type,
+            participant_name: p.name || 'Unknown', // Use captured name
+            player_name: p.type === 'player' ? p.name : null,
+            team_name: p.type === 'team' ? p.name : null,
+            total_points: finalScore,
+            final_rank: 0 // Will sort later
+        };
+    });
+
+    // Sort descending
+    result.sort((a, b) => b.total_points - a.total_points);
+
+    // Assign rank
+    result.forEach((r, idx) => r.final_rank = idx + 1);
+
+    res.json(result);
+
   } catch (error) {
     console.error('Error fetching final scores:', error);
     res.status(500).json({ error: error.message });

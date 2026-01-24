@@ -32,6 +32,15 @@ const loadGameData = async (gameId) => {
       gameinfo.value.currentRound = gameResponse.data.current_round;
       gameinfo.value.totalSets = gameResponse.data.sets;
       gameinfo.value.currentSet = gameResponse.data.current_set;
+      
+      gameinfo.value.scoreType = gameResponse.data.score_type || 'points'; 
+      gameinfo.value.rankingRule = gameResponse.data.ranking_rule || 'highest_wins';
+      
+      try {
+          gameinfo.value.scoreConfig = JSON.parse(gameResponse.data.score_config || '{}');
+      } catch(e) {
+          gameinfo.value.scoreConfig = {};
+      }
 
       // Also get session to check mode
       if (gameResponse.data.session_id) {
@@ -75,20 +84,76 @@ const gameinfo = ref({
   gamename: '',
   sessionName: '',
   gameMode: '',
+  scoreType: 'points',
+  scoreConfig: {},
+  rankingRule: 'highest_wins'
 });
+
+// Helper to format scores
+const formatScore = (val, type, config) => {
+  if (type === 'boolean') {
+    return val ? 'Voltooid' : 'Niet voltooid';
+  }
+  if (type === 'time') {
+    // Assuming val is seconds
+    const totalSeconds = Number(val) || 0;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const ms = Math.round((totalSeconds - Math.floor(totalSeconds)) * 100);
+    
+    // Check config for notation (default mm:ss)
+    const notation = config?.timeNotation || 'mm:ss';
+    const pad = (n) => String(n).padStart(2, '0');
+    
+    if (notation === 'mm:ss.SS') {
+       return `${pad(minutes)}:${pad(seconds)}.${pad(ms)}`;
+    }
+    return `${pad(minutes)}:${pad(seconds)}`;
+  }
+  // Points
+  return String(Math.round(Number(val) || 0)); // Round points?
+};
+
+const getScoreLabel = (type) => {
+    if (type === 'boolean') return 'status';
+    if (type === 'time') return 'tijd';
+    return 'punten';
+}
 
 // Calculate the highest score among all players
 const maxScore = computed(() => {
   if (players.value.length === 0) return 100;
+  // If boolean, max is 1.
+  if (gameinfo.value.scoreType === 'boolean') return 1;
   const max = Math.max(...players.value.map((player) => player.score));
   return max > 0 ? max : 100;
 });
 
 // Computed property to sort players by score and calculate position/variant
 const sortedPlayers = computed(() => {
-  return [...players.value]
-    .sort((a, b) => b.score - a.score) // Sort by score descending
-    .map((player, index) => {
+  let sorted = [...players.value];
+  
+  // Custom sorting based on ranking rule
+  const isLowestWins = gameinfo.value.rankingRule === 'lowest_wins';
+  
+  // For boolean: Completed (1) > Not Completed (0). Always High Wins.
+  // Unless user mapped Completed differently. Usually 1 is good.
+  
+  sorted.sort((a, b) => {
+      if (gameinfo.value.scoreType === 'boolean') {
+          return b.score - a.score; // 1 before 0
+      }
+      if (isLowestWins) {
+           // For time/golf: Lower is better. 
+           // Handle 0 or null? Usually 0 time is "no time yet"? Or super fast?
+           // Assuming valid times > 0. If 0 means DNF, handle separately?
+           // For now simple sort.
+           return a.score - b.score; 
+      }
+      return b.score - a.score;
+  });
+
+  return sorted.map((player, index) => {
       const position = index + 1;
       let variant;
 
@@ -107,6 +172,8 @@ const sortedPlayers = computed(() => {
         position,
         variant,
         maxValue: maxScore.value,
+        displayScore: formatScore(player.score, gameinfo.value.scoreType, gameinfo.value.scoreConfig),
+        scoreLabel: getScoreLabel(gameinfo.value.scoreType)
       };
     });
 });
@@ -373,6 +440,8 @@ onUnmounted(() => {
             <ScoreboardPlayercard
               :spelersnaam="player.spelersnaam"
               :score="player.score"
+              :display-score="player.displayScore"
+              :score-label="player.scoreLabel"
               :max-value="maxScore"
               :position="player.position"
               :variant="player.variant"

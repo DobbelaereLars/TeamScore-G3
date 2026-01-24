@@ -179,6 +179,9 @@ const sortedPlayers = computed(() => {
   if (!currentGame.value) return [];
 
   // Sorteer op punten (hoogste eerst)
+  // We access p.bool to ensure reactivity when boolean scores are reset
+  currentGame.value.players.forEach((p) => p.bool);
+  
   const sorted = [...currentGame.value.players].sort(
     (a, b) => b.points - a.points,
   );
@@ -423,6 +426,11 @@ const goToNext = async () => {
     const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet}_${currentGame.value.currentRound}`;
     localStorage.setItem(key, JSON.stringify(newOffsets));
     accumulatedScores.value = newOffsets;
+  } else if (currentGame.value.score_type === 'boolean' || currentGame.value.score_type === 'bool') {
+    // Reset local state for boolean games (backend does this too, but we need UI update immediately)
+    currentGame.value.players.forEach(p => {
+        p.bool = 0; // Reset to Not Completed
+    });
   }
 
   // Persist to backend
