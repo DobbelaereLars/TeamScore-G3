@@ -184,8 +184,8 @@ const gameModusRadioCards = computed(() => [
   {
     id: "single-game",
     value: "single-game",
-    label: "Scoreboard voor één game",
-    description: "Eén scoreboard voor een enkele game.",
+    label: "Scorebord voor één game",
+    description: "Eén scorebord voor een enkele game.",
     icon: Dices,
     checked: selectedGameMode.value === "single-game",
   },
