@@ -182,9 +182,36 @@ const sortedPlayers = computed(() => {
   // We access p.bool to ensure reactivity when boolean scores are reset
   currentGame.value.players.forEach((p) => p.bool);
 
-  const sorted = [...currentGame.value.players].sort(
-    (a, b) => b.points - a.points,
-  );
+  const game = currentGame.value;
+  const isTime = game.score_type === 'time';
+  const isReverse = game.ranking_rule === 'lowest_wins'; // True if lowest wins (points) or fastest wins (time) depending on how backend stores it?
+
+  // Check backend mapping from InGameSettingsView:
+  // points: lowest_wins -> lowest-first (small is good)
+  // time: highest_wins -> slowest-first (big is good). So lowest_wins (default) -> fastest-first (small is good).
+
+  // Conclusion: lowest_wins always means SMALLER number is BETTER (rank 1).
+  // highest_wins always means LARGER number is BETTER (rank 1).
+
+  const sorted = [...currentGame.value.players].sort((a, b) => {
+    let valA, valB;
+
+    if (isTime) {
+      valA = a.time || 0;
+      valB = b.time || 0;
+    } else {
+      valA = a.points || 0;
+      valB = b.points || 0;
+    }
+
+    if (game.ranking_rule === 'lowest_wins') {
+      // Smallest wins (Ascending)
+      return valA - valB;
+    } else {
+      // Highest wins (Descending)
+      return valB - valA;
+    }
+  });
 
   // Voeg rank toe op basis van positie
   return sorted.map((player, index) => ({
