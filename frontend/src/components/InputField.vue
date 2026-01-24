@@ -34,6 +34,10 @@ const props = defineProps({
     type: [String, Number],
     default: null,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const labelText = computed(() => {
@@ -62,7 +66,8 @@ const onChange = (e) => {
     <input :id="id" :name="name"
       :class="'c-input-field__input' + (type === 'number' ? ' c-input-field__input--number' : '')" :type="type"
       :placeholder="placeholder" v-bind="type === 'number' ? { min: props.min, max: props.max } : {}"
-      :value="modelValue" @input="emit('update:modelValue', $event.target.value)" @change="onChange" />
+      :value="modelValue" @input="emit('update:modelValue', $event.target.value)" @change="onChange"
+      :disabled="disabled" />
     <!-- stuurt de waarde terug bij v-model -->
   </div>
 </template>

@@ -11,6 +11,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  disabled: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -41,6 +45,7 @@ const handleChange = (event) => {
         type="checkbox"
         :checked="internalChecked"
         @change="handleChange"
+        :disabled="disabled"
       />
       <span class="c-toggle__label__thumb"></span>
     </label>

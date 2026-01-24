@@ -17,8 +17,12 @@ import {
   Users,
   Plus,
   LayoutList,
+  Timer,
+  CheckCircle,
+  Dices,
 } from 'lucide-vue-next';
 import InputNumber from '../components/InputNumber.vue';
+import InputRadioCards from '../components/InputRadioCards.vue';
 import socket from '../utils/socket';
 import {
   sessionRepository,
@@ -253,12 +257,14 @@ const timerankingTabBar = computed(() => [
     value: 'fastest-first',
     label: 'Snelste tijd wint',
     checked: activeGame.value?.timeRanking === 'fastest-first',
+    disabled: isGameProtected.value,
   },
   {
     id: 'slowest-first',
     value: 'slowest-first',
     label: 'Langzaamste tijd wint',
     checked: activeGame.value?.timeRanking === 'slowest-first',
+    disabled: isGameProtected.value,
   },
 ]);
 
@@ -268,14 +274,102 @@ const pointsRankingTabBar = computed(() => [
     value: 'highest-first',
     label: 'Hoogste score wint',
     checked: activeGame.value?.pointsRanking === 'highest-first',
+    disabled: isGameProtected.value,
   },
   {
     id: 'lowest-first',
     value: 'lowest-first',
     label: 'Laagste score wint',
     checked: activeGame.value?.pointsRanking === 'lowest-first',
+    disabled: isGameProtected.value,
   },
 ]);
+
+const scoreModelRadioCards = computed(() => [
+  {
+    id: 'points',
+    value: 'points',
+    label: 'Puntenscore',
+    description: 'Deelnemers krijgen punten voor correcte acties.',
+    icon: Dices,
+    checked: activeGame.value?.scoreModel === 'points',
+  },
+  {
+    id: 'time',
+    value: 'time',
+    label: 'Tijdscore',
+    description: 'Deelnemers worden gerangschikt op basis van tijd.',
+    icon: Timer,
+    checked: activeGame.value?.scoreModel === 'time',
+  },
+  {
+    id: 'completed',
+    value: 'completed',
+    label: 'Voltooid / Niet voltooid',
+    description: 'Het doel is om een taak te voltooien.',
+    icon: CheckCircle,
+    checked: activeGame.value?.scoreModel === 'completed',
+  },
+]);
+
+const isGameProtected = computed(() => {
+  if (!activeGame.value) return true;
+
+  // New local games are always editable
+  const isNew = String(activeGame.value.id).startsWith('game-');
+  if (isNew) return false;
+
+  if (selectedGameMode.value === 'parallel-games') {
+    // Parallel: Always editable settings (except scoreModel type, handled separately)
+    return false;
+  }
+
+  if (selectedGameMode.value === 'series-of-games') {
+    // Series: Only locked if visually finished. Active game is editable.
+    return !!activeGame.value.isFinished;
+  }
+
+  // Single game: Always editable settings
+  return false;
+});
+
+const isScoreModelProtected = computed(() => {
+  // If the game itself is locked (finished series), score model is definitely hidden/protected
+  if (isGameProtected.value) return true;
+
+  // If it's a new local game, we can change anything
+  const isNew = String(activeGame.value.id).startsWith('game-');
+  if (isNew) return false;
+
+  // Existing Single Game -> Hide Score Model selection
+  if (selectedGameMode.value === 'single-game') return true;
+
+  // Existing Parallel Game -> Hide Score Model selection
+  if (selectedGameMode.value === 'parallel-games') return true;
+
+  // Series: Existing Active Game -> Hide Score Model selection
+  if (selectedGameMode.value === 'series-of-games') {
+    const runningGameIndex = games.value.findIndex((g) => !g.isFinished);
+    
+    // If we are past/current (but not finished, as checked by isGameProtected),
+    // we must be the current active game.
+    // If I am the active game -> Protected Score Model
+    const myIndex = activeGameIndex.value;
+    if (myIndex <= runningGameIndex) return true;
+    
+    // Future existing games -> Editable
+    return false;
+  }
+
+  return false;
+});
+
+const handleScoreModelChange = (val) => {
+  if (isScoreModelProtected.value) return;
+  if (activeGame.value) {
+    activeGame.value.scoreModel = val;
+  }
+};
 
 const gameSetupTabList = ref([
   {
@@ -463,12 +557,14 @@ const handleGameTabClose = (gameId) => {
 };
 
 const handleTimeRankingChange = (value) => {
+  if (isGameProtected.value) return;
   if (activeGame.value) {
     activeGame.value.timeRanking = value;
   }
 };
 
 const handlePointsRankingChange = (value) => {
+  if (isGameProtected.value) return;
   if (activeGame.value) {
     activeGame.value.pointsRanking = value;
   }
@@ -1280,6 +1376,25 @@ onUnmounted(() => {
                   :label="false"
                   :placeholder="getDefaultGameName(activeGame, activeGameIndex)"
                   v-model="activeGame.name"
+                  :disabled="isGameProtected"
+                />
+              </div>
+
+              <!-- Scoremodel Selection -->
+              <div
+                v-if="!isScoreModelProtected"
+                class="p-game-setup-view__settings__body__content__scoremodel"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__subtitle"
+                >
+                  <h2 class="h6">Scoremodel</h2>
+                  <p>Kies hoe de score wordt bijgehouden.</p>
+                </div>
+                <InputRadioCards
+                  :items="scoreModelRadioCards"
+                  name="scoreModel"
+                  @change="handleScoreModelChange"
                 />
               </div>
 
@@ -1315,6 +1430,7 @@ onUnmounted(() => {
                     type="number"
                     v-model:toggled="activeGame.useRounds"
                     v-model="activeGame.roundsCount"
+                    :disabled="isGameProtected"
                   >
                   </ToggleWithDropdown>
 
@@ -1334,6 +1450,7 @@ onUnmounted(() => {
                     type="number"
                     v-model:toggled="activeGame.useSets"
                     v-model="activeGame.setsCount"
+                    :disabled="isGameProtected"
                   >
                   </ToggleWithDropdown>
                 </div>
@@ -1356,6 +1473,7 @@ onUnmounted(() => {
                     min="1"
                     max="100"
                     v-model="activeGame.pointsPerAction"
+                    :disabled="isGameProtected"
                   />
                 </div>
 
@@ -1386,6 +1504,7 @@ onUnmounted(() => {
                     type="number"
                     v-model:toggled="activeGame.useBonusPoints"
                     v-model="activeGame.bonusPoints"
+                    :disabled="isGameProtected"
                   ></ToggleWithDropdown>
                 </div>
               </div>
@@ -1405,6 +1524,7 @@ onUnmounted(() => {
                     :label="false"
                     :options="timeNotationOptions"
                     v-model="activeGame.timeNotation"
+                    :disabled="isGameProtected"
                   />
                 </div>
 

@@ -32,8 +32,10 @@ const props = defineProps({
   max: {
     type: [Number, String],
     default: Infinity,
-  },
-});
+  },  disabled: {
+    type: Boolean,
+    default: false,
+  },});
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -74,16 +76,16 @@ const onInput = (value) => {
     <p v-if="label">{{ label }}</p>
     <div class="c-input-number__container">
       <Button :clickable="false" :is-icon-button="true" @click="updateValue(-1)"
-        :is-disabled="internalValue <= minValue">
+        :is-disabled="internalValue <= minValue || disabled">
         <template #c-btn_icon-left>
           <Minus :size="18" />
         </template>
       </Button>
       <InputField :modelValue="internalValue" @update:modelValue="onInput" :label="false"
         :placeholder="String(minValue)" :id="id" :name="name" :type="type" :min="minValue"
-        :max="maxValue" />
+        :max="maxValue" :disabled="disabled" />
       <Button :clickable="false" :is-icon-button="true" @click="updateValue(1)"
-        :is-disabled="internalValue >= maxValue">
+        :is-disabled="internalValue >= maxValue || disabled">
         <template #c-btn_icon-left>
           <Plus :size="18" />
         </template>

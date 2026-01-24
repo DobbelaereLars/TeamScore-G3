@@ -10,6 +10,10 @@ const props = defineProps({
     type: String,
     default: 'radio-cards',
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['change']);
@@ -17,12 +21,13 @@ const emit = defineEmits(['change']);
 const getId = (item, index) => item.id ?? `${props.name}-${index}`;
 
 const handleChange = (item) => {
+  if (props.disabled) return;
   emit('change', item.value ?? item.id);
 };
 </script>
 
 <template>
-  <div class="c-input-radio-cards">
+  <div class="c-input-radio-cards" :class="{ 'c-input-radio-cards--disabled': disabled }">
     <div
       v-for="(item, index) in items"
       :key="item.id ?? index"
@@ -35,6 +40,7 @@ const handleChange = (item) => {
         :id="getId(item, index)"
         :value="item.value ?? item.id ?? index"
         :checked="item.checked ?? false"
+        :disabled="disabled"
         @change="handleChange(item)"
       />
       <label class="c-input-radio-cards__label" :for="getId(item, index)">

@@ -23,6 +23,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const labelText = computed(() => {
@@ -50,6 +54,7 @@ const handleChange = (event) => {
         class="c-input-select__input"
         :value="modelValue"
         @change="handleChange"
+        :disabled="disabled"
       >
         <option
           v-for="option in options"

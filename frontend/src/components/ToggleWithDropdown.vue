@@ -44,6 +44,10 @@ const props = defineProps({
     type: [Number, String],
     default: 0,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update:toggled', 'update:modelValue']);
@@ -70,6 +74,7 @@ const handleToggleUpdate = (val) => {
       :labelTekst="labelTekst"
       :modelValue="internalToggled"
       @update:modelValue="handleToggleUpdate"
+      :disabled="disabled"
     />
     <div
       class="c-toggle__label__dropdown"
@@ -84,6 +89,7 @@ const handleToggleUpdate = (val) => {
         :type="type"
         :modelValue="modelValue"
         @update:modelValue="emit('update:modelValue', $event)"
+        :disabled="disabled"
       />
     </div>
   </div>
