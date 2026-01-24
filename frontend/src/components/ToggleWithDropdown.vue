@@ -58,7 +58,7 @@ watch(
   () => props.toggled,
   (newVal) => {
     internalToggled.value = newVal;
-  }
+  },
 );
 
 const handleToggleUpdate = (val) => {

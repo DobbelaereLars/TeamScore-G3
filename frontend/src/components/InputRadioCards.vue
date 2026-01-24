@@ -27,7 +27,10 @@ const handleChange = (item) => {
 </script>
 
 <template>
-  <div class="c-input-radio-cards" :class="{ 'c-input-radio-cards--disabled': disabled }">
+  <div
+    class="c-input-radio-cards"
+    :class="{ 'c-input-radio-cards--disabled': disabled }"
+  >
     <div
       v-for="(item, index) in items"
       :key="item.id ?? index"

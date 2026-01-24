@@ -13,8 +13,8 @@ const props = defineProps({
   },
   disabled: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -25,7 +25,7 @@ watch(
   () => props.modelValue,
   (newVal) => {
     internalChecked.value = newVal;
-  }
+  },
 );
 
 const handleChange = (event) => {

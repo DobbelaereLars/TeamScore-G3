@@ -350,13 +350,13 @@ const isScoreModelProtected = computed(() => {
   // Series: Existing Active Game -> Hide Score Model selection
   if (selectedGameMode.value === 'series-of-games') {
     const runningGameIndex = games.value.findIndex((g) => !g.isFinished);
-    
+
     // If we are past/current (but not finished, as checked by isGameProtected),
     // we must be the current active game.
     // If I am the active game -> Protected Score Model
     const myIndex = activeGameIndex.value;
     if (myIndex <= runningGameIndex) return true;
-    
+
     // Future existing games -> Editable
     return false;
   }
