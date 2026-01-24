@@ -630,7 +630,10 @@ const nextGame = async () => {
       // Toon tussenstand (Leaderboard) op Display
       socket.emit('display:navigate', {
         name: 'display-leaderboard',
-        params: { sessionId: currentSessionId },
+        params: {
+          sessionId: currentSessionId,
+          gameId: currentGame.value.id,
+        },
       });
 
       // Save transition state for recovery

@@ -115,7 +115,8 @@ export const scoreModelRepository = {
 // ============================================
 export const finalScoreRepository = {
   getAll: () => api.get('/final-scores'),
-  getBySession: (sessionId) => api.get(`/sessions/${sessionId}/final-scores`),
+  getBySession: (sessionId, params) =>
+    api.get(`/sessions/${sessionId}/final-scores`, { params }),
   calculate: (sessionId) => api.post(`/final-scores/calculate/${sessionId}`),
 };
 

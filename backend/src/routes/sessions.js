@@ -160,6 +160,7 @@ router.get('/:id/games', async (req, res) => {
 router.get('/:id/final-scores', async (req, res) => {
   const db = getDatabase();
   const { id } = req.params;
+  const { gameId } = req.query;
 
   try {
     // 1. Fetch Session to check mode (optional, but good for context)
@@ -167,16 +168,20 @@ router.get('/:id/final-scores', async (req, res) => {
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
     // 2. Fetch All Games for Session
-    const games = await all(
-      db,
-      `
+    let gamesQuery = `
       SELECT g.*, sm.type as score_type, sm.ranking_rule
       FROM Game g
       JOIN ScoreModel sm ON g.score_model_id = sm.id
       WHERE g.session_id = ?
-    `,
-      [id],
-    );
+    `;
+    const queryParams = [id];
+
+    if (gameId) {
+      gamesQuery += ' AND g.id = ?';
+      queryParams.push(gameId);
+    }
+
+    const games = await all(db, gamesQuery, queryParams);
 
     if (games.length === 0) return res.json([]);
 
@@ -345,13 +350,16 @@ router.get('/:id/final-scores', async (req, res) => {
     };
 
     // 4. Process Scores Per Game
-    const participantFinalScores = {}; // Map: participant_id -> { totalZ, count, name, type }
+    const participantFinalScores = {}; // Map: entity_id -> { totalZ, count, name, type }
 
     // Initialize map with all participants found in scores
     scores.forEach((s) => {
-      if (!participantFinalScores[s.participant_id]) {
-        participantFinalScores[s.participant_id] = {
-          id: s.participant_id,
+      // Use entity_id to aggregate across games
+      const key = s.entity_id; 
+      if (!participantFinalScores[key]) {
+        participantFinalScores[key] = {
+          id: s.participant_id, // Keep one participant ID reference
+          entity_id: s.entity_id,
           name: s.participant_name,
           type: s.participant_type,
           sumZ: 0,
@@ -385,8 +393,11 @@ router.get('/:id/final-scores', async (req, res) => {
           // If rankingRule is lowest_wins (e.g. golf), invert.
           if (rankingRule === 'lowest_wins') z = -z;
 
-          participantFinalScores[s.participant_id].sumZ += z;
-          participantFinalScores[s.participant_id].gamesPlayed += 1;
+          // Aggregate by entity_id
+          if (participantFinalScores[s.entity_id]) {
+            participantFinalScores[s.entity_id].sumZ += z;
+            participantFinalScores[s.entity_id].gamesPlayed += 1;
+          }
         });
       } else if (scoreType === 'time') {
         // Time: Raw = value_time - bonus (Assuming bonus improves time)
@@ -409,8 +420,10 @@ router.get('/:id/final-scores', async (req, res) => {
           if (rankingRule === 'lowest_wins') z = -z;
           // If it was highest_wins (longest time?), keep Z.
 
-          participantFinalScores[s.participant_id].sumZ += z;
-          participantFinalScores[s.participant_id].gamesPlayed += 1;
+          if (participantFinalScores[s.entity_id]) {
+            participantFinalScores[s.entity_id].sumZ += z;
+            participantFinalScores[s.entity_id].gamesPlayed += 1;
+          }
         });
       } else if (scoreType === 'boolean') {
         // Boolean: 1 or 0. No Z-Score normalization requested.
@@ -420,8 +433,10 @@ router.get('/:id/final-scores', async (req, res) => {
           // "Bonus: Tel op bij ruwe score" -> 1 + bonus?
           const finalVal = val + (s.bonus || 0);
 
-          participantFinalScores[s.participant_id].sumZ += finalVal;
-          participantFinalScores[s.participant_id].gamesPlayed += 1;
+          if (participantFinalScores[s.entity_id]) {
+            participantFinalScores[s.entity_id].sumZ += finalVal;
+            participantFinalScores[s.entity_id].gamesPlayed += 1;
+          }
         });
       }
     }

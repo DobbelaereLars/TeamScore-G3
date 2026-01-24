@@ -4,7 +4,7 @@ import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 
 import logo from '../assets/logo.webp';
 import socket from '../utils/socket';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
@@ -15,6 +15,7 @@ console.log('Leaderboard view initialized with sessionID:', sessionID);
 
 const players = ref([]);
 const router = useRouter();
+const route = useRoute();
 
 const handleNavigate = (data) => {
   console.log('Received navigate event:', data);
@@ -30,7 +31,10 @@ const loadGameData = async () => {
   }
 
   try {
-    const response = await finalScoreRepository.getBySession(sessionID);
+    const gameId = route.query.gameId;
+    const response = await finalScoreRepository.getBySession(sessionID, {
+      gameId,
+    });
     console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
