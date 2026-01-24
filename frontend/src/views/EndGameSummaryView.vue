@@ -30,30 +30,30 @@ const loadGameData = async () => {
 
     const resData = response.data;
     players.value = resData.map((p) => {
-        let displayScore = '';
-        let scoreLabel = 'punten';
-        
-        if (p.is_single_game) {
-            if (p.score_type === 'time') {
-                const totalSeconds = Number(p.total_points) || 0;
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = Math.floor(totalSeconds % 60);
-                displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                scoreLabel = 'tijd';
-            } else if (p.score_type === 'boolean') {
-                displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-                scoreLabel = 'status';
-            }
-        }
+      let displayScore = '';
+      let scoreLabel = 'punten';
 
-        return {
-          id: p.participant_id, // Note: backend returns participant_id
-          spelersnaam: p.player_name || p.team_name || 'Unknown',
-          score: p.total_points || 0,
-          displayScore,
-          scoreLabel,
-          rank: p.final_rank
-        };
+      if (p.is_single_game) {
+        if (p.score_type === 'time') {
+          const totalSeconds = Number(p.total_points) || 0;
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = Math.floor(totalSeconds % 60);
+          displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          scoreLabel = 'tijd';
+        } else if (p.score_type === 'boolean') {
+          displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
+          scoreLabel = 'status';
+        }
+      }
+
+      return {
+        id: p.participant_id, // Note: backend returns participant_id
+        spelersnaam: p.player_name || p.team_name || 'Unknown',
+        score: p.total_points || 0,
+        displayScore,
+        scoreLabel,
+        rank: p.final_rank,
+      };
     });
   } catch (error) {
     console.error('Failed to load final scores:', error);
@@ -64,7 +64,7 @@ const loadGameData = async () => {
 const sortedPlayers = computed(() => {
   return [...players.value].sort((a, b) => {
     if (a.rank && b.rank) return a.rank - b.rank;
-    
+
     if (b.score !== a.score) {
       return b.score - a.score;
     }
@@ -363,9 +363,19 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="c-display-end-game-summary-view__footer">
-      <Button buttonTekst="Sluit sessie" variant="secondary" @click="goBack" :clickable="false" />
+      <Button
+        buttonTekst="Sluit sessie"
+        variant="secondary"
+        @click="goBack"
+        :clickable="false"
+      />
 
-      <Button buttonTekst="Exporteren" variant="primary" @click="exportData" :clickable="false">
+      <Button
+        buttonTekst="Exporteren"
+        variant="primary"
+        @click="exportData"
+        :clickable="false"
+      >
         <template #c-btn_icon-left>
           <Download :size="18" />
         </template>

@@ -1,7 +1,7 @@
 <script setup>
-import ProfileIcon from "./ProfileIcon.vue";
-import ProgressBar from "./ProgressBar.vue";
-import RollingNumber from "./RollingNumber.vue";
+import ProfileIcon from './ProfileIcon.vue';
+import ProgressBar from './ProgressBar.vue';
+import RollingNumber from './RollingNumber.vue';
 
 const props = defineProps({
   position: {
@@ -10,7 +10,7 @@ const props = defineProps({
   },
   playerName: {
     type: String,
-    default: "Player 4",
+    default: 'Player 4',
   },
   maxValue: {
     type: Number,

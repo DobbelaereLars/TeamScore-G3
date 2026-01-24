@@ -1,18 +1,18 @@
 <script setup>
-import Crown from "../assets/crown.svg";
-import RollingNumber from "./RollingNumber.vue"; // Import the component
-import { computed } from "vue";
+import Crown from '../assets/crown.svg';
+import RollingNumber from './RollingNumber.vue'; // Import the component
+import { computed } from 'vue';
 // ... (rest is same)
 
 const props = defineProps({
   color: {
     type: String,
-    default: "red",
-    validator: (value) => ["red", "blue", "orange"].includes(value),
+    default: 'red',
+    validator: (value) => ['red', 'blue', 'orange'].includes(value),
   },
   spelersnaam: {
     type: String,
-    default: "speler",
+    default: 'speler',
   },
   score: {
     type: Number,
@@ -35,9 +35,9 @@ const props = defineProps({
 const profileInitials = computed(() => {
   const nameParts = props.spelersnaam
     .trim()
-    .split(" ")
+    .split(' ')
     .filter((part) => part.length > 0);
-  if (nameParts.length === 0) return "S";
+  if (nameParts.length === 0) return 'S';
   if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
   return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
 });
@@ -77,13 +77,13 @@ const profileInitials = computed(() => {
       >
         <p class="h4">
           {{
-            color === "blue"
+            color === 'blue'
               ? 1
-              : color === "red"
-              ? 2
-              : color === "orange"
-              ? 3
-              : "4"
+              : color === 'red'
+                ? 2
+                : color === 'orange'
+                  ? 3
+                  : '4'
           }}
         </p>
       </div>

@@ -66,7 +66,7 @@ async function performSchemaUpdates(database) {
     'is_finished',
     'INTEGER DEFAULT 0 CHECK (is_finished IN (0, 1))',
   );
-  
+
   // Update voor Game.current_set (toegevoegd jan 2026 voor sets support)
   await ensureColumnExists(
     database,
@@ -97,7 +97,9 @@ function initDatabase() {
         const migrationsSql = fs.readFileSync(migrationsPath, 'utf8');
 
         // Create RoundScore table manually if not exists (as it might not be in older migrations.sql)
-        await runQuery(db, `
+        await runQuery(
+          db,
+          `
           CREATE TABLE IF NOT EXISTS RoundScore (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             game_id INTEGER NOT NULL,
@@ -112,7 +114,8 @@ function initDatabase() {
             FOREIGN KEY (game_id) REFERENCES Game(id) ON DELETE CASCADE,
             FOREIGN KEY (participant_id) REFERENCES Participant(id) ON DELETE CASCADE
           );
-        `);
+        `,
+        );
 
         // Split op puntkomma voor betere error reporting, maar db.exec is sneller.
         // We gebruiken exec omdat splitsen op ; soms fout gaat bij triggers/blocks.

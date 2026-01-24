@@ -313,29 +313,42 @@ router.put('/:id', async (req, res) => {
   } = req.body;
 
   // 1. Check if we need to snapshot round logic (BEFORE update)
-  if (current_round !== undefined && current_round > 1) { // Implicitly, if we are setting to 2, previous was 1
-      // Fetch current state to confirm previous Round
-      const gameRow = await get(db, 'SELECT current_round, current_set, score_model_id FROM Game WHERE id = ?', [id]);
-      if (gameRow && gameRow.current_round < current_round) {
-          // A Round Advance is happening!
-          
-          // 1. Snapshot scores to RoundScore
-          await run(db, `
+  if (current_round !== undefined && current_round > 1) {
+    // Implicitly, if we are setting to 2, previous was 1
+    // Fetch current state to confirm previous Round
+    const gameRow = await get(
+      db,
+      'SELECT current_round, current_set, score_model_id FROM Game WHERE id = ?',
+      [id],
+    );
+    if (gameRow && gameRow.current_round < current_round) {
+      // A Round Advance is happening!
+
+      // 1. Snapshot scores to RoundScore
+      await run(
+        db,
+        `
               INSERT INTO RoundScore (game_id, participant_id, round, set_number, value_number, value_time, value_bool, bonus)
               SELECT game_id, participant_id, ?, ?, value_number, value_time, value_bool, bonus
               FROM Score
               WHERE game_id = ?
-          `, [gameRow.current_round, gameRow.current_set || 1, id]);
-          
-          // 2. Reset Boolean Scores (as requested: "iedereen niet voltooid")
-          // Check if ScoreModel is boolean
-          const smRow = await get(db, 'SELECT type FROM ScoreModel WHERE id = ?', [gameRow.score_model_id]);
-          if (smRow && (smRow.type === 'boolean' || smRow.type === 'bool')) {
-             await run(db, `UPDATE Score SET value_bool = 0 WHERE game_id = ?`, [id]);
-             
-             // Emit reset event? Or the current_round update will force refresh and show new empty state
-          }
+          `,
+        [gameRow.current_round, gameRow.current_set || 1, id],
+      );
+
+      // 2. Reset Boolean Scores (as requested: "iedereen niet voltooid")
+      // Check if ScoreModel is boolean
+      const smRow = await get(db, 'SELECT type FROM ScoreModel WHERE id = ?', [
+        gameRow.score_model_id,
+      ]);
+      if (smRow && (smRow.type === 'boolean' || smRow.type === 'bool')) {
+        await run(db, `UPDATE Score SET value_bool = 0 WHERE game_id = ?`, [
+          id,
+        ]);
+
+        // Emit reset event? Or the current_round update will force refresh and show new empty state
       }
+    }
   }
 
   // 1b. Build Game Table Update Query

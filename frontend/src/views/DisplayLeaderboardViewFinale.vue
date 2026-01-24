@@ -33,31 +33,31 @@ const loadGameData = async () => {
     const response = await finalScoreRepository.getBySession(sessionID);
     const resData = response.data;
     const rawPlayers = resData.map((p) => {
-        let displayScore = '';
-        let scoreLabel = 'punten';
-        
-        if (p.is_single_game) {
-            if (p.score_type === 'time') {
-                const totalSeconds = Number(p.total_points) || 0;
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = Math.floor(totalSeconds % 60);
-                displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                scoreLabel = 'tijd';
-            } else if (p.score_type === 'boolean') {
-                displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-                scoreLabel = 'status';
-            }
+      let displayScore = '';
+      let scoreLabel = 'punten';
+
+      if (p.is_single_game) {
+        if (p.score_type === 'time') {
+          const totalSeconds = Number(p.total_points) || 0;
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = Math.floor(totalSeconds % 60);
+          displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          scoreLabel = 'tijd';
+        } else if (p.score_type === 'boolean') {
+          displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
+          scoreLabel = 'status';
         }
-        return {
-           id: p.participant_id, // Note: backend returns participant_id
-           spelersnaam: p.player_name || p.team_name || 'Unknown',
-           score: p.total_points || 0,
-           displayScore,
-           scoreLabel,
-           rank: p.final_rank
-        };
+      }
+      return {
+        id: p.participant_id, // Note: backend returns participant_id
+        spelersnaam: p.player_name || p.team_name || 'Unknown',
+        score: p.total_points || 0,
+        displayScore,
+        scoreLabel,
+        rank: p.final_rank,
+      };
     });
-    
+
     players.value = rawPlayers;
 
     // Start animation only after data is loaded
@@ -72,7 +72,7 @@ const sortedPlayers = computed(() => {
   return [...players.value].sort((a, b) => {
     // Trust backend rank
     if (a.rank && b.rank) return a.rank - b.rank;
-    
+
     if (b.score !== a.score) {
       return b.score - a.score;
     }
