@@ -64,7 +64,10 @@ const increasePoints = () => {
 
 const decreasePoints = () => {
     const val = (props.points !== undefined ? props.points : props.value);
-    const newVal = val - props.perClick;
+    const calculatedVal = val - props.perClick;
+    // Prevent negative scores
+    const newVal = calculatedVal < 0 ? 0 : calculatedVal;
+    
     emit('updatePoints', newVal);
     emit('updateScore', newVal);
 };
