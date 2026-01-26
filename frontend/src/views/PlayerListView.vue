@@ -296,8 +296,8 @@ const filteredBonusPlayers = computed(() => {
 
 const nextButtonLabel = computed(() => {
   if (hasNextSet.value) return 'Volgende set';
-  if (hasNextRound.value) return 'Volgende ronde';
-  return '';
+  // Fallback 'Volgende ronde' prevents empty button during closing transition
+  return 'Volgende ronde';
 });
 
 const nextModalTitle = computed(() => {
