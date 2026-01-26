@@ -26,7 +26,6 @@ const loadGameData = async () => {
 
   try {
     const response = await finalScoreRepository.getBySession(SessionID);
-    console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => {
@@ -52,6 +51,7 @@ const loadGameData = async () => {
         score: p.total_points || 0,
         displayScore,
         scoreLabel,
+        rank: p.final_rank, // Use backend rank which respects ranking_rule
       };
     });
   } catch (error) {
@@ -59,9 +59,13 @@ const loadGameData = async () => {
   }
 };
 
-// Sort players by score (highest first)
+// Sort players by backend rank (respects ranking_rule: fastest/slowest wins)
 const sortedPlayers = computed(() => {
   return [...players.value].sort((a, b) => {
+    // Use backend rank if available
+    if (a.rank && b.rank) return a.rank - b.rank;
+
+    // Fallback to score comparison
     if (b.score !== a.score) {
       return b.score - a.score;
     }

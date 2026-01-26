@@ -134,10 +134,18 @@ onMounted(async () => {
           pointRanking =
             g.ranking_rule === 'lowest_wins' ? 'lowest-first' : 'highest-first';
         } else if (scoreType === 'time') {
-          timeRanking =
-            g.ranking_rule === 'highest_wins'
-              ? 'slowest-first'
-              : 'fastest-first';
+          // If fetching from DB, note that backend stores ranking_rule, not timeRanking
+          // If g.ranking_rule exists, map it.
+          // DB: ranking_rule IN ('highest_wins', 'lowest_wins')
+          // UI: 'slowest-first' (highest time wins), 'fastest-first' (lowest time wins)
+          if (g.ranking_rule) {
+            timeRanking =
+              g.ranking_rule === 'highest_wins'
+                ? 'slowest-first'
+                : 'fastest-first';
+          } else {
+            timeRanking = 'fastest-first';
+          }
         }
 
         return {
@@ -819,10 +827,6 @@ const getGameName = (gameId) => {
 
 const performSave = async (assignmentMoves = []) => {
   try {
-    console.log('=== SAVING CHANGES ===');
-    console.log('Current participants:', participants.value);
-    console.log('Original participants:', originalParticipants.value);
-
     // 1. Update Session Info
     const sessionPayload = {
       sessionName: sessionName.value,
@@ -861,7 +865,6 @@ const performSave = async (assignmentMoves = []) => {
       };
 
       if (isNewGame) {
-        console.log(`Creating NEW game: ${game.name}`);
         const res = await gameRepository.create(gamePayload);
         // Update local ID with real ID from backend to prevent re-creation
         if (res.data && res.data.id) {
@@ -869,14 +872,12 @@ const performSave = async (assignmentMoves = []) => {
           newGameIdMap[tempId] = res.data.id; // Map temp ID to real ID
         }
       } else {
-        console.log(`Updating existing game: ${game.id}`);
         await gameRepository.update(game.id, gamePayload);
       }
     }
 
     // 3. Process Assignment Moves (Moved after game creation!)
     if (assignmentMoves.length > 0) {
-      console.log('Processing assignment moves:', assignmentMoves);
       // Translate temp game IDs to real ones
       const translatedMoves = assignmentMoves.map((move) => {
         const realNewGameId = newGameIdMap[move.newGameId] || move.newGameId;
@@ -903,9 +904,7 @@ const performSave = async (assignmentMoves = []) => {
     );
 
     if (removedGames.length > 0) {
-      console.log('Games to delete:', removedGames);
       const deletePromises = removedGames.map((g) => {
-        console.log(`Deleting game ${g.id} (${g.name})`);
         return gameRepository.delete(g.id);
       });
       await Promise.all(deletePromises);
@@ -920,12 +919,8 @@ const performSave = async (assignmentMoves = []) => {
       (op) => !currentParticipantIds.includes(op.id),
     );
 
-    console.log('Participants to delete:', removedParticipants);
-
     // Delete each participant sequentially to handle errors properly
     for (const p of removedParticipants) {
-      console.log(`Deleting participant ${p.id} (${p.name})`);
-
       try {
         // Delete the player or team - participant.id IS the player/team id
         if (selectedParticipantMode.value === 'players') {
@@ -938,7 +933,6 @@ const performSave = async (assignmentMoves = []) => {
           // In teams-with-players mode, p.id is a team ID
           await teamRepository.delete(p.id);
         }
-        console.log(`Successfully deleted ${p.name}`);
       } catch (error) {
         console.error(
           `Failed to delete participant ${p.id} (${p.name}):`,
@@ -961,12 +955,8 @@ const performSave = async (assignmentMoves = []) => {
           );
 
           for (const subPlayer of removedSubPlayers) {
-            console.log(
-              `Deleting sub-player ${subPlayer.id} (${subPlayer.name}) from team ${team.name}`,
-            );
             try {
               await playerRepository.delete(subPlayer.id);
-              console.log(`Successfully deleted sub-player ${subPlayer.name}`);
             } catch (error) {
               console.error(
                 `Failed to delete sub-player ${subPlayer.id}:`,
@@ -986,15 +976,10 @@ const performSave = async (assignmentMoves = []) => {
           (op) => op.id === p.id,
         );
         if (original && original.name !== p.name) {
-          console.log(
-            `Name changed for participant ${p.id}: "${original.name}" -> "${p.name}"`,
-          );
-          console.log('Participant data:', p);
           // Name changed - update the player or team
           // The participant.id IS the player.id or team.id depending on mode
           if (selectedParticipantMode.value === 'players') {
             // Update player name - participant.id is the player.id
-            console.log(`Updating player ${p.id} to name "${p.name}"`);
             updatePromises.push(
               playerRepository.update(p.id, { name: p.name }),
             );
@@ -1003,7 +988,6 @@ const performSave = async (assignmentMoves = []) => {
             selectedParticipantMode.value === 'teams-with-players'
           ) {
             // Update team name - participant.id is the team.id
-            console.log(`Updating team ${p.id} to name "${p.name}"`);
             updatePromises.push(teamRepository.update(p.id, { name: p.name }));
           }
         }
@@ -1026,9 +1010,6 @@ const performSave = async (assignmentMoves = []) => {
                   originalSubPlayer &&
                   originalSubPlayer.name !== subPlayer.name
                 ) {
-                  console.log(
-                    `Updating sub-player ${subPlayer.id} to name "${subPlayer.name}"`,
-                  );
                   updatePromises.push(
                     playerRepository.update(subPlayer.id, {
                       name: subPlayer.name,
@@ -1042,7 +1023,6 @@ const performSave = async (assignmentMoves = []) => {
       }
     });
 
-    console.log(`Total updates to perform: ${updatePromises.length}`);
     await Promise.all(updatePromises);
 
     // 5. Add New Participants/Teams if any
@@ -1082,9 +1062,6 @@ const performSave = async (assignmentMoves = []) => {
       });
     }
 
-    console.log('New participants to add:', newParticipants);
-    console.log('New sub-players to add:', newSubPlayers);
-
     if (newParticipants.length > 0 || newSubPlayers.length > 0) {
       await sessionRepository.addParticipants(currentSessionId, {
         newParticipants,
@@ -1103,6 +1080,7 @@ const performSave = async (assignmentMoves = []) => {
       );
     }
 
+    // Resume transition timer if we're going back to flow
     router.push({ name: 'tablet-player-list' });
   } catch (error) {
     console.error('Failed to save settings:', error);
@@ -1117,7 +1095,6 @@ const getChangedAssignments = () => {
   if (!originalParticipants.value || originalParticipants.value.length === 0)
     return [];
 
-  console.log('Calculating changed assignments...');
   participants.value.forEach((p) => {
     if (p.isNew) return;
 
@@ -1141,9 +1118,6 @@ const getChangedAssignments = () => {
       // But user issue is "Added to last game", so they are assigned.
 
       if (newId && String(newId) !== String(oldId || '')) {
-        console.log(
-          `Detected change for ${p.name} (${p.id}): ${oldId} -> ${newId}`,
-        );
         moves.push({
           id: p.id,
           type: selectedParticipantMode.value === 'players' ? 'player' : 'team',
@@ -1154,7 +1128,6 @@ const getChangedAssignments = () => {
     }
   });
 
-  console.log('Final moves list:', moves);
   return moves;
 };
 

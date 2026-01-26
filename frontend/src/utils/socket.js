@@ -16,13 +16,9 @@ const socket = io(BACKEND_URL, {
   reconnectionAttempts: 5,
 });
 
-socket.on('connect', () => {
-  console.log('Socket.io connected:', socket.id);
-});
+socket.on('connect', () => {});
 
-socket.on('disconnect', () => {
-  console.log('Socket.io disconnected');
-});
+socket.on('disconnect', () => {});
 
 socket.on('connect_error', (error) => {
   console.error('Socket.io connection error:', error);

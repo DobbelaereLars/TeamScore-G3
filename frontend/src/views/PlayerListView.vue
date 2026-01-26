@@ -5,6 +5,7 @@ import {
   onMounted,
   onUnmounted,
   watch,
+  nextTick,
   TransitionGroup,
 } from 'vue';
 import { useRouter } from 'vue-router';
@@ -13,6 +14,7 @@ import {
   scoreRepository,
   gameRepository,
 } from '../services/api';
+import { previewStore } from '../store/previewStore';
 import socket from '../utils/socket';
 import HostPlayerItem from '../components/HostPlayerItem.vue';
 import Button from '../components/Button.vue';
@@ -24,10 +26,11 @@ import { Cog, Flame, Loader2 } from 'lucide-vue-next';
 
 const router = useRouter();
 const currentSessionId = sessionStorage.getItem('sessionId');
-console.log('Current Session ID:', currentSessionId);
 const currentSession = ref(null);
+const pendingScoreUpdates = ref([]); // Track in-flight score updates
 
 const isTransitioning = ref(false);
+const isGeneratingPreview = ref(false);
 
 // Games from DB
 const games = ref([]);
@@ -41,7 +44,6 @@ const activeModalTeamId = ref(null);
 
 watch(selectedGameId, (newId) => {
   if (newId) {
-    console.log('Sending selected game to display:', newId);
     socket.emit('display:selected-game', {
       gameId: newId,
       sessionId: currentSessionId,
@@ -68,7 +70,6 @@ onMounted(async () => {
 
   try {
     const sessionResponse = await sessionRepository.getById(currentSessionId);
-    console.log('Current Session:', sessionResponse.data);
     currentSession.value = sessionResponse.data;
 
     const response = await sessionRepository.getGames(currentSessionId);
@@ -98,7 +99,6 @@ onMounted(async () => {
             sessionStorage.removeItem('preserve_transition_timer');
 
             if (remaining > 0 && shouldPreserveTimer) {
-              console.log(`Recovering transition: ${remaining}ms remaining`);
               isTransitioning.value = true;
               // Resume the timer
               setTimeout(() => {
@@ -108,9 +108,6 @@ onMounted(async () => {
               }, remaining);
             } else {
               // Time exhausted OR user broke flow (Pause) -> switch immediately
-              console.log(
-                'Recovering transition: Switching immediately (Time exhausted or Flow interrupted)',
-              );
               performGameSwitch(gameId);
               sessionStorage.removeItem('gameTransition');
             }
@@ -237,7 +234,6 @@ const isTeamsWithPlayers = computed(() => {
 });
 
 const isSeries = computed(() => {
-  console.log('Session Mode:', currentSession.value?.game_mode);
   return (
     currentSession.value?.game_mode === 'series-of-games' ||
     currentSession.value?.game_mode === 'series'
@@ -357,22 +353,27 @@ const updatePlayerScore = async (participantId, newVal) => {
     // Stuur naar backend
     const valueToSend = scoreType === 'time' ? player.time : newVal;
 
+    const updatePromise = scoreRepository
+      .updateScore(currentGame.value.id, participantId, valueToSend, scoreType)
+      .then(() => {})
+      .catch((error) => {
+        console.error('Failed to update score:', error);
+        // Rollback bij error
+        if (scoreType === 'points') player.points = oldPoints;
+        else if (scoreType === 'time') player.time = oldTime;
+        else if (scoreType === 'boolean') player.bool = oldBool;
+      });
+
+    // Add to pending tracking
+    pendingScoreUpdates.value.push(updatePromise);
+
+    // Cleanup when done
     try {
-      await scoreRepository.updateScore(
-        currentGame.value.id,
-        participantId,
-        valueToSend,
-        scoreType,
+      await updatePromise;
+    } finally {
+      pendingScoreUpdates.value = pendingScoreUpdates.value.filter(
+        (p) => p !== updatePromise,
       );
-      console.log(
-        `Updated score for participant ${participantId} to ${valueToSend}`,
-      );
-    } catch (error) {
-      console.error('Failed to update score:', error);
-      // Rollback bij error
-      if (scoreType === 'points') player.points = oldPoints;
-      else if (scoreType === 'time') player.time = oldTime;
-      else if (scoreType === 'boolean') player.bool = oldBool;
     }
   }
 };
@@ -420,6 +421,7 @@ const saveBonus = async () => {
 };
 
 const goToSettings = () => {
+  // Also save preview before going to settings, just in case they don't come back? no.
   // Flag that we are intentionally navigating to settings, so transition timer should be preserved
   sessionStorage.setItem('preserve_transition_timer', 'true');
   router.push({
@@ -700,7 +702,40 @@ const nextGame = async () => {
 };
 
 const pauseGame = async () => {
-  // Early exit (Pause) -> session is in_progress
+  // 0. Ensure all scores are saved
+  if (pendingScoreUpdates.value.length > 0) {
+    await Promise.all(pendingScoreUpdates.value);
+  }
+
+  // 1. Generate preview FIRST
+  if (currentGame.value) {
+    isGeneratingPreview.value = true;
+    try {
+      await nextTick();
+      // Give time for layout update or any pending renders
+      await new Promise((r) => setTimeout(r, 300));
+
+      // For Series/Parallel: ALWAYS show session overview (normalized points)
+      // For Single game: show the game scores directly
+      const isMultiGame =
+        currentSession.value?.game_mode === 'series' ||
+        currentSession.value?.game_mode === 'series-of-games' ||
+        currentSession.value?.game_mode === 'parallel' ||
+        currentSession.value?.game_mode === 'parallel-games';
+
+      // Pass null for multi-game to get session overview (always points)
+      // Pass gameId for single game to get raw scores (time/boolean/points)
+      await previewStore.generate(
+        currentSessionId,
+        isMultiGame ? null : currentGame.value.id,
+      );
+    } catch (e) {
+      console.error('Failed to generate preview on pause:', e);
+    }
+    sessionStorage.setItem('lastGenerateTime', Date.now());
+  }
+
+  // 2. Then update status and navigate
   try {
     await sessionRepository.update(currentSessionId, {
       status: 'in_progress',
@@ -713,15 +748,22 @@ const pauseGame = async () => {
     console.error('Failed to update session status:', e);
   }
 
-  // Early exit (Pause) -> Go back to tablet home
+  isGeneratingPreview.value = false;
   router.push('/tablet');
 };
 
 const endGame = async () => {
   if (currentGame.value) {
+    // Ensure all scores are saved FIRST
+    if (pendingScoreUpdates.value.length > 0) {
+      await Promise.all(pendingScoreUpdates.value);
+    }
+
+    const wasAlreadyFinished = currentGame.value.is_finished === 1;
+
     const isParallel =
       currentSession.value?.game_mode?.includes('parallel') ||
-      currentSession.value?.game_mode === 'parallel'; // Fix for mode check
+      currentSession.value?.game_mode === 'parallel';
 
     // SPECIAAL GEVAL: Volgend spel in serie
     // (Ensure this doesn't run for parallel)
@@ -731,6 +773,7 @@ const endGame = async () => {
       isSeries.value &&
       !isParallel
     ) {
+      isGeneratingPreview.value = false;
       await nextGame();
       return;
     }
@@ -743,13 +786,11 @@ const endGame = async () => {
       if (isParallel && isFinished) {
         // Check if we really want to finish all games
         // Use sequential loop to avoid potential parallel write issues (SQLite locks etc)
-        console.log('Finishing all parallel games...');
         for (const g of games.value) {
           g.is_finished = 1;
           try {
             // Use dedicated finish endpoint for better reliability
             await gameRepository.finish(g.id);
-            console.log(`Game ${g.id} finished.`);
           } catch (err) {
             console.error(`Failed to finish game ${g.id}:`, err);
           }
@@ -779,8 +820,6 @@ const endGame = async () => {
         });
       }
 
-      console.log('All finished check:', allFinished);
-
       const newSessionStatus = allFinished ? 'finished' : 'in_progress';
 
       if (newSessionStatus === 'finished') {
@@ -788,18 +827,52 @@ const endGame = async () => {
           await sessionRepository.update(currentSessionId, {
             status: 'finished',
           });
-          console.log('Session updated to finished.');
         } catch (e) {
           console.error('Failed to update session status:', e);
         }
 
+        // Generate preview AFTER all DB updates are complete
+        if (!wasAlreadyFinished) {
+          isGeneratingPreview.value = true;
+          try {
+            await nextTick();
+            await new Promise((r) => setTimeout(r, 300));
+
+            // For Series/Parallel: use session overview. For Single game: use game scores to preserve time/boolean display
+            const isMultiGame =
+              currentSession.value?.game_mode === 'series' ||
+              currentSession.value?.game_mode === 'series-of-games' ||
+              currentSession.value?.game_mode === 'parallel' ||
+              currentSession.value?.game_mode === 'parallel-games';
+
+            await previewStore.generate(
+              currentSessionId,
+              isMultiGame ? null : currentGame.value.id,
+            );
+            sessionStorage.setItem('lastGenerateTime', Date.now());
+          } catch (e) {
+            console.error('Failed to generate final preview:', e);
+          }
+        }
+
         // Navigate display
+        // For single games, pass gameId so finale view can show correct score type (time/boolean)
+        const isMultiGameNav =
+          currentSession.value?.game_mode === 'series' ||
+          currentSession.value?.game_mode === 'series-of-games' ||
+          currentSession.value?.game_mode === 'parallel' ||
+          currentSession.value?.game_mode === 'parallel-games';
+
         socket.emit('display:navigate', {
           name: 'display-leaderboard-finale',
-          params: { sessionId: currentSessionId },
+          params: {
+            sessionId: currentSessionId,
+            gameId: isMultiGameNav ? undefined : currentGame.value?.id,
+          },
         });
 
         // Navigate local
+        isGeneratingPreview.value = false;
         router.push({
           name: 'endgame-summary',
           query: { sessionId: currentSessionId },
@@ -810,6 +883,31 @@ const endGame = async () => {
       }
     } else {
       // Early exit (Pause) -> session is in_progress
+
+      // Generate preview for pause state (AFTER scores saved)
+      if (!wasAlreadyFinished) {
+        isGeneratingPreview.value = true;
+        try {
+          await nextTick();
+          await new Promise((r) => setTimeout(r, 300));
+
+          // For Series/Parallel: use session overview. For Single: use game scores
+          const isMultiGame =
+            currentSession.value?.game_mode === 'series' ||
+            currentSession.value?.game_mode === 'series-of-games' ||
+            currentSession.value?.game_mode === 'parallel' ||
+            currentSession.value?.game_mode === 'parallel-games';
+
+          await previewStore.generate(
+            currentSessionId,
+            isMultiGame ? null : currentGame.value.id,
+          );
+          sessionStorage.setItem('lastGenerateTime', Date.now());
+        } catch (e) {
+          console.error('Failed to generate preview:', e);
+        }
+      }
+
       try {
         await sessionRepository.update(currentSessionId, {
           status: 'in_progress',
@@ -823,10 +921,12 @@ const endGame = async () => {
       }
 
       // Early exit (Pause) -> Go back to tablet home
+      isGeneratingPreview.value = false;
       router.push('/tablet');
     }
   }
 
+  isGeneratingPreview.value = false;
   const modal = document.getElementById('endgame');
   if (modal) {
     modal.close();
@@ -1019,6 +1119,8 @@ const endGame = async () => {
               text="Je staat op het punt het spel te pauzeren. De scores worden opgeslagen en je kan later hervatten."
               cancel-btn-text="Terug"
               accept-btn-text="Pauzeren"
+              :is-loading="isGeneratingPreview"
+              :keep-open-on-accept="true"
               @accept="pauseGame"
             />
             <Button
@@ -1040,6 +1142,8 @@ const endGame = async () => {
               :text="endGameModalText"
               cancel-btn-text="Terug"
               :accept-btn-text="endGameButtonText"
+              :is-loading="isGeneratingPreview"
+              :keep-open-on-accept="true"
               @accept="endGame"
             />
             <Button

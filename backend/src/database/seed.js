@@ -6,7 +6,9 @@ const dbPath = path.join(__dirname, '..', '..', 'data', 'scoreboard.db');
 const seedPath = path.join(__dirname, 'seed.sql');
 
 if (!fs.existsSync(dbPath)) {
-  console.error('❌ Database niet gevonden. Voer eerst migrations uit door de server te starten.');
+  console.error(
+    '❌ Database niet gevonden. Voer eerst migrations uit door de server te starten.',
+  );
   process.exit(1);
 }
 
@@ -18,6 +20,5 @@ db.exec(seedSql, (err) => {
     console.error('❌ Seed error:', err);
     process.exit(1);
   }
-  console.log('✓ Testdata succesvol toegevoegd!');
   db.close();
 });

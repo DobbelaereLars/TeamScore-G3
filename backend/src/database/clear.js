@@ -28,15 +28,10 @@ const clearSql = `
   PRAGMA foreign_keys = ON;
 `;
 
-console.log('🗑️  Database verwijderen en schema resetten...');
-
 db.exec(clearSql, (err) => {
   if (err) {
     console.error('❌ Fout bij leegmaken database:', err);
     process.exit(1);
   }
-  console.log(
-    '✓ Database succesvol verwijderd. Herstart de server om tabellen opnieuw aan te maken.',
-  );
   db.close();
 });

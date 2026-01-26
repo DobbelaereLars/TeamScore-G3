@@ -94,12 +94,13 @@ const profileInitials = computed(() => {
       <p class="h3">
         <span v-if="displayScore">{{ displayScore }}</span>
         <RollingNumber
-          v-else
+          v-else-if="score !== undefined"
           :value="score"
           :duration="800"
           :trigger="visible"
           :disableInitialAnimation="!animated"
         />
+        <span v-else>0</span>
       </p>
     </div>
   </div>

@@ -40,12 +40,20 @@ const statusLabel = computed(() => {
       return null;
   }
 });
+
+const handleImageError = (e) => {
+  e.target.src = '/podium_screens/podium_screen_ph.webp';
+};
 </script>
 
 <template>
   <div class="c-session-card">
     <div class="c-session-card__head">
-      <img :src="props.imageSrc" :alt="props.imageAlt" />
+      <img
+        :src="props.imageSrc"
+        :alt="props.imageAlt"
+        @error="handleImageError"
+      />
       <div
         v-if="statusLabel"
         class="c-session-card__badge"

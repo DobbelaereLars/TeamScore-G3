@@ -11,16 +11,9 @@ import { sessionRepository } from '../services/api';
 const router = useRouter();
 const sessions = ref([]);
 const loading = ref(true);
-
+const cacheKey = ref(Date.now());
 const showStartModal = ref(false);
 const selectedSession = ref(null);
-
-// const handleSocketTest = () => {
-//   console.log('Sending test-popup event...');
-//   socket.emit('test-popup', {
-//     message: 'Dit is een test popup vanuit Tablet Home View!',
-//   });
-// };
 
 const createNewSession = () => {
   // Inform display to go to player list (lobby)
@@ -31,7 +24,22 @@ const createNewSession = () => {
 const fetchSessions = async () => {
   try {
     const response = await sessionRepository.getAll();
-    sessions.value = response.data;
+    const currentSessionId = sessionStorage.getItem('sessionId');
+    const lastGenTime = sessionStorage.getItem('lastGenerateTime');
+
+    sessions.value = response.data.map((s) => {
+      // Use lastGenerateTime for the session we just paused, force cache bust
+      const isCurrentSession = String(s.id) === String(currentSessionId);
+      const sessionCacheKey =
+        isCurrentSession && lastGenTime ? lastGenTime : Date.now();
+
+      return {
+        ...s,
+        cacheKey: sessionCacheKey,
+      };
+    });
+    // Global cache buster fallback
+    cacheKey.value = Date.now();
   } catch (error) {
     console.error('Failed to fetch sessions:', error);
   } finally {
@@ -209,9 +217,13 @@ onMounted(() => {
             >
               <SessionCard
                 :title="`${session.name} - ${formatDate(session.created_at)}`"
-                :subtitle="getSubtitle(session)"
+                :subtitle="
+                  session.participant_count
+                    ? `${session.participant_count} deelnemers`
+                    : 'Geen deelnemers'
+                "
                 :status="session.status"
-                image-src="/podium_screens/podium_screen_ph.webp"
+                :image-src="`/session-images/session_${session.id}.webp?v=${session.cacheKey || cacheKey}`"
                 @click="handleSessionReferal(session)"
               >
               </SessionCard>

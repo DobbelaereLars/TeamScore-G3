@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { Loader2 } from 'lucide-vue-next';
 
 const props = defineProps({
   buttonTekst: { type: String, default: '' },
@@ -11,12 +12,13 @@ const props = defineProps({
     validator: (v) => ['primary', 'secondary'].includes(v),
   },
   isDisabled: { type: Boolean, default: false },
+  isLoading: { type: Boolean, default: false },
   clickable: { type: Boolean, default: true },
 });
 
 const resolvedHref = computed(() => {
   // als niet klikbaar: href verwijderen
-  if (!props.clickable || props.isDisabled) return undefined;
+  if (!props.clickable || props.isDisabled || props.isLoading) return undefined;
 
   // anders normaliseren
   if (props.href === '' || props.href == null) return '#';
@@ -31,10 +33,18 @@ const resolvedHref = computed(() => {
     :class="[
       `c-btn--${props.variant}`,
       { 'c-btn--icon-only': props.isIconButton },
-      { 'c-btn--disabled': props.isDisabled },
+      { 'c-btn--disabled': props.isDisabled || props.isLoading },
     ]"
   >
-    <span v-if="$slots['c-btn_icon-left']" class="c-btn_icon-container">
+    <div v-if="isLoading" class="c-btn__spinner">
+      <Loader2 class="animate-spin" :size="20" />
+    </div>
+
+    <!-- Spinner replaces left icon if loading, or sits to the left -->
+    <span
+      v-if="$slots['c-btn_icon-left'] && !isLoading"
+      class="c-btn_icon-container"
+    >
       <slot name="c-btn_icon-left" />
     </span>
 

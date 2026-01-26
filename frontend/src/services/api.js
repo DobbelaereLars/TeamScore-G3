@@ -25,7 +25,10 @@ export const sessionRepository = {
   updateAssignments: (id, moves) =>
     api.put(`/sessions/${id}/participants/assignment`, { moves }),
   getGames: (id) => api.get(`/sessions/${id}/games`),
-  getFinalScores: (id) => api.get(`/sessions/${id}/final-scores`),
+  getFinalScores: (id, params) =>
+    api.get(`/sessions/${id}/final-scores`, { params }),
+  uploadImage: (id, imageBase64) =>
+    api.post(`/sessions/${id}/image`, { image: imageBase64 }),
 };
 
 // ============================================

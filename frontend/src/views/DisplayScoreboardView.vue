@@ -11,9 +11,7 @@ const players = ref([]);
 // Function to load game data (to be called via SocketIO event later)
 const loadGameData = async (gameId) => {
   try {
-    console.log(`Loading game data for gameId: ${gameId}`);
     const response = await gameRepository.getScores(gameId);
-    console.log('Scores fetched:', response.data);
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => ({
@@ -26,7 +24,6 @@ const loadGameData = async (gameId) => {
     // Optional: Fetch game and session details to update header
     const gameResponse = await gameRepository.getById(gameId);
     if (gameResponse.data) {
-      console.log('Game details fetched:', gameResponse.data);
       gameinfo.value.gamename = gameResponse.data.name;
       gameinfo.value.totalRounds = gameResponse.data.rounds;
       gameinfo.value.currentRound = gameResponse.data.current_round;
@@ -224,7 +221,6 @@ let pageInterval = null;
 
 const handleSession = (data) => {
   if (data && data.sessionId) {
-    console.log('Received session:', data.sessionId);
     // Persist to URL
     const url = new URL(window.location);
     url.searchParams.set('sessionId', data.sessionId);
@@ -245,7 +241,6 @@ const handleSession = (data) => {
 const router = useRouter();
 
 const handleNavigate = (data) => {
-  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -253,7 +248,6 @@ const handleNavigate = (data) => {
 
 const handleSelectedGame = (data) => {
   if (data && data.gameId) {
-    console.log('Received selected game:', data.gameId);
     // Persist to URL
     const url = new URL(window.location);
     url.searchParams.set('gameId', data.gameId);
@@ -266,7 +260,6 @@ const handleSelectedGame = (data) => {
 };
 
 const handleScoreUpdate = (data) => {
-  console.log('Score update received:', data);
   // data = { gameId, participantId, score, scoreType }
 
   // Verify if update belongs to current game (if we know the current game ID)
@@ -295,7 +288,6 @@ const setBannerText = ref('');
 let overlayTimeout = null;
 
 const handleGameInfoUpdate = async (data) => {
-  console.log('Game info update received:', data);
   if (data.gameId) {
     // Only update if it matches current game or we just want to show latest info
     const currentGameId = sessionStorage.getItem('display_gameId');

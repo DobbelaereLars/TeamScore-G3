@@ -40,7 +40,6 @@ const fetchPlayers = async () => {
   try {
     const response = await playerRepository.getAll();
     players.value = response.data;
-    console.log('Spelers opgehaald:', players.value);
   } catch (err) {
     error.value = err.message;
     console.error('Error bij ophalen spelers:', err);

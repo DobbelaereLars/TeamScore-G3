@@ -94,3 +94,28 @@
 .c-btn--icon-only .c-btn_icon-container svg {
   display: block;
 }
+
+/* Spinner animation */
+.c-btn__spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+}
+
+.c-btn--icon-only .c-btn__spinner {
+  margin-right: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

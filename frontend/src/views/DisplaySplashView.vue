@@ -1,14 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
-import socket from "../utils/socket";
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import socket from '../utils/socket';
 
 const router = useRouter();
 const showPopup = ref(false);
-const popupMessage = ref("");
+const popupMessage = ref('');
 
 const handleShowPopup = (data) => {
-  console.log("Received show-popup event:", data);
   popupMessage.value = data.message;
   showPopup.value = true;
 
@@ -19,7 +18,6 @@ const handleShowPopup = (data) => {
 };
 
 const handleNavigate = (data) => {
-  console.log("Received navigate event:", data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -28,15 +26,14 @@ const handleNavigate = (data) => {
 onMounted(() => {
   // Clear any previous session data when returning to splash screen
   sessionStorage.clear();
-  console.log("Display session storage cleared");
 
-  socket.on("show-popup", handleShowPopup);
-  socket.on("display:navigate", handleNavigate);
+  socket.on('show-popup', handleShowPopup);
+  socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
-  socket.off("show-popup", handleShowPopup);
-  socket.off("display:navigate", handleNavigate);
+  socket.off('show-popup', handleShowPopup);
+  socket.off('display:navigate', handleNavigate);
 });
 </script>
 

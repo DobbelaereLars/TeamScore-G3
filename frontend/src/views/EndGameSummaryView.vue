@@ -8,6 +8,7 @@ import socket from '../utils/socket';
 import logo from '../assets/logo.webp';
 
 import { finalScoreRepository } from '../services/api';
+import { previewStore } from '../store/previewStore';
 
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -26,7 +27,6 @@ const loadGameData = async () => {
 
   try {
     const response = await finalScoreRepository.getBySession(SessionID);
-    console.log('Final scores fetched:', response.data);
 
     const resData = response.data;
     players.value = resData.map((p) => {
@@ -48,6 +48,7 @@ const loadGameData = async () => {
 
       return {
         id: p.participant_id, // Note: backend returns participant_id
+        name: p.player_name || p.team_name || 'Unknown',
         spelersnaam: p.player_name || p.team_name || 'Unknown',
         score: p.total_points || 0,
         displayScore,
@@ -55,6 +56,10 @@ const loadGameData = async () => {
         rank: p.final_rank,
       };
     });
+
+    // Generate preview with final standings (pass null gameId to use session overview)
+    // Fire and forget, or await if you want to ensure it is saved before leaving page
+    previewStore.generate(SessionID, null);
   } catch (error) {
     console.error('Failed to load final scores:', error);
   }

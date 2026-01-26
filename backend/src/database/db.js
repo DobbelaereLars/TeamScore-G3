@@ -32,12 +32,10 @@ async function ensureColumnExists(database, tableName, columnName, columnDef) {
     const columnExists = columns.some((col) => col.name === columnName);
 
     if (!columnExists) {
-      console.log(`Adding missing column ${columnName} to ${tableName}...`);
       await runQuery(
         database,
         `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`,
       );
-      console.log(`✓ Added ${columnName} to ${tableName}`);
     }
   } catch (error) {
     console.warn(
@@ -129,9 +127,6 @@ function initDatabase() {
         // 2. Perform specific schema updates for existing tables
         await performSchemaUpdates(db);
 
-        console.log(
-          '✓ Database initialized and migrations executed successfully',
-        );
         resolve(db);
       } catch (error) {
         console.error('Migration error:', error);
@@ -154,7 +149,6 @@ module.exports = { initDatabase, getDatabase };
 if (require.main === module) {
   initDatabase()
     .then(() => {
-      console.log('Standalone migration completed');
       process.exit(0);
     })
     .catch((err) => {

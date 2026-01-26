@@ -12,10 +12,7 @@ function setupSockets(server) {
   let currentParticipants = [];
 
   io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
-
     socket.on('test-popup', (data) => {
-      console.log('Test popup event received:', data);
       // Broadcast naar alle clients
       io.emit('show-popup', {
         message: data.message || 'Test popup!',
@@ -24,8 +21,6 @@ function setupSockets(server) {
     });
 
     socket.on('session-init', () => {
-      console.log('Session init event received');
-
       // Clear stored participants for the new session
       currentParticipants = [];
       // Notify all clients (displays) to clear their lists
@@ -37,8 +32,6 @@ function setupSockets(server) {
     });
 
     socket.on('session-cancel', () => {
-      console.log('Session cancel event received');
-
       // Clear stored participants
       currentParticipants = [];
       // Clean up the display as well
@@ -58,27 +51,22 @@ function setupSockets(server) {
 
     socket.on('display:request-participants', () => {
       // Send only to the requester
-      console.log('Sending current participants to requester:', socket.id);
       socket.emit('display:update-participants', currentParticipants);
     });
 
     socket.on('display:navigate', (data) => {
-      console.log('Display navigate event received:', data);
       io.emit('display:navigate', data);
     });
 
     socket.on('display:selected-game', (data) => {
-      console.log('Display selected game event received:', data);
       io.emit('display:selected-game', data);
     });
 
     socket.on('display:session', (data) => {
-      console.log('Display session event received:', data);
       io.emit('display:session', data);
     });
 
     socket.on('display:update-game-info', (data) => {
-      console.log('Display update game info event received:', data);
       io.emit('display:update-game-info', data);
     });
 
@@ -87,9 +75,7 @@ function setupSockets(server) {
       io.emit('score:update', data);
     });
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-    });
+    socket.on('disconnect', () => {});
   });
 
   return io;

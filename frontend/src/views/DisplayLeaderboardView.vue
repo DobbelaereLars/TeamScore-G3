@@ -11,14 +11,12 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { finalScoreRepository } from '../services/api';
 
 const sessionID = sessionStorage.getItem('display_sessionId');
-console.log('Leaderboard view initialized with sessionID:', sessionID);
 
 const players = ref([]);
 const router = useRouter();
 const route = useRoute();
 
 const handleNavigate = (data) => {
-  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
@@ -35,7 +33,6 @@ const loadGameData = async () => {
     const response = await finalScoreRepository.getBySession(sessionID, {
       gameId,
     });
-    console.log('Final scores fetched:', response.data);
 
     // Map backend data to frontend structure
     const rawPlayers = response.data.map((p) => {
@@ -134,7 +131,6 @@ onUnmounted(() => {
           :score="topThreePlayers[1].score"
           :display-score="topThreePlayers[1].displayScore"
           :score-label="topThreePlayers[1].scoreLabel"
-          :animated="false"
         />
         <LeaderboardPodiumIcon
           v-if="topThreePlayers[0]"
@@ -144,7 +140,6 @@ onUnmounted(() => {
           :score="topThreePlayers[0].score"
           :display-score="topThreePlayers[0].displayScore"
           :score-label="topThreePlayers[0].scoreLabel"
-          :animated="false"
         />
         <LeaderboardPodiumIcon
           v-if="topThreePlayers[2]"
@@ -154,7 +149,6 @@ onUnmounted(() => {
           :score="topThreePlayers[2].score"
           :display-score="topThreePlayers[2].displayScore"
           :score-label="topThreePlayers[2].scoreLabel"
-          :animated="false"
         />
       </div>
     </div>

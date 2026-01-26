@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const { getDatabase } = require('../database/db');
 
 // Helper to run query as promise
@@ -224,14 +226,17 @@ router.get('/:id/final-scores', async (req, res) => {
       const singleGameScores = scores
         .filter((s) => s.game_id === game.id)
         .map((s) => {
-          let rawScore = 0;
+          let rawScore = null;
           // For Single Game used in Leaderboard, we want to show the ACTUAL score.
           // Not normalized.
           if (scoreType === 'points') {
             rawScore = (s.value_number || 0) + (s.bonus || 0);
           } else if (scoreType === 'time') {
-            // Time usually doesn't add bonus like points.
-            rawScore = s.value_time || 0;
+            // Time: keep null if no score, 0 is valid (fastest time)
+            rawScore =
+              s.value_time !== null && s.value_time !== undefined
+                ? s.value_time
+                : null;
           } else if (scoreType === 'boolean') {
             rawScore = s.value_bool ? 1 : 0;
           }
@@ -254,6 +259,9 @@ router.get('/:id/final-scores', async (req, res) => {
 
       // *** Multi-Round Logic for Single Game (Boolean Majority) ***
       if (scoreType === 'boolean' || scoreType === 'bool') {
+        // Get the total number of rounds configured for this game
+        const totalRounds = game.rounds || 1;
+
         // We need to fetch history if available
         const roundScores = await all(
           db,
@@ -266,21 +274,19 @@ router.get('/:id/final-scores', async (req, res) => {
         );
 
         // Merge with current `scores` (which represents the latest round)
-        // We want: For each participant, Count(Completed) vs Count(Not Completed)
-        // across ALL rounds (history + current).
+        // We want: For each participant, Count(Completed) across ALL rounds (history + current).
 
         // 1. Map history
         const stats = {};
         // Init with participants
         singleGameScores.forEach((p) => {
-          stats[p.participant_id] = { completed: 0, total: 0 };
+          stats[p.participant_id] = { completed: 0 };
         });
 
         // Add history
         roundScores.forEach((rs) => {
           if (stats[rs.participant_id]) {
             if (rs.value_bool) stats[rs.participant_id].completed++;
-            stats[rs.participant_id].total++;
           }
         });
 
@@ -290,30 +296,27 @@ router.get('/:id/final-scores', async (req, res) => {
           .forEach((s) => {
             if (stats[s.participant_id]) {
               if (s.value_bool) stats[s.participant_id].completed++;
-              stats[s.participant_id].total++;
             }
           });
 
-        // Calculate Majority
+        // Calculate Majority based on TOTAL ROUNDS (not played rounds)
+        // A player is "Voltooid" only if they completed at least half of ALL rounds
         singleGameScores.forEach((p) => {
           const s = stats[p.participant_id];
-          if (!s || s.total === 0) {
+          if (!s) {
             p.total_points = 0; // Default
             return;
           }
-          // Majority Rule:
-          // "meerderheid van voltooid is voltooid"
-          // "als het gelijk is ... (2 vs 2) is het ook gelijk" -> "is het ook voltooid" (User said: "is het ook voltooid")
 
-          const required = Math.ceil(s.total / 2);
-          // If total is 4 (even), half is 2. 2 completed >= 2 -> Completed. Correct.
-          // If total is 3 (odd), half is 1.5 -> ceil 2. 2 completed >= 2 -> Completed. Correct.
+          // Majority Rule based on total rounds:
+          // "de helft of meer voltooid ten opzichte van de rondes"
+          // If totalRounds = 4, need >= 2 completed
+          // If totalRounds = 3, need >= 1.5 -> 2 completed
+          // If totalRounds = 1, need >= 0.5 -> 1 completed
 
-          // User specific: "2 niet voltooid en 3 keer wel dan is eindstand wel voltooid" (3 > 2.5 -> Yes)
-          // User specific: "als het gelijk is ... is het ook voltooid" (2 vs 2 -> Yes)
+          const required = totalRounds / 2;
 
-          // So logic: completed >= total / 2
-          if (s.completed >= s.total / 2) {
+          if (s.completed >= required) {
             p.total_points = 1; // Completed
           } else {
             p.total_points = 0; // Not Completed
@@ -324,8 +327,13 @@ router.get('/:id/final-scores', async (req, res) => {
       // Sort based on rules
       singleGameScores.sort((a, b) => {
         if (scoreType === 'boolean') return b.total_points - a.total_points; // 1 > 0
-        if (rankingRule === 'lowest_wins')
-          return a.total_points - b.total_points; // Lower is better
+        if (rankingRule === 'lowest_wins') {
+          // For time: lowest wins. null means "no score" and should be ranked last
+          // 0 is a valid time (fastest possible)
+          const scoreA = a.total_points === null ? Infinity : a.total_points;
+          const scoreB = b.total_points === null ? Infinity : b.total_points;
+          return scoreA - scoreB; // Lower is better
+        }
         return b.total_points - a.total_points; // Higher is better
       });
 
@@ -781,6 +789,23 @@ router.delete('/:id', async (req, res) => {
 
     // 3. Delete the session (Cascades to Game, Participant, Score, FinalScore)
     await run(db, 'DELETE FROM Session WHERE id = ?', [id]);
+
+    // Delete session image if exists
+    const imagePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'data',
+      'session_images',
+      `session_${id}.webp`,
+    );
+    if (fs.existsSync(imagePath)) {
+      try {
+        fs.unlinkSync(imagePath);
+      } catch (e) {
+        console.error('Failed to delete session image:', e);
+      }
+    }
 
     // 4. Clean up orphaned ScoreModels
     if (scoreModelIds.length > 0) {
@@ -1268,6 +1293,35 @@ router.put('/:id/participants/assignment', async (req, res) => {
     console.error('Error updating assignments:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// UPLOAD session image
+router.post('/:id/image', express.json({ limit: '10mb' }), (req, res) => {
+  const { id } = req.params;
+  const { image } = req.body; // Expects base64 string "data:image/webp;base64,..."
+
+  if (!image) {
+    return res.status(400).json({ error: 'No image data provided' });
+  }
+
+  // Remove header
+  const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  const dataDir = path.join(__dirname, '..', '..', 'data', 'session_images');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  const filePath = path.join(dataDir, `session_${id}.webp`);
+
+  fs.writeFile(filePath, buffer, (err) => {
+    if (err) {
+      console.error('Error saving session image:', err);
+      return res.status(500).json({ error: 'Failed to save image' });
+    }
+    res.json({ success: true, url: `/session-images/session_${id}.webp` });
+  });
 });
 
 module.exports = router;

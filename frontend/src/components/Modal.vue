@@ -32,6 +32,14 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  keepOpenOnAccept: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['accept', 'cancel']);
@@ -84,7 +92,9 @@ const handleCancel = (event) => {
 };
 
 const handleAccept = (event) => {
-  closeDialog(event);
+  if (!props.keepOpenOnAccept) {
+    closeDialog(event);
+  }
   emit('accept');
 };
 </script>
@@ -122,6 +132,7 @@ const handleAccept = (event) => {
           :href="acceptBtnLink"
           :clickable="false"
           variant="primary"
+          :is-loading="isLoading"
         />
       </slot>
     </div>

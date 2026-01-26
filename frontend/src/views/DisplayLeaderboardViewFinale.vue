@@ -4,24 +4,33 @@ import LeaderboardPlayerCard from '../components/LeaderboardPlayercard.vue';
 
 import logo from '../assets/logo.webp';
 import socket from '../utils/socket';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 import { finalScoreRepository } from '../services/api';
 
-const sessionID = sessionStorage.getItem('display_sessionId');
-console.log('Leaderboard view initialized with sessionID:', sessionID);
-
 const players = ref([]);
 const router = useRouter();
+const route = useRoute();
+
+const sessionID = sessionStorage.getItem('display_sessionId');
 
 const handleNavigate = (data) => {
-  console.log('Received navigate event:', data);
   if (data.name) {
     router.push({ name: data.name, query: data.params });
   }
 };
+
+// Watch for route query changes to reload data when gameId changes
+watch(
+  () => route.query.gameId,
+  (newGameId, oldGameId) => {
+    if (newGameId !== oldGameId) {
+      loadGameData();
+    }
+  },
+);
 
 const loadGameData = async () => {
   if (!sessionID) {
@@ -30,7 +39,11 @@ const loadGameData = async () => {
   }
 
   try {
-    const response = await finalScoreRepository.getBySession(sessionID);
+    // Get gameId from route query for single games (to show time/boolean format)
+    const gameId = route.query.gameId;
+    const response = await finalScoreRepository.getBySession(sessionID, {
+      gameId,
+    });
     const resData = response.data;
     const rawPlayers = resData.map((p) => {
       let displayScore = '';
