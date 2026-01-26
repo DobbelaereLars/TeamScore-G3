@@ -322,8 +322,8 @@ router.get('/:id/scores', async (req, res) => {
       } else if (scoreType === 'boolean' || scoreType === 'bool') {
         scoreVal = row.value_bool; // 0 or 1
       } else {
-        // Points
-        scoreVal = row.value_number;
+        // Points: Treat NULL as 0 (everyone starts with 0 points)
+        scoreVal = row.value_number !== null && row.value_number !== undefined ? row.value_number : 0;
       }
 
       return {

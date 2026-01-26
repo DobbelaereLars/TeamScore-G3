@@ -670,7 +670,7 @@ router.post('/', async (req, res) => {
 
             await run(
               db,
-              `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
+              `INSERT INTO Score (game_id, participant_id, value_number, value_bool) VALUES (?, ?, 0, 0)`,
               [dbGameId, partRes.lastID],
             );
 
@@ -689,7 +689,7 @@ router.post('/', async (req, res) => {
           );
           await run(
             db,
-            `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
+            `INSERT INTO Score (game_id, participant_id, value_number, value_bool) VALUES (?, ?, 0, 0)`,
             [dbGameId, partRes.lastID],
           );
 
@@ -707,7 +707,7 @@ router.post('/', async (req, res) => {
           );
           await run(
             db,
-            `INSERT INTO Score (game_id, participant_id) VALUES (?, ?)`,
+            `INSERT INTO Score (game_id, participant_id, value_number, value_bool) VALUES (?, ?, 0, 0)`,
             [dbGameId, partRes.lastID],
           );
 
