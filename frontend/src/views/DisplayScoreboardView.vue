@@ -17,7 +17,7 @@ const loadGameData = async (gameId) => {
     players.value = response.data.map((p) => ({
       id: p.id,
       spelersnaam: p.spelersnaam,
-      score: p.score,
+      score: p.score !== null && p.score !== undefined ? p.score : null,
       rank: p.rank,
     }));
 
@@ -95,6 +95,10 @@ const formatScore = (val, type, config) => {
     return val ? 'Voltooid' : 'Niet voltooid';
   }
   if (type === 'time') {
+    // If null/undefined, show --:--
+    if (val === null || val === undefined) {
+      return '--:--';
+    }
     // Assuming val is seconds
     const totalSeconds = Number(val) || 0;
     const minutes = Math.floor(totalSeconds / 60);
@@ -125,7 +129,13 @@ const maxScore = computed(() => {
   if (players.value.length === 0) return 100;
   // If boolean, max is 1.
   if (gameinfo.value.scoreType === 'boolean') return 1;
-  const max = Math.max(...players.value.map((player) => player.score));
+  const scores = players.value
+    .map((player) => player.score)
+    .filter((s) => s !== null && s !== undefined);
+
+  if (scores.length === 0) return 100;
+  
+  const max = Math.max(...scores);
   return max > 0 ? max : 100;
 });
 
@@ -145,11 +155,30 @@ const sortedPlayers = computed(() => {
     }
     if (isLowestWins) {
       // For time/golf: Lower is better.
-      // Handle 0 or null? Usually 0 time is "no time yet"? Or super fast?
-      // Assuming valid times > 0. If 0 means DNF, handle separately?
-      // For now simple sort.
-      return a.score - b.score;
+      // null means "no score yet" -> should go last
+      const valA = a.score;
+      const valB = b.score;
+      
+      const isNullA = valA === null || valA === undefined;
+      const isNullB = valB === null || valB === undefined;
+      
+      if (isNullA && isNullB) return 0;
+      if (isNullA) return 1;
+      if (isNullB) return -1;
+      
+      return valA - valB;
     }
+
+    // Explicit check for Highest Wins (Slowest time) to handle nulls correctly
+    const valA = a.score;
+    const valB = b.score;
+    const isNullA = valA === null || valA === undefined;
+    const isNullB = valB === null || valB === undefined;
+
+    if (isNullA && isNullB) return 0;
+    if (isNullA) return 1; // Null is last
+    if (isNullB) return -1;
+
     return b.score - a.score;
   });
 

@@ -12,7 +12,7 @@ const activeScoreType = ref('points'); // points, time, boolean
 const activeRankingRule = ref('highest_wins'); // highest_wins, lowest_wins
 
 const formatTime = (seconds) => {
-  if (!seconds && seconds !== 0) return '00:00';
+  if (seconds === null || seconds === undefined) return '--:--';
   const totalSeconds = Math.floor(Number(seconds) || 0);
   const minutes = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -23,26 +23,35 @@ const sortedPlayers = computed(() => {
   if (!Array.isArray(sessionPlayers.value)) return [];
 
   return [...sessionPlayers.value].sort((a, b) => {
-    // Use backend rank if available (respects ranking_rule)
+    // ALWAYS use backend rank if available (backend already applies correct ranking_rule)
     if (a.rank && b.rank) return a.rank - b.rank;
 
     // Handle null scores (no score = ranked last)
-    const scoreA =
+    // Convert to number but preserve nulls
+    const valA =
       a.score === null || a.score === undefined ? null : Number(a.score);
-    const scoreB =
+    const valB =
       b.score === null || b.score === undefined ? null : Number(b.score);
 
-    // Null scores go last
-    if (scoreA === null && scoreB === null) return 0;
-    if (scoreA === null) return 1;
-    if (scoreB === null) return -1;
+    const isNullA = valA === null;
+    const isNullB = valB === null;
 
-    // Sort based on ranking rule
-    if (activeRankingRule.value === 'lowest_wins') {
-      return scoreA - scoreB; // Lower is better
+    if (isNullA && isNullB) return 0;
+    if (isNullA) return 1;
+    if (isNullB) return -1;
+
+    // Fallback sorting when no rank available
+    // For time games: default to lowest_wins (fastest time) unless explicitly highest_wins
+    const isTimeGame = activeScoreType.value === 'time';
+    const isLowestWins = isTimeGame 
+      ? activeRankingRule.value !== 'highest_wins'  // Time: default lowest wins
+      : activeRankingRule.value === 'lowest_wins';  // Points: default highest wins
+
+    if (isLowestWins) {
+      return valA - valB; // Lower is better
     }
     // Default: highest_wins
-    return scoreB - scoreA; // Higher is better
+    return valB - valA; // Higher is better
   });
 });
 
@@ -61,7 +70,7 @@ const getPlayerProps = (player) => {
 
   const props = {
     spelersnaam: player.name || player.spelersnaam || player.team_name,
-    score: player.score || 0,
+    score: player.score !== null && player.score !== undefined ? player.score : 0,
     displayScore: undefined,
     scoreLabel: undefined,
   };

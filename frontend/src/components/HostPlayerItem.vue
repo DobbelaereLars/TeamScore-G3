@@ -77,7 +77,11 @@ const decreasePoints = () => {
 
 // Time Logic
 const updateTime = (newVal) => {
-  emit('updateScore', Number(newVal));
+  if (newVal === null || newVal === '') {
+    emit('updateScore', null);
+  } else {
+    emit('updateScore', Number(newVal));
+  }
 };
 
 // Boolean Logic
@@ -149,7 +153,7 @@ const setBoolean = (boolVal) => {
       <template v-else-if="scoreType === 'time'">
         <div class="c-host-player-item__input-wrapper">
           <InputTime
-            :modelValue="Number(value)"
+            :modelValue="value"
             @update:modelValue="updateTime"
           />
         </div>

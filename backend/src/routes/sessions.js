@@ -129,7 +129,7 @@ router.get('/:id/games', async (req, res) => {
         team_name: s.team_name,
         name: s.player_name || s.team_name || 'Unknown',
         points: s.value_number || 0,
-        time: s.value_time || 0,
+        time: s.value_time, // Keep null if not set
         bool: s.value_bool || 0,
         participantId: s.participant_id,
       }));
@@ -233,8 +233,11 @@ router.get('/:id/final-scores', async (req, res) => {
             rawScore = (s.value_number || 0) + (s.bonus || 0);
           } else if (scoreType === 'time') {
             // Time: keep null if no score, 0 is valid (fastest time)
+            // Ensure empty string is treated as null
             rawScore =
-              s.value_time !== null && s.value_time !== undefined
+              s.value_time !== null &&
+              s.value_time !== undefined &&
+              s.value_time !== ''
                 ? s.value_time
                 : null;
           } else if (scoreType === 'boolean') {
@@ -327,7 +330,18 @@ router.get('/:id/final-scores', async (req, res) => {
       // Sort based on rules
       singleGameScores.sort((a, b) => {
         if (scoreType === 'boolean') return b.total_points - a.total_points; // 1 > 0
-        if (rankingRule === 'lowest_wins') {
+        
+        // Determine if lower is better
+        let isLowestWins = false;
+        if (scoreType === 'time') {
+          // Time: default to lowest_wins (fastest) UNLESS explicitly set to highest_wins
+          isLowestWins = rankingRule !== 'highest_wins';
+        } else {
+          // Points: default to highest_wins UNLESS explicitly set to lowest_wins
+          isLowestWins = rankingRule === 'lowest_wins';
+        }
+
+        if (isLowestWins) {
           // For time: lowest wins. null means "no score" and should be ranked last
           // 0 is a valid time (fastest possible)
           const scoreA = a.total_points === null ? Infinity : a.total_points;

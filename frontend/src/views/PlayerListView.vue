@@ -181,27 +181,37 @@ const sortedPlayers = computed(() => {
 
   const game = currentGame.value;
   const isTime = game.score_type === 'time';
-  const isReverse = game.ranking_rule === 'lowest_wins'; // True if lowest wins (points) or fastest wins (time) depending on how backend stores it?
-
-  // Check backend mapping from InGameSettingsView:
-  // points: lowest_wins -> lowest-first (small is good)
-  // time: highest_wins -> slowest-first (big is good). So lowest_wins (default) -> fastest-first (small is good).
-
-  // Conclusion: lowest_wins always means SMALLER number is BETTER (rank 1).
-  // highest_wins always means LARGER number is BETTER (rank 1).
+  
+  // Determine sort direction
+  // Default: Time -> Lowest wins (Ascending). Points -> Highest wins (Descending).
+  let isLowestWins = false;
+  if (game.ranking_rule) {
+    isLowestWins = game.ranking_rule === 'lowest_wins';
+  } else {
+    isLowestWins = isTime; // Default to lowest_wins (fastest) for time if rule missing
+  }
 
   const sorted = [...currentGame.value.players].sort((a, b) => {
     let valA, valB;
 
     if (isTime) {
-      valA = a.time || 0;
-      valB = b.time || 0;
+      // For time: null/undefined means "not played" -> always last
+      valA = a.time;
+      valB = b.time;
+      
+      const isNullA = valA === null || valA === undefined;
+      const isNullB = valB === null || valB === undefined;
+      
+      // Null values always go to the bottom
+      if (isNullA && isNullB) return 0;
+      if (isNullA) return 1;
+      if (isNullB) return -1;
     } else {
       valA = a.points || 0;
       valB = b.points || 0;
     }
 
-    if (game.ranking_rule === 'lowest_wins') {
+    if (isLowestWins) {
       // Smallest wins (Ascending)
       return valA - valB;
     } else {
@@ -319,7 +329,11 @@ const handleScoreUpdate = (data) => {
   );
   if (player) {
     if (data.scoreType === 'points') player.points = data.score;
-    else if (data.scoreType === 'time') player.time = data.score;
+    else if (data.scoreType === 'time') {
+      player.time = data.score;
+      // Also update bool if implicit update came through
+      player.bool = (data.score !== null && data.score !== undefined) ? 1 : 0;
+    }
     else if (data.scoreType === 'boolean' || data.scoreType === 'bool')
       player.bool = data.score;
   }
@@ -344,23 +358,35 @@ const updatePlayerScore = async (participantId, newVal) => {
     // Apply new value
     if (scoreType === 'points') player.points = newVal;
     else if (scoreType === 'time') {
-      // For time, the input sends the RELATIVE value (current round time).
-      // We need to add the accumulated offset to get the absolute Total to store in DB.
-      const offset = accumulatedScores.value[participantId] || 0;
-      player.time = newVal + offset;
+      if (newVal === null || newVal === '') {
+        // Clearing input -> revert to accumulated offset (previous rounds)
+        const offset = accumulatedScores.value[participantId];
+        // If offset is undefined/null (round 1), set null
+        player.time = (offset !== undefined && offset !== null) ? offset : null;
+        player.bool = 0;
+      } else {
+        // ...
+        const offset = accumulatedScores.value[participantId] || 0;
+        player.time = Number(newVal) + offset;
+        player.bool = 1;
+      }
     } else if (scoreType === 'boolean') player.bool = newVal;
 
     // Stuur naar backend
     const valueToSend = scoreType === 'time' ? player.time : newVal;
+    const extras = {};
+    if (scoreType === 'time') {
+        extras.bool = player.bool;
+    }
 
     const updatePromise = scoreRepository
-      .updateScore(currentGame.value.id, participantId, valueToSend, scoreType)
+      .updateScore(currentGame.value.id, participantId, valueToSend, scoreType, extras)
       .then(() => {})
       .catch((error) => {
         console.error('Failed to update score:', error);
         // Rollback bij error
         if (scoreType === 'points') player.points = oldPoints;
-        else if (scoreType === 'time') player.time = oldTime;
+        else if (scoreType === 'time') { player.time = oldTime; player.bool = oldBool; }
         else if (scoreType === 'boolean') player.bool = oldBool;
       });
 
@@ -437,7 +463,8 @@ const goToNext = async () => {
   const newOffsets = {};
   if (currentGame.value.score_type === 'time') {
     currentGame.value.players.forEach((p) => {
-      newOffsets[p.participantId] = p.time || 0;
+      // Keep null if they haven't played, so if they reset next round, it stays null (unplayed)
+      newOffsets[p.participantId] = p.time;
     });
   }
 
@@ -452,9 +479,19 @@ const goToNext = async () => {
 
   // 2. Save offsets for the NEW state (so round 2 starts at 0 input)
   if (currentGame.value.score_type === 'time') {
-    const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet}_${currentGame.value.currentRound}`;
+    const key = `offsets_${currentGame.value.id}_${currentGame.value.currentSet || 1}_${currentGame.value.currentRound || 1}`;
     localStorage.setItem(key, JSON.stringify(newOffsets));
     accumulatedScores.value = newOffsets;
+
+    // Reset bools regarding "Played This Round"
+    try {
+        await gameRepository.resetBools(currentGame.value.id);
+        // Optimistic UI update
+        currentGame.value.players.forEach(p => p.bool = 0);
+    } catch(err) {
+        console.error("Failed to reset round status", err);
+    }
+
   } else if (
     currentGame.value.score_type === 'boolean' ||
     currentGame.value.score_type === 'bool'
@@ -1091,7 +1128,7 @@ const endGame = async () => {
               :points="player.points"
               :value="
                 currentGame?.score_type === 'time'
-                  ? player.time - (accumulatedScores[player.participantId] || 0)
+                  ? (player.bool === 1 ? player.time - (accumulatedScores[player.participantId] || 0) : null)
                   : currentGame?.score_type === 'boolean'
                     ? player.bool
                     : player.points

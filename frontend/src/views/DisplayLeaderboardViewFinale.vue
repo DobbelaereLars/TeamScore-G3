@@ -51,10 +51,15 @@ const loadGameData = async () => {
 
       if (p.is_single_game) {
         if (p.score_type === 'time') {
-          const totalSeconds = Number(p.total_points) || 0;
-          const minutes = Math.floor(totalSeconds / 60);
-          const seconds = Math.floor(totalSeconds % 60);
-          displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          // Check for null/undefined explicitly
+          if (p.total_points === null || p.total_points === undefined) {
+             displayScore = '--:--';
+          } else {
+            const totalSeconds = Number(p.total_points);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          }
           scoreLabel = '';
         } else if (p.score_type === 'boolean') {
           displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
@@ -64,10 +69,13 @@ const loadGameData = async () => {
       return {
         id: p.participant_id, // Note: backend returns participant_id
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score: p.total_points || 0,
+        // Preserve null, do NOT coerce to 0 here if it is undefined
+        score: p.total_points !== null && p.total_points !== undefined ? Number(p.total_points) : null,
         displayScore,
         scoreLabel,
         rank: p.final_rank,
+        score_type: p.score_type,     // Pass through 
+        ranking_rule: p.ranking_rule, // Pass through
       };
     });
 
@@ -80,17 +88,52 @@ const loadGameData = async () => {
   }
 };
 
-// Sort players by score (highest first)
+// Sort players by score
 const sortedPlayers = computed(() => {
   return [...players.value].sort((a, b) => {
-    // Trust backend rank
+    // ALWAYS trust backend rank first if available - backend already applies correct ranking_rule
     if (a.rank && b.rank) return a.rank - b.rank;
 
-    if (b.score !== a.score) {
-      return b.score - a.score;
+    // For time games: always sort by lowest time wins (ignore backend rank which may be stale)
+    const samplePlayer = players.value[0];
+    const isTimeGame = samplePlayer?.score_type === 'time';
+    // const isLowestWins = isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
+    
+    // Actually, just rely on raw score logic if rank is missing.
+    // Time games: null is last.
+    
+    // Check if we need to invert sort based on ranking rule
+    // But honestly, backend `final_rank` should be correct if `final-scores/calculate` was called.
+    // If not, we do client sort.
+    
+    // Wait, the calculation might be done in backend: `finalScoreRepository.calculate(sessionID)`
+    // And that calculation logic might convert null to 0?
+    
+    // Let's assume client sort for now as fallback:
+    if (a.score === null && b.score === null) return 0;
+    if (a.score === null) return 1; // Null is always last
+    if (b.score === null) return -1;
+
+    // Normal comparison
+    let isAscending = false; // Default highest wins
+    if (isTimeGame) {
+        // Check rule:
+        // If "lowest_wins" (fastest) -> Ascending
+        // If "highest_wins" (slowest) -> Descending
+        
+        // CAREFUL: Backend default for time is usually 'lowest_wins'.
+        // If user changed to 'slowest wins' -> 'highest_wins' (Descending)
+        
+        isAscending = samplePlayer?.ranking_rule === 'lowest_wins';
+    } else {
+        isAscending = samplePlayer?.ranking_rule === 'lowest_wins';
     }
-    // Secondary sort by ID to ensure stable order
-    return a.id - b.id;
+
+    if (isAscending) {
+        return a.score - b.score;
+    } else {
+        return b.score - a.score;
+    }
   });
 });
 

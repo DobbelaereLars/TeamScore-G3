@@ -34,10 +34,14 @@ const loadGameData = async () => {
 
       if (p.is_single_game) {
         if (p.score_type === 'time') {
-          const totalSeconds = Number(p.total_points) || 0;
-          const minutes = Math.floor(totalSeconds / 60);
-          const seconds = Math.floor(totalSeconds % 60);
-          displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          if (p.total_points === null || p.total_points === undefined) {
+            displayScore = '--:--';
+          } else {
+            const totalSeconds = Number(p.total_points) || 0;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          }
           scoreLabel = '';
         } else if (p.score_type === 'boolean') {
           displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
@@ -48,10 +52,12 @@ const loadGameData = async () => {
       return {
         id: p.participant_id, // Note: backend returns participant_id
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score: p.total_points || 0,
+        score: p.total_points !== null && p.total_points !== undefined ? Number(p.total_points) : null,
         displayScore,
         scoreLabel,
         rank: p.final_rank, // Use backend rank which respects ranking_rule
+        score_type: p.score_type,
+        ranking_rule: p.ranking_rule,
       };
     });
   } catch (error) {
@@ -65,9 +71,31 @@ const sortedPlayers = computed(() => {
     // Use backend rank if available
     if (a.rank && b.rank) return a.rank - b.rank;
 
-    // Fallback to score comparison
-    if (b.score !== a.score) {
-      return b.score - a.score;
+    // Fallback: manual sorting
+    const samplePlayer = players.value[0];
+    const isTimeGame = samplePlayer?.score_type === 'time';
+    const isLowestWins = isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
+
+    if (isLowestWins) {
+      const valA = a.score;
+      const valB = b.score;
+
+      const isNullA = valA === null || valA === undefined;
+      const isNullB = valB === null || valB === undefined;
+
+      if (isNullA && isNullB) return 0;
+      if (isNullA) return 1;
+      if (isNullB) return -1;
+
+      return valA - valB;
+    }
+
+    // Default: higher score wins
+    const valA = a.score !== null && a.score !== undefined ? a.score : -Infinity;
+    const valB = b.score !== null && b.score !== undefined ? b.score : -Infinity;
+
+    if (valB !== valA) {
+      return valB - valA;
     }
     // Secondary sort by ID to ensure stable order
     return a.id - b.id;

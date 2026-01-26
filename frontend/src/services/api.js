@@ -42,6 +42,7 @@ export const gameRepository = {
   delete: (id) => api.delete(`/games/${id}`),
   finish: (id) => api.patch(`/games/${id}/finish`),
   getScores: (id) => api.get(`/games/${id}/scores`),
+  resetBools: (id) => api.put(`/games/${id}/reset-bools`),
 };
 
 // ============================================
@@ -92,10 +93,11 @@ export const scoreRepository = {
     api.put(`/scores/${gameId}/participant/${participantId}/points`, {
       points,
     }),
-  updateScore: (gameId, participantId, value, type) =>
+  updateScore: (gameId, participantId, value, type, extras = {}) =>
     api.put(`/scores/${gameId}/participant/${participantId}/score`, {
       value,
       type,
+      ...extras,
     }),
   update: (id, data) => api.put(`/scores/${id}`, data),
   delete: (id) => api.delete(`/scores/${id}`),
