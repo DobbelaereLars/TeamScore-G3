@@ -996,6 +996,7 @@ const endGame = async () => {
                 onclick="bonusmodal.showModal()"
                 button-tekst="Bonuspunten toekennen"
                 variant="primary"
+                :clickable="false"
               >
                 <template #c-btn_icon-left>
                   <Flame :size="18" />
@@ -1108,10 +1109,10 @@ const endGame = async () => {
           <div class="c-player-list__buttons">
             <Button
               v-if="isLastPhase"
+              :clickable="false"
               onclick="pausegame.showModal()"
               button-tekst="Spel pauzeren"
               variant="secondary"
-              :clickable="false"
             />
             <Modal
               modal-id="pausegame"
@@ -1129,7 +1130,7 @@ const endGame = async () => {
                 isTransitioning ? 'Volgend spel start...' : endGameButtonText
               "
               :variant="isLastPhase ? 'primary' : 'secondary'"
-              :clickable="!shouldDisableMainButton"
+              :clickable="false"
               :is-disabled="shouldDisableMainButton"
             >
               <template #c-btn_icon-left v-if="isTransitioning">
