@@ -92,7 +92,9 @@ const profileInitials = computed(() => {
     <div class="c-leaderboard-podium-icon__details">
       <p class="h5">{{ spelersnaam }}</p>
       <p class="h3">
-        <span v-if="displayScore !== undefined && displayScore !== ''">{{ displayScore }}</span>
+        <span v-if="displayScore !== undefined && displayScore !== ''">{{
+          displayScore
+        }}</span>
         <RollingNumber
           v-else-if="score !== null && score !== undefined"
           :value="score"

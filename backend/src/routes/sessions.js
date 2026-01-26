@@ -330,7 +330,7 @@ router.get('/:id/final-scores', async (req, res) => {
       // Sort based on rules
       singleGameScores.sort((a, b) => {
         if (scoreType === 'boolean') return b.total_points - a.total_points; // 1 > 0
-        
+
         // Determine if lower is better
         let isLowestWins = false;
         if (scoreType === 'time') {

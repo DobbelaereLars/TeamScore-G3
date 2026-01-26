@@ -15,16 +15,16 @@ const run = (db, sql, params = []) => {
 // PUT /api/games/:id/reset-bools
 // Resets value_bool to 0 for all scores in a game (used for new round initialization in time games)
 router.put('/:id/reset-bools', async (req, res) => {
-    const db = getDatabase();
-    const { id } = req.params;
-    
-    try {
-        await run(db, 'UPDATE Score SET value_bool = 0 WHERE game_id = ?', [id]);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Failed to reset bools:', err);
-        res.status(500).json({ error: err.message });
-    }
+  const db = getDatabase();
+  const { id } = req.params;
+
+  try {
+    await run(db, 'UPDATE Score SET value_bool = 0 WHERE game_id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Failed to reset bools:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const all = (db, sql, params = []) => {
@@ -279,18 +279,22 @@ router.get('/:id/scores', async (req, res) => {
   const { id } = req.params;
 
   try {
-      // 1. Determine Score Type first
-      const gameInfo = await get(db, `
+    // 1. Determine Score Type first
+    const gameInfo = await get(
+      db,
+      `
         SELECT sm.type as score_type 
         FROM Game g 
         JOIN ScoreModel sm ON g.score_model_id = sm.id 
         WHERE g.id = ?
-      `, [id]);
-      
-      const scoreType = gameInfo ? gameInfo.score_type : 'points';
+      `,
+      [id],
+    );
 
-      // 2. Query scores
-      const query = `
+    const scoreType = gameInfo ? gameInfo.score_type : 'points';
+
+    // 2. Query scores
+    const query = `
         SELECT 
           part.id as id,
           COALESCE(pl.name, tm.name) as spelersnaam,
@@ -307,30 +311,30 @@ router.get('/:id/scores', async (req, res) => {
         ORDER BY s.rank ASC
       `;
 
-      const rows = await all(db, query, [id]);
+    const rows = await all(db, query, [id]);
 
-      // 3. Map to include 'score' field based on TYPE
-      const mappedRows = rows.map(row => {
-          let scoreVal = null;
-          
-          if (scoreType === 'time') {
-              scoreVal = row.value_time; // Can be null
-          } else if (scoreType === 'boolean' || scoreType === 'bool') {
-              scoreVal = row.value_bool; // 0 or 1
-          } else {
-              // Points
-              scoreVal = row.value_number;
-          }
-          
-          return {
-             ...row,
-             score: scoreVal
-          };
-      });
+    // 3. Map to include 'score' field based on TYPE
+    const mappedRows = rows.map((row) => {
+      let scoreVal = null;
 
-      res.json(mappedRows);
+      if (scoreType === 'time') {
+        scoreVal = row.value_time; // Can be null
+      } else if (scoreType === 'boolean' || scoreType === 'bool') {
+        scoreVal = row.value_bool; // 0 or 1
+      } else {
+        // Points
+        scoreVal = row.value_number;
+      }
+
+      return {
+        ...row,
+        score: scoreVal,
+      };
+    });
+
+    res.json(mappedRows);
   } catch (err) {
-      return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
 

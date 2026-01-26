@@ -61,11 +61,14 @@ const loadGameData = async () => {
       return {
         id: p.participant_id,
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score: p.total_points !== null && p.total_points !== undefined ? Number(p.total_points) : null,
+        score:
+          p.total_points !== null && p.total_points !== undefined
+            ? Number(p.total_points)
+            : null,
         rank: p.final_rank, // Use backend rank
         displayScore,
         scoreLabel,
-        score_type: p.score_type,     // Pass through
+        score_type: p.score_type, // Pass through
         ranking_rule: p.ranking_rule, // Pass through
       };
     });
@@ -86,12 +89,15 @@ const sortedPlayers = computed(() => {
     // For time games: always sort by lowest time wins (ignore backend rank which may be stale)
     const samplePlayer = players.value[0];
     const isTimeGame = samplePlayer?.score_type === 'time';
-    const isLowestWins = isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
+    const isLowestWins =
+      isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
 
     if (isLowestWins) {
       // Lower time is better. 0 is valid (fastest). null = no score = last.
-      const scoreA = a.score === null || a.score === undefined ? Infinity : a.score;
-      const scoreB = b.score === null || b.score === undefined ? Infinity : b.score;
+      const scoreA =
+        a.score === null || a.score === undefined ? Infinity : a.score;
+      const scoreB =
+        b.score === null || b.score === undefined ? Infinity : b.score;
       return scoreA - scoreB;
     }
 

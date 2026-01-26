@@ -43,9 +43,9 @@ const sortedPlayers = computed(() => {
     // Fallback sorting when no rank available
     // For time games: default to lowest_wins (fastest time) unless explicitly highest_wins
     const isTimeGame = activeScoreType.value === 'time';
-    const isLowestWins = isTimeGame 
-      ? activeRankingRule.value !== 'highest_wins'  // Time: default lowest wins
-      : activeRankingRule.value === 'lowest_wins';  // Points: default highest wins
+    const isLowestWins = isTimeGame
+      ? activeRankingRule.value !== 'highest_wins' // Time: default lowest wins
+      : activeRankingRule.value === 'lowest_wins'; // Points: default highest wins
 
     if (isLowestWins) {
       return valA - valB; // Lower is better
@@ -70,7 +70,8 @@ const getPlayerProps = (player) => {
 
   const props = {
     spelersnaam: player.name || player.spelersnaam || player.team_name,
-    score: player.score !== null && player.score !== undefined ? player.score : 0,
+    score:
+      player.score !== null && player.score !== undefined ? player.score : 0,
     displayScore: undefined,
     scoreLabel: undefined,
   };
@@ -82,7 +83,7 @@ const getPlayerProps = (player) => {
     activeScoreType.value === 'boolean' ||
     activeScoreType.value === 'completed'
   ) {
-    props.displayScore = player.score ? 'Voltooid' : 'Nog niet voltooid';
+    props.displayScore = player.score ? 'Voltooid' : 'Niet voltooid';
     props.scoreLabel = ' ';
   } else {
     // Explicitly clear displayScore so RollingNumber takes over for Points

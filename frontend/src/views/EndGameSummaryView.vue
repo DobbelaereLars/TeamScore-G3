@@ -54,11 +54,14 @@ const loadGameData = async () => {
         id: p.participant_id, // Note: backend returns participant_id
         name: p.player_name || p.team_name || 'Unknown',
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score: p.total_points !== null && p.total_points !== undefined ? Number(p.total_points) : null,
+        score:
+          p.total_points !== null && p.total_points !== undefined
+            ? Number(p.total_points)
+            : null,
         displayScore,
         scoreLabel,
         rank: p.final_rank,
-        score_type: p.score_type,     // Pass through 
+        score_type: p.score_type, // Pass through
         ranking_rule: p.ranking_rule, // Pass through
       };
     });
@@ -81,7 +84,8 @@ const sortedPlayers = computed(() => {
     const samplePlayer = players.value[0];
     const isTimeGame = samplePlayer?.score_type === 'time';
     // For time games: default to lowest wins (fastest time) unless explicitly highest_wins
-    const isLowestWins = isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
+    const isLowestWins =
+      isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
 
     if (isLowestWins) {
       // Lower time is better. 0 is valid (fastest). null = no score = last.
@@ -94,14 +98,16 @@ const sortedPlayers = computed(() => {
       if (isNullA && isNullB) return 0;
       if (isNullA) return 1; // A is null -> A goes last
       if (isNullB) return -1; // B is null -> B goes last
-      
+
       return valA - valB;
     }
 
     // Default: higher score wins
-    const valA = a.score !== null && a.score !== undefined ? a.score : -Infinity;
-    const valB = b.score !== null && b.score !== undefined ? b.score : -Infinity;
-    
+    const valA =
+      a.score !== null && a.score !== undefined ? a.score : -Infinity;
+    const valB =
+      b.score !== null && b.score !== undefined ? b.score : -Infinity;
+
     if (valB !== valA) {
       return valB - valA;
     }

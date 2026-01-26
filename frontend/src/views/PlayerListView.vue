@@ -181,7 +181,7 @@ const sortedPlayers = computed(() => {
 
   const game = currentGame.value;
   const isTime = game.score_type === 'time';
-  
+
   // Determine sort direction
   // Default: Time -> Lowest wins (Ascending). Points -> Highest wins (Descending).
   let isLowestWins = false;
@@ -198,10 +198,10 @@ const sortedPlayers = computed(() => {
       // For time: null/undefined means "not played" -> always last
       valA = a.time;
       valB = b.time;
-      
+
       const isNullA = valA === null || valA === undefined;
       const isNullB = valB === null || valB === undefined;
-      
+
       // Null values always go to the bottom
       if (isNullA && isNullB) return 0;
       if (isNullA) return 1;
@@ -332,9 +332,8 @@ const handleScoreUpdate = (data) => {
     else if (data.scoreType === 'time') {
       player.time = data.score;
       // Also update bool if implicit update came through
-      player.bool = (data.score !== null && data.score !== undefined) ? 1 : 0;
-    }
-    else if (data.scoreType === 'boolean' || data.scoreType === 'bool')
+      player.bool = data.score !== null && data.score !== undefined ? 1 : 0;
+    } else if (data.scoreType === 'boolean' || data.scoreType === 'bool')
       player.bool = data.score;
   }
 };
@@ -362,7 +361,7 @@ const updatePlayerScore = async (participantId, newVal) => {
         // Clearing input -> revert to accumulated offset (previous rounds)
         const offset = accumulatedScores.value[participantId];
         // If offset is undefined/null (round 1), set null
-        player.time = (offset !== undefined && offset !== null) ? offset : null;
+        player.time = offset !== undefined && offset !== null ? offset : null;
         player.bool = 0;
       } else {
         // ...
@@ -376,18 +375,26 @@ const updatePlayerScore = async (participantId, newVal) => {
     const valueToSend = scoreType === 'time' ? player.time : newVal;
     const extras = {};
     if (scoreType === 'time') {
-        extras.bool = player.bool;
+      extras.bool = player.bool;
     }
 
     const updatePromise = scoreRepository
-      .updateScore(currentGame.value.id, participantId, valueToSend, scoreType, extras)
+      .updateScore(
+        currentGame.value.id,
+        participantId,
+        valueToSend,
+        scoreType,
+        extras,
+      )
       .then(() => {})
       .catch((error) => {
         console.error('Failed to update score:', error);
         // Rollback bij error
         if (scoreType === 'points') player.points = oldPoints;
-        else if (scoreType === 'time') { player.time = oldTime; player.bool = oldBool; }
-        else if (scoreType === 'boolean') player.bool = oldBool;
+        else if (scoreType === 'time') {
+          player.time = oldTime;
+          player.bool = oldBool;
+        } else if (scoreType === 'boolean') player.bool = oldBool;
       });
 
     // Add to pending tracking
@@ -485,13 +492,12 @@ const goToNext = async () => {
 
     // Reset bools regarding "Played This Round"
     try {
-        await gameRepository.resetBools(currentGame.value.id);
-        // Optimistic UI update
-        currentGame.value.players.forEach(p => p.bool = 0);
-    } catch(err) {
-        console.error("Failed to reset round status", err);
+      await gameRepository.resetBools(currentGame.value.id);
+      // Optimistic UI update
+      currentGame.value.players.forEach((p) => (p.bool = 0));
+    } catch (err) {
+      console.error('Failed to reset round status', err);
     }
-
   } else if (
     currentGame.value.score_type === 'boolean' ||
     currentGame.value.score_type === 'bool'
@@ -1128,7 +1134,10 @@ const endGame = async () => {
               :points="player.points"
               :value="
                 currentGame?.score_type === 'time'
-                  ? (player.bool === 1 ? player.time - (accumulatedScores[player.participantId] || 0) : null)
+                  ? player.bool === 1
+                    ? player.time -
+                      (accumulatedScores[player.participantId] || 0)
+                    : null
                   : currentGame?.score_type === 'boolean'
                     ? player.bool
                     : player.points

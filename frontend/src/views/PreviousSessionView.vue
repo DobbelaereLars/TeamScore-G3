@@ -52,7 +52,10 @@ const loadGameData = async () => {
       return {
         id: p.participant_id, // Note: backend returns participant_id
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score: p.total_points !== null && p.total_points !== undefined ? Number(p.total_points) : null,
+        score:
+          p.total_points !== null && p.total_points !== undefined
+            ? Number(p.total_points)
+            : null,
         displayScore,
         scoreLabel,
         rank: p.final_rank, // Use backend rank which respects ranking_rule
@@ -74,7 +77,8 @@ const sortedPlayers = computed(() => {
     // Fallback: manual sorting
     const samplePlayer = players.value[0];
     const isTimeGame = samplePlayer?.score_type === 'time';
-    const isLowestWins = isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
+    const isLowestWins =
+      isTimeGame && samplePlayer?.ranking_rule !== 'highest_wins';
 
     if (isLowestWins) {
       const valA = a.score;
@@ -91,8 +95,10 @@ const sortedPlayers = computed(() => {
     }
 
     // Default: higher score wins
-    const valA = a.score !== null && a.score !== undefined ? a.score : -Infinity;
-    const valB = b.score !== null && b.score !== undefined ? b.score : -Infinity;
+    const valA =
+      a.score !== null && a.score !== undefined ? a.score : -Infinity;
+    const valB =
+      b.score !== null && b.score !== undefined ? b.score : -Infinity;
 
     if (valB !== valA) {
       return valB - valA;

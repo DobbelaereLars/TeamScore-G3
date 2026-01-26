@@ -134,7 +134,7 @@ const maxScore = computed(() => {
     .filter((s) => s !== null && s !== undefined);
 
   if (scores.length === 0) return 100;
-  
+
   const max = Math.max(...scores);
   return max > 0 ? max : 100;
 });
@@ -158,14 +158,14 @@ const sortedPlayers = computed(() => {
       // null means "no score yet" -> should go last
       const valA = a.score;
       const valB = b.score;
-      
+
       const isNullA = valA === null || valA === undefined;
       const isNullB = valB === null || valB === undefined;
-      
+
       if (isNullA && isNullB) return 0;
       if (isNullA) return 1;
       if (isNullB) return -1;
-      
+
       return valA - valB;
     }
 

@@ -30,7 +30,7 @@ const parseTime = (totalSeconds) => {
   const val = Number(totalSeconds);
   if (isNaN(val)) {
     // If it's a non-number (but not null/undefined caught above)
-    // usually defaulting to 0 is safer or empty. 
+    // usually defaulting to 0 is safer or empty.
     // Let's stick to empty for invalid inputs to avoid auto-0
     hours.value = '';
     minutes.value = '';
@@ -81,14 +81,19 @@ watch(
 
 const update = () => {
   // Check if everything is empty strings
-  if (hours.value === '' && minutes.value === '' && seconds.value === '' && milliseconds.value === '') {
+  if (
+    hours.value === '' &&
+    minutes.value === '' &&
+    seconds.value === '' &&
+    milliseconds.value === ''
+  ) {
     emit('update:modelValue', null);
     return;
   }
 
   // Enforce limits (only if not empty string to prevent coercion)
   if (hours.value !== '' && hours.value < 0) hours.value = 0;
-  
+
   if (minutes.value !== '') {
     if (minutes.value > 60) minutes.value = 60;
     if (minutes.value < 0) minutes.value = 0;
