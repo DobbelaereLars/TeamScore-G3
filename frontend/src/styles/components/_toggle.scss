@@ -35,14 +35,19 @@
       height: 1.5rem;
       border-radius: $border-radius-999;
       background-color: $color-primary-blue-200;
-      transition: left 0.3s ease, background-color 0.3s ease;
+      transition:
+        left 0.3s ease,
+        background-color 0.3s ease;
     }
 
     &__dropdown {
       height: 0;
       opacity: 0;
       overflow: hidden;
-      transition: height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+      transition:
+        height 0.4s ease,
+        opacity 0.3s ease,
+        padding 0.3s ease;
       width: fit-content;
 
       &--active {
