@@ -419,7 +419,8 @@ router.get('/:id/final-scores', async (req, res) => {
         // Count completed from history
         roundScores.forEach((rs) => {
           if (booleanMajorityMap[rs.participant_id]) {
-            if (rs.value_bool) booleanMajorityMap[rs.participant_id].completed++;
+            if (rs.value_bool)
+              booleanMajorityMap[rs.participant_id].completed++;
           }
         });
 
