@@ -70,14 +70,6 @@ const getPlayerProps = (player) => {
     timeNotation: activeTimeNotation.value,
   });
 
-  // Fix: Don't show numeric score for boolean games (Voltooid/Niet voltooid)
-  if (
-    activeScoreType.value === 'boolean' ||
-    activeScoreType.value === 'completed'
-  ) {
-    displayScore = ''; // Label does the work
-  }
-
   // Use centralized label helper
   let scoreLabel = getScoreLabel(scoreVal, activeScoreType.value);
 

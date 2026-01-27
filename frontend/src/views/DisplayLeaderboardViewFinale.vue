@@ -53,22 +53,7 @@ const loadGameData = async () => {
       };
 
       let displayScore = formatScore(p.total_points, p.score_type, scoreConfig);
-      // For boolean, we might want custom label 'Voltooid' / 'Niet voltooid' which formatScore provides.
-      // Check existing logic:
-      /*
-        if (p.is_single_game) {
-            if (p.score_type === 'boolean') {
-              displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-              scoreLabel = '';
-            }
-        }
-      */
       // formatScore handles boolean correctly: val ? 'Voltooid' : 'Niet voltooid'
-
-      // FIX: Ensure boolean games don't show "1" or "0" alongside label
-      if (p.score_type === 'boolean' || p.score_type === 'completed') {
-        displayScore = ''; // Clear number, let label do the work
-      }
 
       let scoreLabel = getScoreLabel(p.score_type, p.total_points);
       // BUG FIX: Don't show "punten" label for time/boolean games

@@ -37,11 +37,6 @@ const loadGameData = async () => {
       let displayScore = formatScore(p.total_points, p.score_type, scoreConfig);
       let scoreLabel = getScoreLabel(p.score_type, p.total_points);
 
-      // FIX: Ensure boolean games don't show "1" or "0" alongside label
-      if (p.score_type === 'boolean' || p.score_type === 'completed') {
-        displayScore = '';
-      }
-
       // BUG FIX: Don't show "punten" label for time/boolean games if getScoreLabel returns default 'punten'
       if (
         p.score_type === 'time' ||

@@ -43,11 +43,6 @@ const loadGameData = async () => {
         { timeNotation: p.time_notation || 'mm:ss' },
       );
 
-      // Fix: Don't show numeric score for boolean games (Voltooid/Niet voltooid)
-      if (p.score_type === 'boolean' || p.score_type === 'completed') {
-        displayScore = '';
-      }
-
       let scoreLabel = getScoreLabel(scoreValue, p.score_type);
       // Extra check: if score_type is NOT 'points' (and not parallel aggregation), force label to be empty if getScoreLabel returned something default
       // getScoreLabel usually handles this, but let's be sure for Time/Boolean
