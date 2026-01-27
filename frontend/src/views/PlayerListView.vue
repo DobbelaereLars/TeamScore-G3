@@ -1025,6 +1025,7 @@ const endGame = async () => {
             button-tekst="Spelinstellingen"
             variant="secondary"
             :clickable="false"
+            :is-disabled="isTransitioning"
             @click="goToSettings"
           >
             <template #c-btn_icon-left>
@@ -1154,6 +1155,7 @@ const endGame = async () => {
               :size="playerItemSize"
               :rank="player.rank"
               :perClick="currentGame?.perClick || 1"
+              :disabled="isTransitioning"
               @updateScore="
                 (newVal) => updatePlayerScore(player.participantId, newVal)
               "

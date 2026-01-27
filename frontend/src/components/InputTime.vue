@@ -6,6 +6,10 @@ const props = defineProps({
     type: [Number, String], // Allow null
     default: null,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -128,6 +132,7 @@ const update = () => {
         v-model="hours"
         @change="update"
         min="0"
+        :disabled="disabled"
         class="c-input-time__input"
         placeholder="u"
       />
@@ -142,6 +147,7 @@ const update = () => {
         @change="update"
         min="0"
         max="60"
+        :disabled="disabled"
         class="c-input-time__input"
         placeholder="m"
       />
@@ -156,6 +162,7 @@ const update = () => {
         @change="update"
         min="0"
         max="60"
+        :disabled="disabled"
         class="c-input-time__input"
         placeholder="s"
       />
@@ -170,6 +177,7 @@ const update = () => {
         @change="update"
         min="0"
         max="999"
+        :disabled="disabled"
         class="c-input-time__input"
         placeholder="ms"
       />

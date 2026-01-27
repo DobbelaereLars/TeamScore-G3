@@ -35,6 +35,10 @@ const props = defineProps({
     default: 'default',
     validator: (value) => ['default', 'large', 'extra-large'].includes(value),
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['updatePoints', 'updateScore']);
@@ -59,6 +63,7 @@ watch(
 
 // Points Logic
 const increasePoints = () => {
+  if (props.disabled) return;
   const val = props.points !== undefined ? props.points : props.value;
   const newVal = val + props.perClick;
   emit('updatePoints', newVal);
@@ -66,6 +71,7 @@ const increasePoints = () => {
 };
 
 const decreasePoints = () => {
+  if (props.disabled) return;
   const val = props.points !== undefined ? props.points : props.value;
   const calculatedVal = val - props.perClick;
   // Prevent negative scores
@@ -77,6 +83,7 @@ const decreasePoints = () => {
 
 // Time Logic
 const updateTime = (newVal) => {
+  if (props.disabled) return;
   if (newVal === null || newVal === '') {
     emit('updateScore', null);
   } else {
@@ -86,6 +93,7 @@ const updateTime = (newVal) => {
 
 // Boolean Logic
 const setBoolean = (boolVal) => {
+  if (props.disabled) return;
   emit('updateScore', boolVal ? 1 : 0);
 };
 </script>
@@ -132,6 +140,7 @@ const setBoolean = (boolVal) => {
         <Button
           :is-icon-button="true"
           :clickable="false"
+          :is-disabled="disabled"
           variant="primary"
           @click="increasePoints"
         >
@@ -142,6 +151,7 @@ const setBoolean = (boolVal) => {
         <Button
           :is-icon-button="true"
           :clickable="false"
+          :is-disabled="disabled"
           variant="secondary"
           @click="decreasePoints"
         >
@@ -154,7 +164,7 @@ const setBoolean = (boolVal) => {
       <!-- Time Controls -->
       <template v-else-if="scoreType === 'time'">
         <div class="c-host-player-item__input-wrapper">
-          <InputTime :modelValue="value" @update:modelValue="updateTime" />
+          <InputTime :modelValue="value" :disabled="disabled" @update:modelValue="updateTime" />
         </div>
       </template>
 
@@ -163,6 +173,7 @@ const setBoolean = (boolVal) => {
         <Button
           :is-icon-button="true"
           :clickable="false"
+          :is-disabled="disabled"
           variant="secondary"
           @click="setBoolean(true)"
           :class="{ 'is-active': value === 1 }"
@@ -175,6 +186,7 @@ const setBoolean = (boolVal) => {
         <Button
           :is-icon-button="true"
           :clickable="false"
+          :is-disabled="disabled"
           variant="secondary"
           @click="setBoolean(false)"
           class="u-text-danger"
