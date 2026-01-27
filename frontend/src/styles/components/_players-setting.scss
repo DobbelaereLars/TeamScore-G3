@@ -1,0 +1,253 @@
+.c-players-setting {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-7;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-6;
+  }
+
+  &__intro {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+
+    &__tekst {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-2;
+
+      & p {
+        color: $color-secondary-grey-500;
+      }
+    }
+  }
+
+  &__input {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-5;
+    align-items: center;
+
+    .c-input-field {
+      width: auto;
+      flex: 1 1 150px;
+    }
+
+    .c-btn {
+      flex: 0 0 auto;
+    }
+  }
+
+  &__tab {
+    background-color: $color-secondary-grey-75;
+    border: none;
+    color: $color-secondary-grey-400;
+    padding: $spacing-3 $spacing-5;
+    border-radius: $border-radius-10;
+    transition:
+      background-color 0.2s ease-in,
+      color 0.2s ease-in;
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    &__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-secondary-grey-400;
+      padding: $spacing-2;
+    }
+
+    &--active {
+      background-color: $color-primary-blue-75;
+      color: $color-primary-blue-500;
+
+      & .c-players-setting__tab__close {
+        color: $color-primary-blue-300;
+      }
+    }
+
+    &--add {
+      color: $color-primary-blue-500;
+    }
+
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: $spacing-2;
+    }
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: $spacing-2;
+      cursor: pointer;
+    }
+
+    &__edit-wrapper {
+      flex-grow: 1;
+      min-width: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    &__edit-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      box-shadow: 0 1px 0 0 currentColor;
+    }
+  }
+
+  &__tabs-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-5;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: $spacing-3;
+    flex-wrap: wrap;
+  }
+
+  &__list,
+  &__emptylist {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-3;
+
+    padding: $spacing-6;
+    width: 100%;
+  }
+
+  &__emptylist {
+    border: 1px dashed $color-secondary-grey-400;
+    color: $color-secondary-grey-400;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    align-items: center;
+    border-radius: $border-radius-10;
+  }
+
+  &__emptycontainer {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__csv-upload {
+    color: $color-primary-blue-500;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+  }
+
+  &__players-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+
+    width: 100%;
+  }
+
+  &__participant {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    &-delete-x {
+      // Legacy class, now handled by -action--delete
+      cursor: pointer;
+    }
+
+    &-actions {
+      display: flex;
+      flex-direction: row;
+      gap: $spacing-4;
+    }
+
+    &-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: $color-secondary-grey-400;
+      transition: all 0.2s ease;
+
+      &--delete {
+        &:hover {
+          color: $colors-vibrant-red;
+        }
+
+        &:active {
+          transform: scale(0.9);
+        }
+      }
+    }
+
+    &-content {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      margin: 0 $spacing-5;
+      min-width: 0; // Ensures truncation works without hiding box-shadow
+    }
+
+    &-name {
+      // Changed from cursor: text as click to edit is now via icon
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      text-align: center; // Default center alignment
+    }
+
+    &-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      outline: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      box-shadow: 0 1px 0 0 currentColor;
+
+      &:focus {
+        color: $color-primary-blue-500;
+      }
+    }
+  }
+}

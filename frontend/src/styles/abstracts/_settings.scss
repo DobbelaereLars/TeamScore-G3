@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-
 // --- CSS VARIABLES --- ///
 :root {
-  --font-family-inter: 'Inter', sans-serif;
+  --font-family-inter: "Inter", sans-serif;
 
   --font-bold: 700;
   --font-semibold: 600;
@@ -45,6 +43,8 @@ $colors-vibrant-red: #ff3b30;
 $colors-vibrant-yellow: #ffd60a;
 $colors-vibrant-orange: #ff9f0a;
 
+$color-white: #ffffff;
+
 $colors-gradient-red: linear-gradient(121deg, #ff3b30 18.2%, #99231d 85.55%);
 $colors-gradient-blue: linear-gradient(144deg, #00d4fa 11.87%, #007e94 81.36%);
 $colors-gradient-orange: linear-gradient(
@@ -69,16 +69,35 @@ $colors-gradient-orange-light: linear-gradient(
   rgba(206, 128, 6, 0.5) 83.45%
 );
 
+// --- SPACING --- //
+$spacing-1: 0.125rem;
+$spacing-2: 0.25rem;
+$spacing-3: 0.5rem;
+$spacing-4: 0.75rem;
+$spacing-5: 1rem;
+$spacing-6: 1.5rem;
+$spacing-7: 2rem;
+$spacing-8: 2.5rem;
+$spacing-9: 3rem;
+$spacing-10: 4rem;
+
 // --- BORDERS --- //
 $border-radius-5: 0.3125rem;
+$border-radius-8: 0.5rem;
 $border-radius-10: 0.625rem;
+$border-radius-12: 0.75rem;
+$border-radius-16: 1rem;
 $border-radius-20: 1.25rem;
 $border-radius-25: 1.5625rem;
 $border-radius-34: 2.125rem;
 $border-radius-999: 50%;
 
 // --- SHADOWS --- //
-$box-shadow: 4.534px 9.068px 45.34px 0 rgba(0, 0, 0, 0.1);
+$box-shadow: 0 4px 24px 0 rgba(9, 44, 76, 0.08);
+$box-shadow-lg: 0 5px 10px 0 rgba(206, 206, 206, 0.4);
+$box-shadow-blue: 0 0 24.024px 0 #4acfff;
+$box-shadow-red: 0 0 24.024px 0 #eb8d88;
+$box-shadow-orange: 0 0 24.024px 0 #ffbf66;
 
 // --- BOOTSTRAP OVERRIDES ---
 $grid-breakpoints: (

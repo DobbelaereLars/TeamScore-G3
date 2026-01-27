@@ -1,0 +1,105 @@
+.p-display-splash-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  height: 100vh;
+  margin-top: -$spacing-10;
+
+  &__logo {
+    width: clamp(16rem, 40vw, 25rem);
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  &__title {
+    color: $color-secondary-grey-500;
+    text-align: center;
+  }
+}
+
+// Socket.io test popup styles
+
+.p-display-splash-view__popup {
+  position: absolute;
+  top: $spacing-5;
+  right: $spacing-5;
+  background-color: $color-secondary-grey-75;
+  padding: 2rem 3rem;
+  border-radius: $border-radius-8;
+  box-shadow: $box-shadow-lg;
+  z-index: 1000;
+  text-align: center;
+  min-width: 20rem;
+  color: $color-primary-blue-500;
+}
+
+.p-display-splash-view__popup p {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.popup-enter-active,
+.popup-leave-active {
+  transition: all 0.3s ease;
+}
+
+.popup-enter-from {
+  opacity: 0;
+  transform: translate(0, -60%);
+}
+
+.popup-leave-to {
+  opacity: 0;
+  transform: translate(0, -40%);
+}
+
+
+.dot {
+  animation: blink 1.4s infinite both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.p-display-splash-view__logo {
+  animation: pulse-logo 1.4s infinite ease-in-out;
+}
+
+@keyframes pulse-logo {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}

@@ -143,4 +143,10 @@ vite.config.ts.timestamp-*
 
 # OS / editor
 .DS_Store
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+
+# Database
+backend/data/
+*.db
+*.db-journal

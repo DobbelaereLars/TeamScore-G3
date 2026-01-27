@@ -1,0 +1,45 @@
+.c-leaderboard-playercard {
+  display: flex;
+  padding: 0.9375rem 1.75rem;
+  align-items: center;
+  gap: $spacing-10;
+  align-self: stretch;
+
+  border-radius: $border-radius-10;
+  background: $color-secondary-grey-50;
+
+  /* Dropshadow */
+  box-shadow: $box-shadow-lg;
+
+  .c-leaderboard-playercard__rank-and-icon {
+    display: flex;
+    height: 4.375rem;
+    align-items: center;
+    gap: $spacing-6;
+
+    .c-leaderboard-playercard__rank-and-icon__rank {
+      width: 3rem;
+      flex-shrink: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+  .c-leaderboard-playercard__name-and-progress {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: $spacing-3;
+    flex: 1 0 0;
+
+    p {
+      align-self: stretch;
+    }
+  }
+  .c-leaderboard-playercard__points {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: $spacing-1;
+  }
+}

@@ -1,2 +1,30 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('../../assets/fonts/Inter/Inter-VariableFont_opsz,wght.ttf')
+    format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../../assets/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf')
+    format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 @import 'bootstrap/scss/bootstrap';
 @import 'reset-css/sass/reset';
+
+/* GPU Acceleration for Display Views - Performance optimization for Pi */
+.v-display-scoreboard,
+.v-display-leaderboard,
+.v-display-playerlist,
+.v-display-splash {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

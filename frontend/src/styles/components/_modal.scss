@@ -1,0 +1,103 @@
+.c-modal {
+  background-color: $color-secondary-grey-75;
+  padding: $spacing-6;
+  border-radius: $border-radius-12;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-6;
+  max-width: 26rem;
+  position: fixed;
+  margin: auto;
+  inset: 0;
+
+  @media (max-width: 480px) {
+    width: 90%;
+  }
+
+  opacity: 0;
+  transform: scale(0.9) translateY(-20px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    overlay 0.3s ease allow-discrete,
+    display 0.3s ease allow-discrete;
+
+  &[open] {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  @starting-style {
+    &[open] {
+      opacity: 0;
+      transform: scale(0.9) translateY(-20px);
+    }
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition:
+      opacity 0.3s ease,
+      overlay 0.3s ease allow-discrete,
+      display 0.3s ease allow-discrete;
+  }
+
+  &[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    &[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  &__textcontainer {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+  }
+
+  &__text {
+    color: $color-secondary-grey-500;
+  }
+
+  &__btncontainer {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-4;
+  }
+
+  &__close-x {
+    background: none;
+    border: none;
+
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $colors-vibrant-red;
+    }
+
+    &:active {
+      color: darken($colors-vibrant-red, 10%);
+      transform: scale(0.95);
+    }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}

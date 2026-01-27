@@ -1,0 +1,86 @@
+.c-session-card {
+  position: relative;
+  width: 100%;
+  height: auto;
+  box-shadow: $box-shadow-lg;
+  border-radius: $border-radius-8;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+
+  &:hover {
+    .c-session-card__head img {
+      transform: scale(1.05);
+    }
+
+    .c-session-card__body {
+      background-color: $color-primary-blue-75;
+    }
+  }
+
+  &__link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  &__head {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: $color-secondary-grey-50;
+    border-radius: $border-radius-8;
+    overflow: hidden;
+
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: $border-radius-12;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: $spacing-3;
+    right: $spacing-3;
+    padding: $spacing-1 $spacing-3;
+    border-radius: $border-radius-5;
+    font-size: var(--font-size-meta);
+    z-index: 2;
+    box-shadow: $box-shadow;
+
+    &--created {
+      background-color: $color-primary-blue-75;
+      color: $color-primary-blue-500;
+    }
+
+    &--in_progress {
+      background-color: $color-primary-blue-75;
+      color: $color-primary-blue-500;
+    }
+
+    &--finished {
+      /* color: $color-secondary-grey-400;
+      background-color: transparent; */
+
+      background-color: $color-primary-blue-75;
+      color: $color-primary-blue-500;
+    }
+  }
+
+  &__body {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    padding: $spacing-4 $spacing-6;
+    background-color: $color-secondary-grey-75;
+    border-bottom-left-radius: $border-radius-8;
+    border-bottom-right-radius: $border-radius-8;
+    transition: background-color 0.3s ease;
+  }
+}

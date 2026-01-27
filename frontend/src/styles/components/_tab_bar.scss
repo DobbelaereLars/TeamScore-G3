@@ -1,0 +1,91 @@
+.c-tabbar {
+  padding: $spacing-3;
+  background-color: $color-primary-blue-75;
+  border-radius: $border-radius-5;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $spacing-3;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  &--hug {
+    width: max-content;
+
+    .c-tabbar__label {
+      flex: 0 0 auto;
+    }
+
+    .c-tabbar__wrapper {
+      flex: 0 0 auto;
+    }
+  }
+
+  &__wrapper {
+    display: flex;
+    flex: 1 1 0;
+    position: relative;
+  }
+
+  &__input {
+    // Ensure the hidden input is positioned relative to the wrapper to prevent scroll jumps
+    &.u-hide {
+      top: 50%; /* Position inside the wrapper */
+      left: 50%;
+    }
+
+    &:checked {
+      & + .c-tabbar__label {
+        background-color: $color-primary-blue-100;
+      }
+    }
+
+    &:disabled {
+      & + .c-tabbar__label {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: transparent; // Ensure it looks inactive
+        color: $color-secondary-grey-300;
+      }
+    }
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-3;
+    padding: $spacing-3 $spacing-5;
+    border-radius: $border-radius-5;
+    flex: 1 1 0;
+    min-width: 0;
+    cursor: pointer;
+
+    &__tekst {
+      text-align: center;
+    }
+
+    &__close {
+      background-color: transparent;
+      border: none;
+      padding: $spacing-2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-secondary-grey-400;
+    }
+
+    &__icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+  }
+}

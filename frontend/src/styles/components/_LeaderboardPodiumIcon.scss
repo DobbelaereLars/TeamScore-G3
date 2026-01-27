@@ -1,0 +1,139 @@
+.c-leaderboard-podium-icon {
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-3;
+  margin-top: 3.5rem;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.c-leaderboard-podium-icon__profile {
+  display: flex;
+  width: fit-content;
+  height: fit-content;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: $spacing-3;
+  position: relative;
+
+  .c-leaderboard-podium-icon__crown {
+    position: absolute;
+    top: -4.2em;
+    left: 45%;
+    transform: translateX(-30%) rotate(5deg);
+    width: 125%;
+    height: auto;
+    z-index: 10;
+  }
+
+  .c-leaderboard-podium-icon__profile-container {
+    border-radius: $border-radius-999;
+    box-shadow: $box-shadow-red;
+    width: fit-content;
+    position: relative;
+    height: fit-content;
+    background: $colors-gradient-red;
+    padding: $border-radius-5;
+    box-sizing: border-box;
+
+    .c-leaderboard-podium-icon__profileIcon {
+      display: flex;
+      width: 8.9375rem;
+      height: 100%;
+      padding: $spacing-3;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: $spacing-3;
+      flex-shrink: 0;
+      aspect-ratio: 1/1;
+      box-sizing: border-box;
+      border-radius: $border-radius-999;
+      background: $colors-gradient-red-light, $color-secondary-grey-75;
+      background-blend-mode: normal;
+
+      h2 {
+        background: $colors-gradient-red;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    &--blue {
+      box-shadow: $box-shadow-blue;
+      background: $colors-gradient-blue;
+
+      .c-leaderboard-podium-icon__profileIcon {
+        background: $colors-gradient-blue-light, $color-secondary-grey-75;
+        background-blend-mode: normal;
+        // width: 12.75rem;
+
+        h2 {
+          background: $colors-gradient-blue;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+    }
+    &--orange {
+      box-shadow: $box-shadow-orange;
+      background: $colors-gradient-orange;
+
+      .c-leaderboard-podium-icon__profileIcon {
+        background: $colors-gradient-orange-light, $color-secondary-grey-75;
+        background-blend-mode: normal;
+
+        h2 {
+          background: $colors-gradient-orange;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+    }
+  }
+  .c-leaderboard-podium-icon__rank {
+    display: flex;
+    width: 2.5rem; // Fixed width
+    height: 2.5rem; // Fixed height
+    // padding: 0.35rem 0.85rem; // Removed variable padding
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    // gap: $spacing-3;
+    border-radius: 50%;
+    background: $colors-gradient-red;
+    position: absolute;
+
+    h4,
+    h3 {
+      color: $color-secondary-grey-50;
+    }
+  }
+  .c-leaderboard-podium-icon__rank--blue {
+    // padding: 0.65rem 1.15rem;
+    background: $colors-gradient-blue;
+    // bottom: 0.5rem;
+  }
+  .c-leaderboard-podium-icon__rank--orange {
+    background: $colors-gradient-orange;
+  }
+}
+
+.c-leaderboard-podium-icon__details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%; /* Ensure it doesn't overflow parent unnecessarily */
+  gap: $spacing-3;
+  white-space: nowrap; // Prevent name from wrapping
+  text-align: center;
+}
