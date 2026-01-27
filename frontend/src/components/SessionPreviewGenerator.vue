@@ -147,6 +147,18 @@ const generateAndUpload = async (sessionId, gameIdOrList) => {
 
           // Set ranking rule from game config
           activeRankingRule.value = game.ranking_rule || 'highest_wins';
+
+          // Set time notation from game config (stored in score_config JSON)
+          if (game.score_config) {
+            try {
+              const config = JSON.parse(game.score_config);
+              if (config.timeNotation) {
+                activeTimeNotation.value = config.timeNotation;
+              }
+            } catch (e) {
+              console.error('Error parsing score_config:', e);
+            }
+          }
         }
       } catch (e) {
         console.error('Error fetching game config for preview:', e);
