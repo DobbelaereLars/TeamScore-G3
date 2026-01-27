@@ -844,9 +844,9 @@ onUnmounted(() => {
                     @change="handleParticipantModeChange"
                   ></TabBar>
 
-                  <Notice
+                  <!-- <Notice
                     text="Dit kan later niet meer worden gewijzigd"
-                  ></Notice>
+                  ></Notice> -->
                 </div>
               </div>
 
@@ -864,9 +864,9 @@ onUnmounted(() => {
                     @change="handleGameModeChange"
                   />
 
-                  <Notice
+                  <!-- <Notice
                     text="Dit kan later niet meer worden gewijzigd"
-                  ></Notice>
+                  ></Notice> -->
                 </div>
               </div>
             </div>
