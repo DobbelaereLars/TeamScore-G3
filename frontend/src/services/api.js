@@ -8,7 +8,48 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10s timeout
 });
+
+// Algemene retry-logic voor instabiele verbindingen (zoals Pi Hotspot)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+
+    // Als we geen config hebben of al 3x geprobeerd hebben, geef de error door
+    if (!config || config.__retryCount >= 3) {
+      return Promise.reject(error);
+    }
+
+    // Check of het een netwerkfout is (geen internet, timeout, etc.)
+    const isNetworkError =
+      error.message === 'Network Error' ||
+      error.code === 'ERR_NETWORK' ||
+      error.code === 'ECONNABORTED' ||
+      !error.response; // Geen response = netwerkfout
+
+    // Check of het een server error is (500, 502, 503, 504)
+    const isServerError =
+      error.response &&
+      (error.response.status >= 500 && error.response.status <= 599);
+
+    if (isNetworkError || isServerError) {
+      config.__retryCount = (config.__retryCount || 0) + 1;
+
+      // Wacht even voor de volgende poging (300ms, 600ms, 1200ms)
+      const delay = 300 * Math.pow(2, config.__retryCount - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      console.warn(
+        `[API] Retrying request ${config.url} (Attempt ${config.__retryCount}) due to network error`,
+      );
+      return api(config);
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 // ============================================
 // SESSION ENDPOINTS

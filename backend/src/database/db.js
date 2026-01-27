@@ -90,6 +90,10 @@ function initDatabase() {
         return reject(err);
       }
 
+      // Performance optimalisatie voor Pi (WAL mode voorkomt locking issues)
+      db.run('PRAGMA journal_mode = WAL');
+      db.run('PRAGMA synchronous = NORMAL');
+
       try {
         // 1. Run basic migrations (creates tables IF NOT EXISTS)
         const migrationsSql = fs.readFileSync(migrationsPath, 'utf8');
