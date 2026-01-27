@@ -72,7 +72,11 @@ const loadGameData = async () => {
 
       let scoreLabel = getScoreLabel(p.score_type, p.total_points);
       // BUG FIX: Don't show "punten" label for time/boolean games
-      if (p.score_type === 'time' || p.score_type === 'boolean' || p.score_type === 'completed') {
+      if (
+        p.score_type === 'time' ||
+        p.score_type === 'boolean' ||
+        p.score_type === 'completed'
+      ) {
         scoreLabel = '';
       }
 

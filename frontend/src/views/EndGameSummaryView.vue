@@ -51,8 +51,12 @@ const loadGameData = async () => {
       let scoreLabel = getScoreLabel(scoreValue, p.score_type);
       // Extra check: if score_type is NOT 'points' (and not parallel aggregation), force label to be empty if getScoreLabel returned something default
       // getScoreLabel usually handles this, but let's be sure for Time/Boolean
-      if (p.score_type === 'time' || p.score_type === 'boolean' || p.score_type === 'completed') {
-         scoreLabel = '';
+      if (
+        p.score_type === 'time' ||
+        p.score_type === 'boolean' ||
+        p.score_type === 'completed'
+      ) {
+        scoreLabel = '';
       }
 
       return {
