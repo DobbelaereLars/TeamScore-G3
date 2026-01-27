@@ -6,7 +6,7 @@ import TabList from '../components/TabList.vue';
 import InputField from '../components/InputField.vue';
 import InputSelect from '../components/InputSelect.vue';
 import TabBar from '../components/TabBar.vue';
-import Notice from '../components/Notice.vue';
+/* import Notice from '../components/Notice.vue'; */
 import InputRadioCards from '../components/InputRadioCards.vue';
 import ToggleWithDropdown from '../components/ToggleWithDropdown.vue';
 import PlayersSetting from '../components/PlayersSetting.vue';
