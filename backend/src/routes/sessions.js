@@ -358,21 +358,8 @@ router.get('/:id/final-scores', async (req, res) => {
       return;
     }
 
-    // Helper: Calculate Mean and StdDev
-    const calculateStats = (values) => {
-      const n = values.length;
-      if (n === 0) return { mean: 0, stdDev: 0 };
-      const mean = values.reduce((a, b) => a + b, 0) / n;
-      const variance =
-        values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
-        (n > 1 ? n - 1 : 1); // Sample StdDev
-      // Or Population StdDev? Sample usually better for small groups.
-      // If n=1, variance is 0 (handled by division rules later or logic)
-      return { mean, stdDev: Math.sqrt(variance) };
-    };
-
-    // 4. Process Scores Per Game
-    const participantFinalScores = {}; // Map: entity_id -> { totalZ, count, name, type }
+    // 4. Process Scores Per Game (Normalized / Equalized)
+    const participantFinalScores = {}; // Map: entity_id -> { totalPoints, gamesPlayed, name, type }
 
     // Initialize map with all participants found in scores
     scores.forEach((s) => {
@@ -384,11 +371,13 @@ router.get('/:id/final-scores', async (req, res) => {
           entity_id: s.entity_id,
           name: s.participant_name,
           type: s.participant_type,
-          sumZ: 0,
+          totalPoints: 0,
           gamesPlayed: 0,
         };
       }
     });
+
+    const SCORE_PER_GAME = 100;
 
     for (const game of games) {
       // Filter scores for this game
@@ -398,94 +387,120 @@ router.get('/:id/final-scores', async (req, res) => {
       const scoreType = game.score_type;
       const rankingRule = game.ranking_rule; // 'highest_wins' or 'lowest_wins'
 
-      if (scoreType === 'points') {
-        // Points: Raw = value + bonus
-        const rawValues = gameScores.map(
-          (s) => (s.value_number || 0) + (s.bonus || 0),
-        );
-        const { mean, stdDev } = calculateStats(rawValues);
+      // Check if this is a solo game (only 1 participant assigned)
+      const isSoloGame = gameScores.length === 1;
 
-        gameScores.forEach((s, idx) => {
-          const raw = rawValues[idx];
-          let z = 0;
-          if (stdDev !== 0) {
-            z = (raw - mean) / stdDev;
-          }
-          // Direction: Highest wins (Points).
-          // If rankingRule is lowest_wins (e.g. golf), invert.
-          if (rankingRule === 'lowest_wins') z = -z;
+      // Prepare raw values
+      const calculatedScores = gameScores
+        .map((s) => {
+          let raw = 0;
+          let isValid = true;
 
-          // Aggregate by entity_id
-          if (participantFinalScores[s.entity_id]) {
-            participantFinalScores[s.entity_id].sumZ += z;
-            participantFinalScores[s.entity_id].gamesPlayed += 1;
+          if (scoreType === 'points') {
+            raw = Number(s.value_number || 0) + Number(s.bonus || 0);
+          } else if (scoreType === 'time') {
+            if (s.value_time === null || s.value_time === undefined) {
+              isValid = false;
+            } else {
+              raw = Number(s.value_time) - Number(s.bonus || 0);
+            }
+          } else if (scoreType === 'boolean') {
+            // boolean might be stored as 0/1 integer
+            raw = s.value_bool ? 1 : 0;
+            // Add bonus if exists
+            if (s.bonus) raw += Number(s.bonus);
           }
-        });
-      } else if (scoreType === 'time') {
-        // Time: Raw = value_time - bonus (Assuming bonus improves time)
-        // Or typically bonus is separate. Let's assume raw = time - bonus is good logic for "Bonus".
-        const rawValues = gameScores.map(
-          (s) => (s.value_time || 0) - (s.bonus || 0),
-        );
-        const { mean, stdDev } = calculateStats(rawValues);
 
-        gameScores.forEach((s, idx) => {
-          const raw = rawValues[idx];
-          let z = 0;
-          if (stdDev !== 0) {
-            z = (raw - mean) / stdDev;
+          // OVERRIDE: If it's a solo game, we consider the participant valid regardless of score value (null matches --:--)
+          // This ensures they get the "Default Win" points.
+          if (isSoloGame) {
+            isValid = true;
           }
-          // Direction: Lowest wins (Time).
-          // Standard Z: (x - mean)/std. If x > mean (slower), Z > 0. Bad.
-          // We want Better Time (Lower) -> Higher Score.
-          // So Invert Z.
-          if (rankingRule === 'lowest_wins') z = -z;
-          // If it was highest_wins (longest time?), keep Z.
 
-          if (participantFinalScores[s.entity_id]) {
-            participantFinalScores[s.entity_id].sumZ += z;
-            participantFinalScores[s.entity_id].gamesPlayed += 1;
-          }
-        });
-      } else if (scoreType === 'boolean') {
-        // Boolean: 1 or 0. No Z-Score normalization requested.
-        gameScores.forEach((s) => {
-          const val = s.value_bool ? 1 : 0;
-          // Bonus for boolean? Maybe?
-          // "Bonus: Tel op bij ruwe score" -> 1 + bonus?
-          const finalVal = val + (s.bonus || 0);
+          return { ...s, raw, isValid };
+        })
+        .filter((cs) => cs.isValid);
 
-          if (participantFinalScores[s.entity_id]) {
-            participantFinalScores[s.entity_id].sumZ += finalVal;
-            participantFinalScores[s.entity_id].gamesPlayed += 1;
+      if (calculatedScores.length === 0) continue;
+
+      // Determine Bounds (Min/Max) for this game
+      let maxRaw = -Infinity;
+      let minRaw = Infinity;
+
+      calculatedScores.forEach((cs) => {
+        if (cs.raw > maxRaw) maxRaw = cs.raw;
+        if (cs.raw < minRaw) minRaw = cs.raw;
+      });
+
+      // Calculate Points
+      calculatedScores.forEach((cs) => {
+        let points = 0;
+
+        // SOLO PARTICIPANT RULE:
+        // If only 1 participant has a valid score in this game, they get max points (100).
+        // This ensures that in parallel games where 1 person plays 1 game, they all get 100 points
+        // regardless of whether it is points (5), time (20m), or boolean (completed/incomplete).
+        // User explicitly asked for equality even if "0 points, 0 seconds, or completed".
+        if (calculatedScores.length === 1) {
+             points = SCORE_PER_GAME;
+        } else if (scoreType === 'boolean') {
+          // Boolean: Completed -> Full Score
+          points = cs.raw > 0 ? SCORE_PER_GAME : 0;
+        } else {
+          // Points or Time (Multiple participants)
+          // Identify if Higher or Lower is better
+          let isHighBest = true; // Default to highest wins (Points)
+          if (scoreType === 'time') isHighBest = false; // Default time to lowest wins
+          if (rankingRule === 'highest_wins') isHighBest = true;
+          if (rankingRule === 'lowest_wins') isHighBest = false;
+
+          if (isHighBest) {
+            // Points (Higher is better)
+            // If all scores are 0, maxRaw is 0 -> Everyone gets 0?
+            // "Indien 0 punten... gelijkgetrokken". If everyone has 0, everyone has "equal" (0 or 100?).
+            // If everyone has 0 points, arguably they performed equally.
+            // But usually 0 points = 0 score.
+            // Let's stick to proportional.
+            if (maxRaw > 0) {
+              const val = Math.max(0, cs.raw);
+              points = (val / maxRaw) * SCORE_PER_GAME;
+            } else {
+              // If maxRaw <= 0 (e.g. everyone 0, or negatives).
+              points = 0;
+            }
+          } else {
+            // Time (Lower is better)
+            // Percent of Min (Best).
+            // Prevent division by zero or negative issues
+            if (cs.raw <= 0) {
+              // Time <= 0 (0 seconds or negative w/ bonus)
+              // This is "Better than or equal to perfect".
+              // Giving 100 is fair.
+              points = SCORE_PER_GAME;
+            } else {
+              const best = minRaw > 0 ? minRaw : 1; 
+              const current = cs.raw;
+              // Formula: (Best / Current) * 100
+              points = (best / current) * SCORE_PER_GAME;
+            }
           }
-        });
-      }
+        }
+
+        // Apply Constraints: No negative, No decimals
+        // Round per game to avoid decimals accumulating
+        const finalGamePoints = Math.round(Math.max(0, points));
+
+        if (participantFinalScores[cs.entity_id]) {
+          participantFinalScores[cs.entity_id].totalPoints += finalGamePoints;
+          participantFinalScores[cs.entity_id].gamesPlayed += 1;
+        }
+      });
     }
 
     // 5. Finalize Scores
     const result = Object.values(participantFinalScores).map((p) => {
-      // Average Z-Score (or Sum?)
-      // "Som genormaliseerde waarden over games, deel door aantal games voor gemiddelde."
-      // We use total games in session or games played?
-      // "deel door aantal games". Usually implies games played or total games.
-      // Let's use games.length (Total Games in Session) to penalize missing games?
-      // Or p.gamesPlayed?
-      // If I miss a game, do I get 0? 0 Z-score is "Average".
-      // It's safer to divide by Total Games in Session if we want fairness across all.
-      // But if `parallel`, maybe different people play different games?
-      // Let's divide by `games.length` for Series/Single.
-      // For Parallel, implies all run at same time?
-      // Let's stick to "gamesPlayed" to be safe for now, or games.length if generic.
-      // User said: "deel door aantal games voor gemiddelde".
-      // Let's use `games.length` to normalize against the full set.
-
-      const count = games.length || 1;
-      const avgZ = p.sumZ / count;
-
-      // Multiply to remove decimals
-      // Using 100 as multiplier
-      const finalScore = Math.round(avgZ * 100);
+      // Total points are already aggregated as integers
+      const finalScore = p.totalPoints;
 
       return {
         participant_id: p.id,
