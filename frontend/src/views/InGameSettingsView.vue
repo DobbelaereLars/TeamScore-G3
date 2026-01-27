@@ -158,8 +158,10 @@ onMounted(async () => {
           useSets: g.sets > 1,
           setsCount: g.sets > 1 ? g.sets : 2,
           originalUseSets: g.sets > 1,
+          originalSetsCount: g.sets > 1 ? g.sets : 0,
           originalRoundsCount: g.rounds > 1 ? g.rounds : 0,
           currentRound: g.current_round || 1,
+          currentSet: g.current_set || 1,
           pointsPerAction: config.pointsPerAction || 1,
           useBonusPoints: !!g.bonus_points,
           bonusPoints: g.bonus_points || 1,
@@ -1408,10 +1410,15 @@ onUnmounted(() => {
                   </ToggleWithDropdown>
 
                   <ToggleWithDropdown
-                    v-if="!activeGame.originalUseSets"
                     :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
-                    min="2"
+                    :min="
+                      Math.max(
+                        2,
+                        activeGame.currentSet || 1,
+                        activeGame.originalSetsCount || 0,
+                      )
+                    "
                     max="100"
                     :label="
                       activeGame.useRounds
