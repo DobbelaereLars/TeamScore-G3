@@ -372,19 +372,29 @@ router.put('/:id', async (req, res) => {
     timeNotation,
   } = req.body;
 
-  // 1. Check if we need to snapshot round logic (BEFORE update)
-  if (current_round !== undefined && current_round > 1) {
-    // Implicitly, if we are setting to 2, previous was 1
-    // Fetch current state to confirm previous Round
-    const gameRow = await get(
-      db,
-      'SELECT current_round, current_set, score_model_id FROM Game WHERE id = ?',
-      [id],
-    );
-    if (gameRow && gameRow.current_round < current_round) {
-      // A Round Advance is happening!
+  // 1. Check if we need to snapshot round/set logic (BEFORE update)
+  // This handles both round advances AND set advances
+  const gameRow = await get(
+    db,
+    'SELECT current_round, current_set, score_model_id, rounds FROM Game WHERE id = ?',
+    [id],
+  );
 
-      // 1. Snapshot scores to RoundScore
+  if (gameRow) {
+    const oldRound = gameRow.current_round || 1;
+    const oldSet = gameRow.current_set || 1;
+    const newRound = current_round !== undefined ? current_round : oldRound;
+    const newSet = current_set !== undefined ? current_set : oldSet;
+    const totalRounds = gameRow.rounds || 1;
+
+    // Detect if we are advancing to next round OR next set
+    // Next round: current_round increases
+    // Next set: current_set increases AND current_round resets to 1 (or stays same if no rounds)
+    const isRoundAdvance = newRound > oldRound;
+    const isSetAdvance = newSet > oldSet;
+
+    if (isRoundAdvance || isSetAdvance) {
+      // Snapshot current scores to RoundScore before resetting
       await run(
         db,
         `
@@ -393,11 +403,10 @@ router.put('/:id', async (req, res) => {
               FROM Score
               WHERE game_id = ?
           `,
-        [gameRow.current_round, gameRow.current_set || 1, id],
+        [oldRound, oldSet, id],
       );
 
-      // 2. Reset Boolean Scores (as requested: "iedereen niet voltooid")
-      // Check if ScoreModel is boolean
+      // Reset Boolean Scores for boolean games
       const smRow = await get(db, 'SELECT type FROM ScoreModel WHERE id = ?', [
         gameRow.score_model_id,
       ]);

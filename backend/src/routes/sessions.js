@@ -269,10 +269,13 @@ router.get('/:id/final-scores', async (req, res) => {
           };
         });
 
-      // *** Multi-Round Logic for Single Game (Boolean Majority) ***
+      // *** Multi-Round/Set Logic for Single Game (Boolean Majority) ***
       if (scoreType === 'boolean' || scoreType === 'bool') {
-        // Get the total number of rounds configured for this game
+        // Get the total number of rounds and sets configured for this game
         const totalRounds = game.rounds || 1;
+        const totalSets = game.sets || 1;
+        // Total phases = rounds * sets (e.g., 2 rounds x 3 sets = 6 phases)
+        const totalPhases = totalRounds * totalSets;
 
         // We need to fetch history if available
         const roundScores = await all(
@@ -285,8 +288,8 @@ router.get('/:id/final-scores', async (req, res) => {
           [game.id],
         );
 
-        // Merge with current `scores` (which represents the latest round)
-        // We want: For each participant, Count(Completed) across ALL rounds (history + current).
+        // Merge with current `scores` (which represents the latest round/set)
+        // We want: For each participant, Count(Completed) across ALL phases (history + current).
 
         // 1. Map history
         const stats = {};
@@ -302,7 +305,7 @@ router.get('/:id/final-scores', async (req, res) => {
           }
         });
 
-        // Add current round (from `scores`)
+        // Add current phase (from `scores`)
         scores
           .filter((s) => s.game_id === game.id)
           .forEach((s) => {
@@ -311,8 +314,8 @@ router.get('/:id/final-scores', async (req, res) => {
             }
           });
 
-        // Calculate Majority based on TOTAL ROUNDS (not played rounds)
-        // A player is "Voltooid" only if they completed at least half of ALL rounds
+        // Calculate Majority based on TOTAL PHASES (rounds * sets)
+        // A player is "Voltooid" only if they completed at least half of ALL phases
         singleGameScores.forEach((p) => {
           const s = stats[p.participant_id];
           if (!s) {
@@ -320,13 +323,13 @@ router.get('/:id/final-scores', async (req, res) => {
             return;
           }
 
-          // Majority Rule based on total rounds:
-          // "de helft of meer voltooid ten opzichte van de rondes"
-          // If totalRounds = 4, need >= 2 completed
-          // If totalRounds = 3, need >= 1.5 -> 2 completed
-          // If totalRounds = 1, need >= 0.5 -> 1 completed
+          // Majority Rule based on total phases:
+          // "de helft of meer voltooid ten opzichte van de rondes/sets"
+          // If totalPhases = 6, need >= 3 completed
+          // If totalPhases = 4, need >= 2 completed
+          // If totalPhases = 1, need >= 0.5 -> 1 completed
 
-          const required = totalRounds / 2;
+          const required = totalPhases / 2;
 
           if (s.completed >= required) {
             p.total_points = 1; // Completed
@@ -403,6 +406,8 @@ router.get('/:id/final-scores', async (req, res) => {
       let booleanMajorityMap = {};
       if (scoreType === 'boolean' || scoreType === 'bool') {
         const totalRounds = game.rounds || 1;
+        const totalSets = game.sets || 1;
+        const totalPhases = totalRounds * totalSets;
 
         // Fetch history from RoundScore
         const roundScores = await all(
@@ -431,8 +436,8 @@ router.get('/:id/final-scores', async (req, res) => {
           }
         });
 
-        // Calculate majority result: completed if >= half of total rounds
-        const required = totalRounds / 2;
+        // Calculate majority result: completed if >= half of total phases (rounds × sets)
+        const required = totalPhases / 2;
         Object.keys(booleanMajorityMap).forEach((pid) => {
           booleanMajorityMap[pid].isMajorityCompleted =
             booleanMajorityMap[pid].completed >= required;
