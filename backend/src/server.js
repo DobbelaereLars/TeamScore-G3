@@ -36,8 +36,9 @@ const CERT_DIR = path.join(__dirname, '..', 'certs');
 const KEY_PATH = path.join(CERT_DIR, 'key.pem');
 const CERT_PATH = path.join(CERT_DIR, 'cert.pem');
 
-// JSON API (voorbeeld)
-app.use(express.json());
+// JSON API (limiet verhoogd voor image uploads)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // API Routes
 const playersRouter = require('./routes/players');
