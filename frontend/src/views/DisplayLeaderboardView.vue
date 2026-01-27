@@ -168,6 +168,13 @@ const goToPage = (pageIndex) => {
   startAutoScroll();
 };
 
+const handleGameConfigUpdated = (data) => {
+  const currentGameId = route.query.gameId;
+  if (currentGameId && String(data.gameId) === String(currentGameId)) {
+    loadGameData();
+  }
+};
+
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = 'hidden';
@@ -179,6 +186,7 @@ onMounted(() => {
   startAutoScroll();
 
   socket.on('display:navigate', handleNavigate);
+  socket.on('game-config-updated', handleGameConfigUpdated);
 });
 
 onUnmounted(() => {
@@ -188,6 +196,7 @@ onUnmounted(() => {
   if (autoScrollInterval) clearInterval(autoScrollInterval);
 
   socket.off('display:navigate', handleNavigate);
+  socket.off('game-config-updated', handleGameConfigUpdated);
 });
 </script>
 

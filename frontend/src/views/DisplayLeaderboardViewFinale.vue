@@ -49,7 +49,7 @@ const loadGameData = async () => {
     const rawPlayers = resData.map((p) => {
       // Create config object for formatter
       const scoreConfig = {
-        timeNotation: p.time_notation,
+        timeNotation: p.time_notation || 'mm:ss',
       };
 
       let displayScore = formatScore(p.total_points, p.score_type, scoreConfig);
@@ -65,7 +65,16 @@ const loadGameData = async () => {
       */
       // formatScore handles boolean correctly: val ? 'Voltooid' : 'Niet voltooid'
 
+      // FIX: Ensure boolean games don't show "1" or "0" alongside label
+      if (p.score_type === 'boolean' || p.score_type === 'completed') {
+        displayScore = ''; // Clear number, let label do the work
+      }
+
       let scoreLabel = getScoreLabel(p.score_type, p.total_points);
+      // BUG FIX: Don't show "punten" label for time/boolean games
+      if (p.score_type === 'time' || p.score_type === 'boolean' || p.score_type === 'completed') {
+        scoreLabel = '';
+      }
 
       return {
         id: p.participant_id, // Note: backend returns participant_id
@@ -322,6 +331,13 @@ const startPodiumAnimation = () => {
   );
 };
 
+const handleGameConfigUpdated = (data) => {
+  const currentGameId = route.query.gameId;
+  if (currentGameId && String(data.gameId) === String(currentGameId)) {
+    loadGameData();
+  }
+};
+
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = 'hidden';
@@ -334,6 +350,7 @@ onMounted(() => {
   // Start animation sequence only AFTER data is loaded (now called in loadGameData)
   // startPodiumAnimation();
   socket.on('display:navigate', handleNavigate);
+  socket.on('game-config-updated', handleGameConfigUpdated);
 });
 
 onUnmounted(() => {
@@ -342,6 +359,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', calculateItemsPerPage);
   if (autoScrollInterval) clearInterval(autoScrollInterval);
   socket.off('display:navigate', handleNavigate);
+  socket.off('game-config-updated', handleGameConfigUpdated);
 
   // Clear all animation timeouts
   timeouts.forEach((t) => clearTimeout(t));

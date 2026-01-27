@@ -171,7 +171,7 @@ router.get('/:id/final-scores', async (req, res) => {
 
     // 2. Fetch All Games for Session
     let gamesQuery = `
-      SELECT g.*, sm.type as score_type, sm.ranking_rule
+      SELECT g.*, sm.type as score_type, sm.ranking_rule, sm.config_json as score_config
       FROM Game g
       JOIN ScoreModel sm ON g.score_model_id = sm.id
       WHERE g.session_id = ?
@@ -222,7 +222,7 @@ router.get('/:id/final-scores', async (req, res) => {
       const game = games[0];
       const scoreType = game.score_type;
       const rankingRule = game.ranking_rule;
-      
+
       let timeNotation = 'mm:ss';
       try {
         const config = JSON.parse(game.score_config || '{}');

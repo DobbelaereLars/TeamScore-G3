@@ -469,7 +469,9 @@ router.put('/:id', async (req, res) => {
 
     db.get(fetchQuery, [id], (err, row) => {
       if (err || !row)
-        return res.status(500).json({ error: 'Game/ScoreModel not found or DB error' });
+        return res
+          .status(500)
+          .json({ error: 'Game/ScoreModel not found or DB error' });
 
       const scoreModelId = row.id;
       let config = {};

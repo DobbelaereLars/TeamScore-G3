@@ -39,11 +39,17 @@ const parseTime = (totalSeconds) => {
     return;
   }
 
-  hours.value = Math.floor(val / 3600);
-  minutes.value = Math.floor((val % 3600) / 60);
-  seconds.value = Math.floor(val % 60);
-  // Handle floating point precision issues for MS
-  milliseconds.value = Math.round((val % 1) * 1000);
+  // Use empty string for zero values to show placeholders instead of "0"
+  // This preserves the user experience of only showing filled-in values
+  const h = Math.floor(val / 3600);
+  const m = Math.floor((val % 3600) / 60);
+  const s = Math.floor(val % 60);
+  const ms = Math.round((val % 1) * 1000);
+
+  hours.value = h || '';
+  minutes.value = m || '';
+  seconds.value = s || '';
+  milliseconds.value = ms || '';
 };
 
 // Initial parse

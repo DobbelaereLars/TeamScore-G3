@@ -36,12 +36,24 @@ const loadGameData = async () => {
           ? Number(p.total_points)
           : null;
       // Pass p.time_notation from backend to formatScore
-      const displayScore = formatScore(
+      let displayScore = formatScore(
         scoreValue,
         p.score_type,
-        p.time_notation,
+        // Ensure config passes timeNotation correctly
+        { timeNotation: p.time_notation || 'mm:ss' },
       );
-      const scoreLabel = getScoreLabel(scoreValue, p.score_type);
+
+      // Fix: Don't show numeric score for boolean games (Voltooid/Niet voltooid)
+      if (p.score_type === 'boolean' || p.score_type === 'completed') {
+        displayScore = '';
+      }
+
+      let scoreLabel = getScoreLabel(scoreValue, p.score_type);
+      // Extra check: if score_type is NOT 'points' (and not parallel aggregation), force label to be empty if getScoreLabel returned something default
+      // getScoreLabel usually handles this, but let's be sure for Time/Boolean
+      if (p.score_type === 'time' || p.score_type === 'boolean' || p.score_type === 'completed') {
+         scoreLabel = '';
+      }
 
       return {
         id: p.participant_id, // Note: backend returns participant_id

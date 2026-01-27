@@ -4,20 +4,14 @@ import html2canvas from 'html2canvas';
 import { sessionRepository, gameRepository } from '../services/api';
 import LeaderboardPodiumIcon from './LeaderboardPodiumIcon.vue';
 import logo from '../assets/logo.webp';
+import { formatScore, getScoreLabel } from '../utils/formatters';
 
 const containerRef = ref(null);
 const sessionPlayers = ref([]);
 const isGenerating = ref(false);
 const activeScoreType = ref('points'); // points, time, boolean
 const activeRankingRule = ref('highest_wins'); // highest_wins, lowest_wins
-
-const formatTime = (seconds) => {
-  if (seconds === null || seconds === undefined) return '--:--';
-  const totalSeconds = Math.floor(Number(seconds) || 0);
-  const minutes = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
+const activeTimeNotation = ref('mm:ss'); // Default time notation
 
 const sortedPlayers = computed(() => {
   if (!Array.isArray(sessionPlayers.value)) return [];
@@ -68,29 +62,54 @@ const topThree = computed(() => {
 const getPlayerProps = (player) => {
   if (!player) return {};
 
-  const props = {
-    spelersnaam: player.name || player.spelersnaam || player.team_name,
-    score:
-      player.score !== null && player.score !== undefined ? player.score : 0,
-    displayScore: undefined,
-    scoreLabel: undefined,
-  };
+  const scoreVal =
+    player.score !== null && player.score !== undefined ? player.score : null;
 
-  if (activeScoreType.value === 'time') {
-    props.displayScore = formatTime(player.score);
-    props.scoreLabel = ' '; // Hide 'ptn' label
-  } else if (
+  // Use centralized formatter
+  let displayScore = formatScore(scoreVal, activeScoreType.value, {
+    timeNotation: activeTimeNotation.value,
+  });
+
+  // Fix: Don't show numeric score for boolean games (Voltooid/Niet voltooid)
+  if (
     activeScoreType.value === 'boolean' ||
     activeScoreType.value === 'completed'
   ) {
-    props.displayScore = player.score ? 'Voltooid' : 'Niet voltooid';
-    props.scoreLabel = ' ';
-  } else {
-    // Explicitly clear displayScore so RollingNumber takes over for Points
-    props.displayScore = undefined;
+    displayScore = ''; // Label does the work
   }
 
-  return props;
+  // Use centralized label helper
+  let scoreLabel = getScoreLabel(scoreVal, activeScoreType.value);
+
+  // Fix: Hide label for Time/Boolean games
+  if (
+    activeScoreType.value === 'time' ||
+    activeScoreType.value === 'boolean' ||
+    activeScoreType.value === 'completed'
+  ) {
+    scoreLabel = '';
+  }
+
+  // To let RollingNumber work for Points, we usually unset displayScore
+  // But formatScore returns strings, so we can just pass it directly if we want consistent formatting
+  // RollingNumber expects `score` prop for animation. If `displayScore` is set, it might override animation?
+  // Let's check LeaderboardPodiumIcon:
+  // <RollingNumber ... :displayValue="displayScore ? displayScore : undefined" ... />
+  // So if formatScore returns something, animation might be static or just final frame?
+  // For 'points', formatScore returns just the number string.
+  // Actually, for points we want RollingNumber to animate from 0 to X.
+  // if displayScore is provided, RollingNumber often just displays that static string.
+  // For 'points', let's set displayScore to undefined so RollingNumber animates.
+  if (activeScoreType.value === 'points') {
+    displayScore = undefined;
+  }
+
+  return {
+    spelersnaam: player.name || player.spelersnaam || player.team_name,
+    score: scoreVal || 0,
+    displayScore,
+    scoreLabel,
+  };
 };
 
 const generateAndUpload = async (sessionId, gameIdOrList) => {
@@ -173,6 +192,11 @@ const generateAndUpload = async (sessionId, gameIdOrList) => {
         else activeScoreType.value = 'points';
 
         if (rankingRule) activeRankingRule.value = rankingRule;
+
+        // Set time notation if available
+        if (res.data[0].time_notation) {
+          activeTimeNotation.value = res.data[0].time_notation;
+        }
       }
 
       sessionPlayers.value = res.data.map((p) => {
