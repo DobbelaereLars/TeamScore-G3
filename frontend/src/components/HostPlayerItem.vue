@@ -164,7 +164,11 @@ const setBoolean = (boolVal) => {
       <!-- Time Controls -->
       <template v-else-if="scoreType === 'time'">
         <div class="c-host-player-item__input-wrapper">
-          <InputTime :modelValue="value" :disabled="disabled" @update:modelValue="updateTime" />
+          <InputTime
+            :modelValue="value"
+            :disabled="disabled"
+            @update:modelValue="updateTime"
+          />
         </div>
       </template>
 
