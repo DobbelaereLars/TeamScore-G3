@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   value: {
@@ -62,7 +62,7 @@ watch(
       }, props.startDelay);
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -71,7 +71,7 @@ watch(
     if (props.trigger) {
       animateValue(oldVal || 0, newVal, props.duration);
     }
-  }
+  },
 );
 </script>
 

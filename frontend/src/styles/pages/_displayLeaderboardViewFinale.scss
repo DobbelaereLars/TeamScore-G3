@@ -132,7 +132,9 @@
         border-radius: 50%;
         background-color: rgb(222, 222, 222); // Light grey inactive
         cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.3s ease;
+        transition:
+          background-color 0.3s ease,
+          transform 0.3s ease;
 
         &--active {
           background-color: rgb(112, 112, 112); // Darker grey active
@@ -149,7 +151,9 @@
   // Smooth transition animations for player cards
   .player-slide-enter-active,
   .player-slide-leave-active {
-    transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
+    transition:
+      transform 1.5s ease-in-out,
+      opacity 1.5s ease-in-out;
     will-change: transform, opacity;
   }
 
