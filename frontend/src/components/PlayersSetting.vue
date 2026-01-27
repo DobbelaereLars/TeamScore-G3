@@ -431,7 +431,11 @@ const handleFileUpload = (event) => {
     lines.slice(1).forEach((line) => {
       const parts = line.split(separator);
       if (parts.length > nameIndex) {
-        const trimmed = parts[nameIndex].trim();
+        let trimmed = parts[nameIndex].trim();
+        // Remove surrounding quotes if present (from CSV export)
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+          trimmed = trimmed.slice(1, -1).replace(/""/g, '"');
+        }
         if (trimmed) {
           newItems.push({
             id: currentId++,
