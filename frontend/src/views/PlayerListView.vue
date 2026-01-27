@@ -502,18 +502,26 @@ const goToNext = async () => {
     currentGame.value.score_type === 'boolean' ||
     currentGame.value.score_type === 'bool'
   ) {
-    // Reset local state for boolean games (backend does this too, but we need UI update immediately)
-    currentGame.value.players.forEach((p) => {
-      p.bool = 0; // Reset to Not Completed
-    });
+    // DO NOT call resetBools here - the backend handles this AFTER snapshotting to RoundScore
+    // We only update the UI optimistically after the gameRepository.update() call succeeds
   }
 
-  // Persist to backend
+  // Persist to backend (this also snapshots scores to RoundScore and resets bools for boolean games)
   try {
     await gameRepository.update(currentGame.value.id, {
       current_round: currentGame.value.currentRound,
       current_set: currentGame.value.currentSet,
     });
+
+    // For boolean games: update UI after backend has done the reset
+    if (
+      currentGame.value.score_type === 'boolean' ||
+      currentGame.value.score_type === 'bool'
+    ) {
+      currentGame.value.players.forEach((p) => {
+        p.bool = 0; // Reset to Not Completed
+      });
+    }
 
     // Notify display of round change
     socket.emit('display:update-game-info', {

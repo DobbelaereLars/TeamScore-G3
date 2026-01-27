@@ -399,6 +399,45 @@ router.get('/:id/final-scores', async (req, res) => {
       // Check if this is a solo game (only 1 participant assigned)
       const isSoloGame = gameScores.length === 1;
 
+      // *** For Boolean games in series/parallel: Apply Majority Rule ***
+      let booleanMajorityMap = {};
+      if (scoreType === 'boolean' || scoreType === 'bool') {
+        const totalRounds = game.rounds || 1;
+
+        // Fetch history from RoundScore
+        const roundScores = await all(
+          db,
+          `SELECT participant_id, value_bool FROM RoundScore WHERE game_id = ?`,
+          [game.id],
+        );
+
+        // Initialize stats for each participant in this game
+        gameScores.forEach((s) => {
+          booleanMajorityMap[s.participant_id] = { completed: 0 };
+        });
+
+        // Count completed from history
+        roundScores.forEach((rs) => {
+          if (booleanMajorityMap[rs.participant_id]) {
+            if (rs.value_bool) booleanMajorityMap[rs.participant_id].completed++;
+          }
+        });
+
+        // Add current round
+        gameScores.forEach((s) => {
+          if (booleanMajorityMap[s.participant_id]) {
+            if (s.value_bool) booleanMajorityMap[s.participant_id].completed++;
+          }
+        });
+
+        // Calculate majority result: completed if >= half of total rounds
+        const required = totalRounds / 2;
+        Object.keys(booleanMajorityMap).forEach((pid) => {
+          booleanMajorityMap[pid].isMajorityCompleted =
+            booleanMajorityMap[pid].completed >= required;
+        });
+      }
+
       // Prepare raw values
       const calculatedScores = gameScores
         .map((s) => {
@@ -413,9 +452,10 @@ router.get('/:id/final-scores', async (req, res) => {
             } else {
               raw = Number(s.value_time) - Number(s.bonus || 0);
             }
-          } else if (scoreType === 'boolean') {
-            // boolean might be stored as 0/1 integer
-            raw = s.value_bool ? 1 : 0;
+          } else if (scoreType === 'boolean' || scoreType === 'bool') {
+            // Use majority rule result instead of just current value_bool
+            const majorityData = booleanMajorityMap[s.participant_id];
+            raw = majorityData && majorityData.isMajorityCompleted ? 1 : 0;
             // Add bonus if exists
             if (s.bonus) raw += Number(s.bonus);
           }

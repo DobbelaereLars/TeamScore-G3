@@ -20,6 +20,13 @@ router.put('/:id/reset-bools', async (req, res) => {
 
   try {
     await run(db, 'UPDATE Score SET value_bool = 0 WHERE game_id = ?', [id]);
+    
+    // Emit socket event to notify display to refresh scores
+    const io = req.app.get('socketio');
+    if (io) {
+      io.emit('game-config-updated', { gameId: parseInt(id) });
+    }
+    
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to reset bools:', err);
@@ -399,7 +406,11 @@ router.put('/:id', async (req, res) => {
           id,
         ]);
 
-        // Emit reset event? Or the current_round update will force refresh and show new empty state
+        // Emit socket event to notify display to refresh scores
+        const io = req.app.get('socketio');
+        if (io) {
+          io.emit('game-config-updated', { gameId: parseInt(id) });
+        }
       }
     }
   }
