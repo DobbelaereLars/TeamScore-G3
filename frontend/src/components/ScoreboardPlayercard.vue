@@ -30,6 +30,14 @@ const props = defineProps({
     type: Number,
     default: 100,
   },
+  minValue: {
+    type: Number,
+    default: 0,
+  },
+  rankingRule: {
+    type: String,
+    default: 'highest_wins',
+  },
   position: {
     type: Number,
     default: 1,
@@ -86,6 +94,8 @@ const props = defineProps({
       <ProgressBar
         :current-value="score"
         :max-value="maxValue"
+        :min-value="minValue"
+        :ranking-rule="rankingRule"
         :variant="variant"
       />
     </div>

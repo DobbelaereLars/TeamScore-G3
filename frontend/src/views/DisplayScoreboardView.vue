@@ -105,6 +105,18 @@ const maxScore = computed(() => {
   return max > 0 ? max : 100;
 });
 
+// Calculate the minimum score among all players (for lowest_wins scenarios)
+const minScore = computed(() => {
+  if (players.value.length === 0) return 0;
+  const scores = players.value
+    .map((player) => player.score)
+    .filter((s) => s !== null && s !== undefined);
+
+  if (scores.length === 0) return 0;
+
+  return Math.min(...scores);
+});
+
 // Computed property to sort players by score and calculate position/variant
 const sortedPlayers = computed(() => {
   let sorted = [...players.value];
@@ -167,6 +179,8 @@ const sortedPlayers = computed(() => {
       position,
       variant,
       maxValue: maxScore.value,
+      minValue: minScore.value,
+      rankingRule: gameinfo.value.rankingRule,
       displayScore: formatScore(
         player.score,
         gameinfo.value.scoreType,
@@ -446,6 +460,8 @@ onUnmounted(() => {
               :display-score="player.displayScore"
               :score-label="player.scoreLabel"
               :max-value="maxScore"
+              :min-value="minScore"
+              :ranking-rule="gameinfo.rankingRule"
               :position="player.position"
               :variant="player.variant"
             />
