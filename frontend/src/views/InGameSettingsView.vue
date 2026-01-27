@@ -447,6 +447,32 @@ const isNextButtonDisabled = computed(() => {
   return false;
 });
 
+const isFutureSeriesGame = computed(() => {
+  if (selectedGameMode.value !== 'series-of-games') return false;
+  if (!games.value || games.value.length === 0) return false;
+
+  // Find index of first game that is NOT finished
+  const firstUnfinishedIndex = games.value.findIndex((g) => !g.isFinished);
+  if (firstUnfinishedIndex === -1) return false; // All finished
+
+  const activeIndex = activeGameIndex.value;
+  return activeIndex > firstUnfinishedIndex;
+});
+
+const roundsMin = computed(() => {
+  if (!activeGame.value) return 2;
+  const base = Math.max(2, activeGame.value.currentRound || 1);
+  if (isFutureSeriesGame.value) return base;
+  return Math.max(base, activeGame.value.originalRoundsCount || 0);
+});
+
+const setsMin = computed(() => {
+  if (!activeGame.value) return 2;
+  const base = Math.max(2, activeGame.value.currentSet || 1);
+  if (isFutureSeriesGame.value) return base;
+  return Math.max(base, activeGame.value.originalSetsCount || 0);
+});
+
 const unassignedParticipants = computed(() =>
   participants.value.filter((p) => !p.assignedGameId),
 );
@@ -492,6 +518,19 @@ watch([selectedGameMode, hasValidParticipants], () => {
 watch(
   () => activeGame.value?.useRounds,
   (newValue, oldValue) => {
+    // Check if we are allowed to turn it off
+    if (!newValue && oldValue && activeGame.value?.originalRoundsCount > 1) {
+      // If NOT future game -> Block
+      const isLocked = !isFutureSeriesGame.value;
+
+      if (isLocked) {
+        nextTick(() => {
+          if (activeGame.value) activeGame.value.useRounds = true;
+        });
+        return;
+      }
+    }
+
     if (newValue && !oldValue && activeGame.value) {
       // When toggle is turned on, set to minimum of 2
       if (activeGame.value.roundsCount < 2) {
@@ -505,12 +544,17 @@ watch(
 watch(
   () => activeGame.value?.useSets,
   (newValue, oldValue) => {
-    // If trying to turn OFF, but originalUseSets is true -> revert to ON
+    // Check if we are allowed to turn it off
     if (!newValue && oldValue && activeGame.value?.originalUseSets) {
-      nextTick(() => {
-        if (activeGame.value) activeGame.value.useSets = true;
-      });
-      return;
+      // If NOT future game -> Block
+      const isLocked = !isFutureSeriesGame.value;
+
+      if (isLocked) {
+        nextTick(() => {
+          if (activeGame.value) activeGame.value.useSets = true;
+        });
+        return;
+      }
     }
 
     if (newValue && !oldValue && activeGame.value) {
@@ -1355,24 +1399,6 @@ onUnmounted(() => {
                 />
               </div>
 
-              <!-- Scoremodel Selection -->
-              <div
-                v-if="!isScoreModelProtected"
-                class="p-game-setup-view__settings__body__content__scoremodel"
-              >
-                <div
-                  class="p-game-setup-view__settings__body__content__scoremodel__subtitle"
-                >
-                  <h2 class="h6">Scoremodel</h2>
-                  <p>Kies hoe de score wordt bijgehouden.</p>
-                </div>
-                <InputRadioCards
-                  :items="scoreModelRadioCards"
-                  name="scoreModel"
-                  @change="handleScoreModelChange"
-                />
-              </div>
-
               <div
                 class="p-game-setup-view__settings__body__content__gamestructure"
               >
@@ -1392,33 +1418,26 @@ onUnmounted(() => {
                   <ToggleWithDropdown
                     :inputId="`rounds-toggle-${activeGameId}`"
                     labelTekst="Gebruik van rondes"
-                    :min="
-                      Math.max(
-                        2,
-                        activeGame.currentRound || 1,
-                        activeGame.originalRoundsCount || 0,
-                      )
-                    "
+                    :min="roundsMin"
                     max="100"
                     label="Aantal rondes"
                     :id="`rounds-${activeGameId}`"
+                    :name="`rounds-${activeGameId}`"
                     type="number"
                     v-model:toggled="activeGame.useRounds"
                     v-model="activeGame.roundsCount"
                     :disabled="isGameProtected"
+                    :toggleDisabled="
+                      !isFutureSeriesGame &&
+                      (activeGame.originalRoundsCount || 0) > 1
+                    "
                   >
                   </ToggleWithDropdown>
 
                   <ToggleWithDropdown
                     :inputId="`sets-toggle-${activeGameId}`"
                     labelTekst="Gebruik van sets"
-                    :min="
-                      Math.max(
-                        2,
-                        activeGame.currentSet || 1,
-                        activeGame.originalSetsCount || 0,
-                      )
-                    "
+                    :min="setsMin"
                     max="100"
                     :label="
                       activeGame.useRounds
@@ -1431,9 +1450,30 @@ onUnmounted(() => {
                     v-model:toggled="activeGame.useSets"
                     v-model="activeGame.setsCount"
                     :disabled="isGameProtected"
+                    :toggleDisabled="
+                      !isFutureSeriesGame && activeGame.originalUseSets
+                    "
                   >
                   </ToggleWithDropdown>
                 </div>
+              </div>
+
+              <!-- Scoremodel Selection -->
+              <div
+                v-if="!isScoreModelProtected"
+                class="p-game-setup-view__settings__body__content__scoremodel"
+              >
+                <div
+                  class="p-game-setup-view__settings__body__content__scoremodel__subtitle"
+                >
+                  <h2 class="h6">Scoremodel</h2>
+                  <p>Kies hoe de score wordt bijgehouden.</p>
+                </div>
+                <InputRadioCards
+                  :items="scoreModelRadioCards"
+                  name="scoreModel"
+                  @change="handleScoreModelChange"
+                />
               </div>
 
               <!-- Puntenscore instellingen -->

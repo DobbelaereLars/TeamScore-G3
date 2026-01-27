@@ -54,6 +54,24 @@
 
   &__labeltekst {
   }
+
+  &--disabled {
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+
+    .c-toggle__label {
+      background-color: $color-secondary-grey-200 !important;
+      cursor: not-allowed !important;
+
+      &__thumb {
+        background-color: $color-secondary-grey-300 !important;
+      }
+    }
+
+    .c-toggle__labeltekst {
+      color: $color-secondary-grey-300 !important;
+    }
+  }
 }
 
 .c-toggle-dropdown {

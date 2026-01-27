@@ -36,7 +36,7 @@ const handleChange = (event) => {
 </script>
 
 <template>
-  <div class="c-toggle">
+  <div class="c-toggle" :class="{ 'c-toggle--disabled': disabled }">
     <label class="c-toggle__label" :for="inputId">
       <input
         :id="inputId"
