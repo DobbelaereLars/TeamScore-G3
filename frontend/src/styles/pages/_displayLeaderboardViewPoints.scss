@@ -97,6 +97,34 @@
       gap: $spacing-5;
       width: 100%;
     }
+
+    .c-leaderboard-pagination {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: $spacing-3;
+      margin-top: $spacing-2;
+      align-self: center;
+
+      .c-leaderboard-pagination__dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: rgb(222, 222, 222); // Light grey inactive
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &--active {
+          background-color: rgb(112, 112, 112); // Darker grey active
+          transform: scale(1.1);
+        }
+
+        &:hover {
+          background-color: rgb(180, 180, 180);
+        }
+      }
+    }
   }
 
   // Smooth transition animations for player cards

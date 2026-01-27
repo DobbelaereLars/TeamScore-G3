@@ -126,19 +126,83 @@ const topThreePlayers = computed(() => {
 // Get remaining players (from position 4 onwards)
 // Get remaining players (from position 4 onwards)
 const remainingPlayers = computed(() => {
-  return sortedPlayers.value.slice(3, 8);
+  return sortedPlayers.value.slice(3); // Show all remaining players, pagination handles limit
 });
+
+const ITEMS_per_PAGE = ref(5);
+const currentPage = ref(0);
+
+const calculateItemsPerPage = () => {
+  // Estimate height usage:
+  // Podium section (~450px: 26rem height + margins)
+  // Header/Padding (~100px)
+  // Pagination Dots (~40px) + Margin (~20px) = 60px
+  const reservedHeight = 580;
+  const availableHeight = window.innerHeight - reservedHeight;
+
+  // Estimate player card height + gap (~80px + 20px = 100px)
+  const itemHeight = 100;
+
+  const count = Math.floor(availableHeight / itemHeight);
+
+  // Clamp between 1 and 8 (allowing fewer items on small screens)
+  ITEMS_per_PAGE.value = Math.max(1, Math.min(count, 8));
+};
+
+const totalPages = computed(() => {
+  return Math.ceil(remainingPlayers.value.length / ITEMS_per_PAGE.value);
+});
+
+// Reset page if we are out of bounds after resize
+watch(totalPages, (newTotal) => {
+  if (currentPage.value >= newTotal) {
+    currentPage.value = Math.max(0, newTotal - 1);
+  }
+});
+
+const displayedPlayers = computed(() => {
+  const start = currentPage.value * ITEMS_per_PAGE.value;
+  return remainingPlayers.value.slice(start, start + ITEMS_per_PAGE.value);
+});
+
+let autoScrollInterval = null;
+
+const startAutoScroll = () => {
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
+
+  // 30 seconds interval as requested
+  autoScrollInterval = setInterval(() => {
+    if (totalPages.value > 1) {
+      currentPage.value = (currentPage.value + 1) % totalPages.value;
+    }
+  }, 30000);
+};
+
+const goToPage = (pageIndex) => {
+  currentPage.value = pageIndex;
+  // Reset timer on manual interaction
+  startAutoScroll();
+};
 
 onMounted(() => {
   // Disable body scrolling
   document.body.style.overflow = 'hidden';
   loadGameData();
+
+  // Calculate items per page
+  calculateItemsPerPage();
+  window.addEventListener('resize', calculateItemsPerPage);
+  startAutoScroll();
+
   socket.on('display:navigate', handleNavigate);
 });
 
 onUnmounted(() => {
   // Re-enable body scrolling
   document.body.style.overflow = '';
+  window.removeEventListener('resize', calculateItemsPerPage);
+  if (autoScrollInterval) clearInterval(autoScrollInterval);
+
   socket.off('display:navigate', handleNavigate);
 });
 </script>
@@ -186,12 +250,12 @@ onUnmounted(() => {
         class="c-display-leaderboard-view-points__players-container"
       >
         <div
-          v-for="(player, index) in remainingPlayers"
+          v-for="(player, index) in displayedPlayers"
           :key="player.id"
           class="c-player-wrapper"
         >
           <LeaderboardPlayerCard
-            :position="index + 4"
+            :position="index + 4 + currentPage * ITEMS_per_PAGE"
             :playerName="player.spelersnaam"
             :maxValue="maxScore"
             :score="player.score"
@@ -200,6 +264,20 @@ onUnmounted(() => {
           />
         </div>
       </TransitionGroup>
+
+      <!-- Pagination Dots -->
+      <div class="c-leaderboard-pagination" v-if="totalPages > 1">
+        <div
+          v-for="pageIndex in totalPages"
+          :key="pageIndex"
+          class="c-leaderboard-pagination__dot"
+          :class="{
+            'c-leaderboard-pagination__dot--active':
+              currentPage === pageIndex - 1,
+          }"
+          @click="goToPage(pageIndex - 1)"
+        ></div>
+      </div>
     </div>
   </div>
 </template>
