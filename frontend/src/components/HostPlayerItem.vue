@@ -110,7 +110,9 @@ const setBoolean = (boolVal) => {
         <!-- Points View Display -->
         <div v-if="scoreType === 'points'" class="c-host-player-item__points">
           <span class="h4 c-host-player-item__points--value">{{ points }}</span>
-          <p class="c-host-player-item__points--label">punten</p>
+          <p class="c-host-player-item__points--label">
+            {{ points === 1 ? 'punt' : 'punten' }}
+          </p>
         </div>
 
         <!-- Boolean Display -->

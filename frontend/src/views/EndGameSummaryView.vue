@@ -31,7 +31,10 @@ const loadGameData = async () => {
     const resData = response.data;
     players.value = resData.map((p) => {
       let displayScore = '';
-      let scoreLabel = 'punten';
+      let scoreLabel =
+        Number(p.total_points) === 1 || Number(p.total_points) === 1.0
+          ? 'punt'
+          : 'punten';
 
       if (p.is_single_game) {
         if (p.score_type === 'time') {

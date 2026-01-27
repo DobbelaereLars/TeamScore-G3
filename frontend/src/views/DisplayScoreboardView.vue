@@ -118,9 +118,10 @@ const formatScore = (val, type, config) => {
   return String(Math.round(Number(val) || 0)); // Round points?
 };
 
-const getScoreLabel = (type) => {
+const getScoreLabel = (type, score = 0) => {
   if (type === 'boolean') return '';
   if (type === 'time') return '';
+  if (type === 'points' && Math.round(Number(score)) === 1) return 'punt';
   return 'punten';
 };
 
@@ -206,7 +207,7 @@ const sortedPlayers = computed(() => {
         gameinfo.value.scoreType,
         gameinfo.value.scoreConfig,
       ),
-      scoreLabel: getScoreLabel(gameinfo.value.scoreType),
+      scoreLabel: getScoreLabel(gameinfo.value.scoreType, player.score),
     };
   });
 });
