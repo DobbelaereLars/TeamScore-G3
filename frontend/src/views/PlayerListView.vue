@@ -116,6 +116,15 @@ onMounted(async () => {
           console.error('Invalid transition data', e);
           sessionStorage.removeItem('gameTransition');
         }
+      } else {
+        // No pending transition, but check if current game is already finished
+        // This happens when user paused during transition - go directly to next game
+        const currentGameData = games.value.find(
+          (g) => g.id === selectedGameId.value,
+        );
+        if (currentGameData && currentGameData.is_finished === 1) {
+          performGameSwitch(selectedGameId.value);
+        }
       }
     }
   } catch (error) {
@@ -756,6 +765,12 @@ const pauseGame = async () => {
   // 0. Ensure all scores are saved
   if (pendingScoreUpdates.value.length > 0) {
     await Promise.all(pendingScoreUpdates.value);
+  }
+
+  // If we're in a transition (waiting for next game), clear the transition timer
+  // so that when resuming, it goes directly to the next game without waiting
+  if (isTransitioning.value) {
+    sessionStorage.removeItem('gameTransition');
   }
 
   // 1. Generate preview FIRST
