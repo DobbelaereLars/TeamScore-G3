@@ -222,6 +222,14 @@ router.get('/:id/final-scores', async (req, res) => {
       const game = games[0];
       const scoreType = game.score_type;
       const rankingRule = game.ranking_rule;
+      
+      let timeNotation = 'mm:ss';
+      try {
+        const config = JSON.parse(game.score_config || '{}');
+        timeNotation = config.timeNotation || 'mm:ss';
+      } catch (e) {
+        // ignore
+      }
 
       const singleGameScores = scores
         .filter((s) => s.game_id === game.id)
@@ -250,6 +258,7 @@ router.get('/:id/final-scores', async (req, res) => {
             participant_name: s.participant_name,
             player_name:
               s.participant_type === 'player' ? s.participant_name : null,
+            time_notation: timeNotation,
             team_name:
               s.participant_type === 'team' ? s.participant_name : null,
             total_points: rawScore, // Raw value

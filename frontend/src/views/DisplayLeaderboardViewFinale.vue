@@ -9,6 +9,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 import { finalScoreRepository } from '../services/api';
+import { formatScore, getScoreLabel } from '../utils/formatters';
 
 const players = ref([]);
 const router = useRouter();
@@ -46,29 +47,26 @@ const loadGameData = async () => {
     });
     const resData = response.data;
     const rawPlayers = resData.map((p) => {
-      let displayScore = '';
-      let scoreLabel =
-        Number(p.total_points) === 1 || Number(p.total_points) === 1.0
-          ? 'punt'
-          : 'punten';
+      // Create config object for formatter
+      const scoreConfig = {
+        timeNotation: p.time_notation,
+      };
 
-      if (p.is_single_game) {
-        if (p.score_type === 'time') {
-          // Check for null/undefined explicitly
-          if (p.total_points === null || p.total_points === undefined) {
-            displayScore = '--:--';
-          } else {
-            const totalSeconds = Number(p.total_points);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          }
-          scoreLabel = '';
-        } else if (p.score_type === 'boolean') {
-          displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-          scoreLabel = '';
+      let displayScore = formatScore(p.total_points, p.score_type, scoreConfig);
+      // For boolean, we might want custom label 'Voltooid' / 'Niet voltooid' which formatScore provides.
+      // Check existing logic:
+      /*
+        if (p.is_single_game) {
+            if (p.score_type === 'boolean') {
+              displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
+              scoreLabel = '';
+            }
         }
-      }
+      */
+      // formatScore handles boolean correctly: val ? 'Voltooid' : 'Niet voltooid'
+
+      let scoreLabel = getScoreLabel(p.score_type, p.total_points);
+
       return {
         id: p.participant_id, // Note: backend returns participant_id
         spelersnaam: p.player_name || p.team_name || 'Unknown',

@@ -458,14 +458,44 @@ router.put('/:id', async (req, res) => {
   }
 
   function updateScoreModel() {
-    // Fetch current score_model_id
-    db.get('SELECT score_model_id FROM Game WHERE id = ?', [id], (err, row) => {
-      if (err || !row)
-        return res.status(500).json({ error: 'Game not found or DB error' });
+    // Fetch current score_model_id AND configuration from ScoreModel
+    // We join Game to find the correct ScoreModel
+    const fetchQuery = `
+      SELECT sm.id, sm.config_json 
+      FROM ScoreModel sm
+      JOIN Game g ON g.score_model_id = sm.id
+      WHERE g.id = ?
+    `;
 
-      const scoreModelId = row.score_model_id;
+    db.get(fetchQuery, [id], (err, row) => {
+      if (err || !row)
+        return res.status(500).json({ error: 'Game/ScoreModel not found or DB error' });
+
+      const scoreModelId = row.id;
+      let config = {};
+      try {
+        config = JSON.parse(row.config_json || '{}');
+      } catch (e) {
+        config = {};
+      }
+
       let smFields = [];
       let smValues = [];
+
+      // Update config values
+      if (timeNotation !== undefined) {
+        config.timeNotation = timeNotation;
+      }
+      if (points_per_click !== undefined) {
+        config.pointsPerAction = points_per_click;
+      }
+      if (bonus_points !== undefined) {
+        config.bonusPoints = bonus_points;
+      }
+
+      // Always update config_json
+      smFields.push('config_json = ?');
+      smValues.push(JSON.stringify(config));
 
       // Determine ranking rule based on type
       let rankingRule = null;
@@ -502,10 +532,6 @@ router.put('/:id', async (req, res) => {
         smValues.push(useBonusPoints ? 1 : 0);
       }
 
-      // We might also need to update config_json for timeNotation etc.
-      // This requires reading the old JSON first, but for simplicity let's update it if we are changing core things
-      // For now, let's assume valid JSON update if needed
-
       if (smFields.length === 0) {
         return res.json({ success: true });
       }
@@ -515,6 +541,12 @@ router.put('/:id', async (req, res) => {
 
       db.run(smQuery, smValues, function (err) {
         if (err) return res.status(500).json({ error: err.message });
+
+        const io = req.app.get('socketio');
+        if (io) {
+          io.emit('game-config-updated', { gameId: id });
+        }
+
         res.json({ success: true });
       });
     });

@@ -9,6 +9,7 @@ import logo from '../assets/logo.webp';
 
 import { finalScoreRepository } from '../services/api';
 import { previewStore } from '../store/previewStore';
+import { formatScore, getScoreLabel } from '../utils/formatters';
 
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -30,37 +31,23 @@ const loadGameData = async () => {
 
     const resData = response.data;
     players.value = resData.map((p) => {
-      let displayScore = '';
-      let scoreLabel =
-        Number(p.total_points) === 1 || Number(p.total_points) === 1.0
-          ? 'punt'
-          : 'punten';
-
-      if (p.is_single_game) {
-        if (p.score_type === 'time') {
-          if (p.total_points === null || p.total_points === undefined) {
-            displayScore = '--:--';
-          } else {
-            const totalSeconds = Number(p.total_points) || 0;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          }
-          scoreLabel = '';
-        } else if (p.score_type === 'boolean') {
-          displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-          scoreLabel = '';
-        }
-      }
+      const scoreValue =
+        p.total_points !== null && p.total_points !== undefined
+          ? Number(p.total_points)
+          : null;
+      // Pass p.time_notation from backend to formatScore
+      const displayScore = formatScore(
+        scoreValue,
+        p.score_type,
+        p.time_notation,
+      );
+      const scoreLabel = getScoreLabel(scoreValue, p.score_type);
 
       return {
         id: p.participant_id, // Note: backend returns participant_id
         name: p.player_name || p.team_name || 'Unknown',
         spelersnaam: p.player_name || p.team_name || 'Unknown',
-        score:
-          p.total_points !== null && p.total_points !== undefined
-            ? Number(p.total_points)
-            : null,
+        score: scoreValue,
         displayScore,
         scoreLabel,
         rank: p.final_rank,

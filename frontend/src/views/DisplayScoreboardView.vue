@@ -4,6 +4,7 @@ import { gameRepository, sessionRepository } from '../services/api'; // Import r
 import logo from '../assets/logo.webp';
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import { formatScore, getScoreLabel } from '../utils/formatters';
 
 // Initial state can be empty or mock, we'll overwrite it when loadGameData is called
 const players = ref([]);
@@ -88,42 +89,6 @@ const gameinfo = ref({
   scoreConfig: {},
   rankingRule: 'highest_wins',
 });
-
-// Helper to format scores
-const formatScore = (val, type, config) => {
-  if (type === 'boolean') {
-    return val ? 'Voltooid' : 'Niet voltooid';
-  }
-  if (type === 'time') {
-    // If null/undefined, show --:--
-    if (val === null || val === undefined) {
-      return '--:--';
-    }
-    // Assuming val is seconds
-    const totalSeconds = Number(val) || 0;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.floor(totalSeconds % 60);
-    const ms = Math.round((totalSeconds - Math.floor(totalSeconds)) * 100);
-
-    // Check config for notation (default mm:ss)
-    const notation = config?.timeNotation || 'mm:ss';
-    const pad = (n) => String(n).padStart(2, '0');
-
-    if (notation === 'mm:ss.SS') {
-      return `${pad(minutes)}:${pad(seconds)}.${pad(ms)}`;
-    }
-    return `${pad(minutes)}:${pad(seconds)}`;
-  }
-  // Points
-  return String(Math.round(Number(val) || 0)); // Round points?
-};
-
-const getScoreLabel = (type, score = 0) => {
-  if (type === 'boolean') return '';
-  if (type === 'time') return '';
-  if (type === 'points' && Math.round(Number(score)) === 1) return 'punt';
-  return 'punten';
-};
 
 // Calculate the highest score among all players
 const maxScore = computed(() => {
@@ -312,6 +277,13 @@ const handleScoreUpdate = (data) => {
   }
 };
 
+const handleGameConfigUpdated = (data) => {
+  const currentGameId = sessionStorage.getItem('display_gameId');
+  if (currentGameId && String(data.gameId) === String(currentGameId)) {
+    loadGameData(currentGameId);
+  }
+};
+
 const showRoundOverlay = ref(false);
 const roundBannerText = ref('');
 const setBannerText = ref('');
@@ -374,6 +346,7 @@ onMounted(() => {
   socket.on('display:navigate', handleNavigate);
   socket.on('score:update', handleScoreUpdate);
   socket.on('display:update-game-info', handleGameInfoUpdate);
+  socket.on('game-config-updated', handleGameConfigUpdated);
 
   // Check URL params first, then sessionStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -424,6 +397,7 @@ onUnmounted(() => {
   socket.off('display:navigate', handleNavigate);
   socket.off('score:update', handleScoreUpdate);
   socket.off('display:update-game-info', handleGameInfoUpdate);
+  socket.off('game-config-updated', handleGameConfigUpdated);
   window.removeEventListener('resize', calculatePlayersPerPage);
   if (pageInterval) {
     clearInterval(pageInterval);

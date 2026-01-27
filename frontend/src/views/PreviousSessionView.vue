@@ -12,6 +12,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { finalScoreRepository, sessionRepository } from '../services/api';
+import { formatScore, getScoreLabel } from '../utils/formatters';
 
 const route = useRoute();
 const SessionID = route.params.id;
@@ -29,28 +30,12 @@ const loadGameData = async () => {
 
     // Map backend data to frontend structure
     players.value = response.data.map((p) => {
-      let displayScore = '';
-      let scoreLabel =
-        Number(p.total_points) === 1 || Number(p.total_points) === 1.0
-          ? 'punt'
-          : 'punten';
+      const scoreConfig = {
+        timeNotation: p.time_notation,
+      };
 
-      if (p.is_single_game) {
-        if (p.score_type === 'time') {
-          if (p.total_points === null || p.total_points === undefined) {
-            displayScore = '--:--';
-          } else {
-            const totalSeconds = Number(p.total_points) || 0;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            displayScore = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-          }
-          scoreLabel = '';
-        } else if (p.score_type === 'boolean') {
-          displayScore = p.total_points ? 'Voltooid' : 'Niet voltooid';
-          scoreLabel = '';
-        }
-      }
+      let displayScore = formatScore(p.total_points, p.score_type, scoreConfig);
+      let scoreLabel = getScoreLabel(p.score_type, p.total_points);
 
       return {
         id: p.participant_id, // Note: backend returns participant_id
