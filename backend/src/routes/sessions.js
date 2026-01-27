@@ -442,7 +442,7 @@ router.get('/:id/final-scores', async (req, res) => {
         // regardless of whether it is points (5), time (20m), or boolean (completed/incomplete).
         // User explicitly asked for equality even if "0 points, 0 seconds, or completed".
         if (calculatedScores.length === 1) {
-             points = SCORE_PER_GAME;
+          points = SCORE_PER_GAME;
         } else if (scoreType === 'boolean') {
           // Boolean: Completed -> Full Score
           points = cs.raw > 0 ? SCORE_PER_GAME : 0;
@@ -478,7 +478,7 @@ router.get('/:id/final-scores', async (req, res) => {
               // Giving 100 is fair.
               points = SCORE_PER_GAME;
             } else {
-              const best = minRaw > 0 ? minRaw : 1; 
+              const best = minRaw > 0 ? minRaw : 1;
               const current = cs.raw;
               // Formula: (Best / Current) * 100
               points = (best / current) * SCORE_PER_GAME;
