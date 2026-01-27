@@ -18,3 +18,13 @@
 
 @import 'bootstrap/scss/bootstrap';
 @import 'reset-css/sass/reset';
+
+/* GPU Acceleration for Display Views - Performance optimization for Pi */
+.v-display-scoreboard,
+.v-display-leaderboard,
+.v-display-playerlist,
+.v-display-splash {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

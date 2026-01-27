@@ -21,6 +21,8 @@
   background: $colors-gradient-blue;
   transition: width 0.3s ease-in-out;
   min-width: 0;
+  will-change: width;
+  transform: translateZ(0);
 }
 .c-progressbar__track--P1 {
   width: 100%;
@@ -61,6 +63,8 @@
   background: $colors-gradient-blue;
   transition: width 0.3s ease-in-out;
   min-width: 0;
+  will-change: width;
+  transform: translateZ(0);
 }
 .c-progressbar__fill--P2 {
   height: 100%;
@@ -68,6 +72,8 @@
   background: $colors-gradient-red;
   transition: width 0.3s ease-in-out;
   min-width: 0;
+  will-change: width;
+  transform: translateZ(0);
 }
 .c-progressbar__fill--P3 {
   height: 100%;
@@ -75,6 +81,8 @@
   background: $colors-gradient-orange;
   transition: width 0.3s ease-in-out;
   min-width: 0;
+  will-change: width;
+  transform: translateZ(0);
 }
 .c-progressbar__fill--Px {
   height: 100%;
@@ -82,6 +90,8 @@
   background: $color-primary-blue-500;
   transition: width 0.3s ease-in-out;
   min-width: 0;
+  will-change: width;
+  transform: translateZ(0);
 }
 
 

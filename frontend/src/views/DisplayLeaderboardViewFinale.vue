@@ -289,14 +289,17 @@ const startPodiumAnimation = () => {
           }, 500),
         ); // Duration of shake animation
 
-        // Trigger Confetti
+        // Trigger Confetti (optimized for Pi performance)
         if (showRank1.value) {
           // Safety check
           confetti({
-            particleCount: 150,
-            spread: 70,
+            particleCount: 80, // Reduced from 150 for Pi
+            spread: 60,
             origin: { y: 0.6 },
-            colors: ['#534aff', '#ff3b30', '#ffd60a'], // Using our theme colors if possible, or defaults
+            colors: ['#534aff', '#ff3b30', '#ffd60a'],
+            disableForReducedMotion: true,
+            drift: 0, // Disable drift for smoother animation
+            gravity: 1.2, // Slightly faster fall
           });
         }
       }, currentDelay),

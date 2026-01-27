@@ -219,12 +219,15 @@ const startPodiumAnimation = () => {
   showRunnerUps.value = true;
   showLogo.value = true;
 
-  // Trigger Confetti
+  // Trigger Confetti (optimized for Pi performance)
   confetti({
-    particleCount: 150,
-    spread: 70,
+    particleCount: 80, // Reduced from 150 for Pi
+    spread: 60,
     origin: { y: 0.6 },
     colors: ['#534aff', '#ff3b30', '#ffd60a'],
+    disableForReducedMotion: true,
+    drift: 0,
+    gravity: 1.2,
   });
 };
 

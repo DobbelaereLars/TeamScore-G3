@@ -238,28 +238,32 @@
 
 .player-pop-enter-active {
   animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 .player-pop-leave-active {
   animation: pop-out 0.3s ease-in;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 @keyframes pop-in {
   0% {
-    transform: scale(0);
+    transform: scale(0) translateZ(0);
     opacity: 0;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
     opacity: 1;
   }
 }
 @keyframes pop-out {
   0% {
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
     opacity: 1;
   }
   100% {
-    transform: scale(0);
+    transform: scale(0) translateZ(0);
     opacity: 0;
   }
 }

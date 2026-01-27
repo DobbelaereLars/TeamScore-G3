@@ -87,25 +87,29 @@
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   z-index: 10;
   position: relative;
+  will-change: transform;
+  transform: translateZ(0);
 
   // Create a "lift" effect during move
   :deep(.c-player-card) {
-    transform: scale(1.05);
+    transform: scale(1.05) translateZ(0);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    transition: all 0.5s ease;
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
     z-index: 100;
+    will-change: transform;
   }
 }
 
 .scoreboard-item-enter-active,
 .scoreboard-item-leave-active {
-  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform, opacity;
 }
 
 .scoreboard-item-enter-from,
 .scoreboard-item-leave-to {
   opacity: 0;
-  transform: scale(0.8);
+  transform: scale(0.8) translateZ(0);
 }
 
 /* Round Banner Animation */
@@ -168,26 +172,27 @@
 /* Banner Entrance/Exit Animations */
 .banner-slide-enter-active,
 .banner-slide-leave-active {
-  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform, opacity;
 }
 
 .banner-slide-enter-from,
 .banner-slide-leave-to {
   opacity: 0;
-  transform: translateY(-50%) scaleY(0);
+  transform: translateY(-50%) scaleY(0) translateZ(0);
 }
 
 .banner-slide-enter-to,
 .banner-slide-leave-from {
   opacity: 1;
-  transform: translateY(-50%) scaleY(1);
+  transform: translateY(-50%) scaleY(1) translateZ(0);
 }
 
 @keyframes marquee {
   0% {
-    transform: translateX(0);
+    transform: translateX(0) translateZ(0);
   }
   100% {
-    transform: translateX(-20%); /* Move enough to create flow perception */
+    transform: translateX(-20%) translateZ(0); /* Move enough to create flow perception */
   }
 }

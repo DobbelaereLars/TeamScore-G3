@@ -29,14 +29,18 @@ const hasAnimated = ref(props.disableInitialAnimation);
 
 const animateValue = (start, end, duration) => {
   let startTimestamp = null;
+  let lastUpdate = 0;
   const step = (timestamp) => {
     if (!startTimestamp) startTimestamp = timestamp;
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
 
-    // Ease out quart
-    const easeProgress = 1 - Math.pow(1 - progress, 4);
-
-    displayValue.value = Math.floor(progress * (end - start) + start);
+    // Throttle updates to ~30fps for better Pi performance
+    if (timestamp - lastUpdate > 33 || progress >= 1) {
+      lastUpdate = timestamp;
+      // Ease out quart
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      displayValue.value = Math.floor(easeProgress * (end - start) + start);
+    }
 
     if (progress < 1) {
       window.requestAnimationFrame(step);
