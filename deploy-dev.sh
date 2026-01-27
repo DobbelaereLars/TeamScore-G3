@@ -52,6 +52,16 @@ ssh ${PI_USER}@${PI_HOST} /bin/bash << EOF
   echo ">> Ensure data dir..."
   mkdir -p data
 
+  # Backup database before migrations (if exists)
+  if [ -f "data/scoreboard.db" ]; then
+    echo ">> Creating database backup..."
+    BACKUP_FILE="data/scoreboard.db.backup.\$(date +%Y%m%d_%H%M%S)"
+    cp "data/scoreboard.db" "\$BACKUP_FILE"
+    echo ">> Backup created: \$BACKUP_FILE"
+    # Keep only last 5 backups to save space
+    ls -t data/scoreboard.db.backup.* 2>/dev/null | tail -n +6 | xargs -r rm --
+  fi
+
   echo ">> Ensure HTTPS certs (backend/certs)..."
   # We zitten al in de backend-map; gebruik een vaste relatieve certs-map
   mkdir -p certs
